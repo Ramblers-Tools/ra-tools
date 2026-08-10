@@ -34,6 +34,12 @@
                 description="Used when creating links in emails etc" 
                 required="true"
                 hint="https://xxxramblers.org.uk"/>
+         <field name="logo"
+              type="media"
+              directory="images/com_ra_tools"
+              label="Logo"
+              description="Upload a logo for use in the header of any emails."
+        />
         <field name="email_new_user" 
             validate="email" 
             type="email" 

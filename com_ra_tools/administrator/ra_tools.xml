@@ -1,1 +1,96 @@
-../ra_tools.xml
+<?xml version="1.0" encoding="utf-8" ?>
+<extension type="component" method="upgrade">
+    <name>RA Tools</name>
+    <element>com_ra_tools</element>
+    <creationDate>2024</creationDate>
+    <copyright>2024-2026 Ramblers Tools</copyright>
+    <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
+    <author>Ramblers Tools</author>
+    <authorEmail>support@ramblers.tools</authorEmail>
+    <authorUrl>https://ramblers.tools</authorUrl>
+    <version>4.0.9</version>
+    <description>Admin tools and member utilities for Ramblers groups</description>
+    <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
+    <updateservers>
+        <server type="extension" name="RA Tools Update Server">https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/updates/pkg_ra_tools.xml</server>
+    </updateservers>
+    <namespace path="src">Ramblers\Component\Ra_tools</namespace>
+    
+    <scriptfile>script.php</scriptfile>
+    
+    <install> <!-- Runs on install -->
+        <sql>
+            <file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+        </sql>
+    </install>
+    <update> <!-- Runs on update -->
+        <schemas>
+            <schemapath type="mysql">sql/updates</schemapath>
+        </schemas>
+    </update>
+    <uninstall> <!-- Runs on uninstall -->
+        <sql>
+            <file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+        </sql>
+    </uninstall>
+    <files folder="site">        
+        <folder>forms</folder>
+        <folder>languages</folder>
+        <folder>src</folder>
+        <folder>tmpl</folder>
+    </files>
+    <media destination="com_ra_tools" folder="media">
+        <folder>css</folder>
+        <folder>js</folder>
+        <filename>bullseye.png</filename>
+        <filename>cross.png</filename>
+        <filename>download.png</filename>
+        <filename>email.png</filename>
+        <filename>email2.png</filename>        
+        <filename>google.png</filename>
+        <filename>gps.png</filename>
+        <filename>icon-cog.png</filename>  
+        <filename>info.png</filename>        
+        <filename>joomla.asset.json</filename>
+        <filename>link.png</filename>
+        <filename>logo_90px.png</filename>
+        <filename>map_pin.png</filename>
+        <filename>paperclip.png</filename>        
+        <filename>print.png</filename>
+        <filename>tick.png</filename>
+        <filename>upload.png</filename>
+        <filename>walksfinder.png</filename>            
+    </media>
+    <languages folder="site/languages">     
+	<language tag="en-GB">en-GB/com_ra_tools.ini</language>
+    </languages>
+    <administration>
+        <menu link="option=com_ra_tools&amp;view=dashboard">RA Tools</menu>
+        <files folder="administrator">
+            <filename>access.xml</filename>
+            <filename>config.xml</filename>
+            <folder>assets</folder>
+            <folder>forms</folder>
+            <folder>src</folder>
+            <folder>tmpl</folder>
+            <folder>services</folder>
+            <folder>presets</folder>
+            <folder>sql</folder>
+        </files>
+        <languages folder="administrator">
+            <language tag="en-GB">languages/en-GB/com_ra_tools.ini</language>
+            <language tag="en-GB">languages/en-GB/com_ra_tools.sys.ini</language>
+        </languages>
+    </administration>
+    <config>
+        <fields name="params">
+            <fieldset name="component">
+                <field name="save_history" default="0" />
+            </fieldset>
+        </fields>
+    </config>
+    <modules>
+		<module module="mod_ra_tools" />
+	</modules>
+
+</extension>
