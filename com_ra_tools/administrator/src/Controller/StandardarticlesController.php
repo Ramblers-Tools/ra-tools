@@ -5,6 +5,7 @@
  * @author     GitHub Copilot
  * @copyright  2026
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * 10/08/26 CB Use Joomla's workflow when creatiing artices, not just the table
  */
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
 
@@ -14,7 +15,7 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Router\Route;
-use Joomla\CMS\Session\Session;
+use Joomla\CMS\Workflow\Workflow;
 use Ramblers\Component\Ra_tools\Site\Helpers\JsonHelper;
 
 /**
@@ -39,7 +40,7 @@ class StandardarticlesController extends BaseController
 
     public function refresh()
     {
-
+        $this->db = Factory::getDbo();
         $input = $this->app->input;
         $remote_id    = $input->getInt('remote_id');
         $local_id = $input->getInt('local_id');
@@ -63,30 +64,58 @@ class StandardarticlesController extends BaseController
         }
 
         $data = [
-            'id' => 0, // Let the save method determine if it's an insert or update
+            'id' => $local_id,
             'title' => $item->title,
             'articletext' => $item->text,
             'catid' => $params->get('local_category_id'),
             'state' => 1, // Published
             'language' => '*',
         ];
-        // Get the Articles  table
-        $table = \Joomla\CMS\Table\Table::getInstance('Content', 'JTable', ['dbo' => $this->db]);
 
-        if ($local_id > 0) {
-            $table->load($local_id);
+        $contentComponent = $this->app->bootComponent('com_content');
+        $articleModel = $contentComponent->getMVCFactory()->createModel(
+            'Article',
+            'Administrator',
+            ['ignore_request' => true]
+        );
 
-        }
-        $table->bind($data);
-        if (!$table->check()) {
-            $this->app->enqueueMessage('Error checking article data: ' . $table->getError(), 'error');
-            $this->setRedirect(Route::_('index.php?option=com_ra_tools&view=standardarticles', false));
-            return;
-        }
-        if ($table->store()) {
-            $this->app->enqueueMessage('Article saved successfully.');
+        if ($articleModel->save($data)) {
+            $articleId = (int) $articleModel->getState('article.id');
+            $storedArticle = $articleModel->getItem($articleId);
+
+            if ($articleId > 0 && $storedArticle) {
+                // Older imports saved directly to #__content and may not have
+                // the workflow association required by Joomla's article list.
+                $workflow = new Workflow('com_content.article', $this->app, $this->db);
+                $workflowAssociation = $workflow->getAssociation($articleId);
+
+                if (!$workflowAssociation) {
+                    $stageId = (int) $workflow->getDefaultStageByCategory((int) $storedArticle->catid);
+
+                    if ($stageId < 1 || !$workflow->createAssociation($articleId, $stageId)) {
+                        $this->app->enqueueMessage(
+                            'Article saved, but its Joomla workflow association could not be created. ID: '
+                                . $articleId,
+                            'error'
+                        );
+                        $this->setRedirect(Route::_('index.php?option=com_ra_tools&view=standardarticles', false));
+                        return;
+                    }
+                }
+
+                $articleTitle = htmlspecialchars(
+                    (string) $storedArticle->title,
+                    ENT_QUOTES,
+                    'UTF-8'
+                );
+            } else {
+                $this->app->enqueueMessage(
+                    'Article saved, but the stored record could not be retrieved. ID: ' . $articleId,
+                    'warning'
+                );
+            }
         } else {
-            $this->app->enqueueMessage('Error saving article: ' . $table->getError(), 'error');
+            $this->app->enqueueMessage('Error saving article: ' . $articleModel->getError(), 'error');
         }
         $this->setRedirect(Route::_('index.php?option=com_ra_tools&view=standardarticles', false));
     }
