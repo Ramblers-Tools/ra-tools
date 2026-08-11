@@ -8,7 +8,7 @@
     <author>Ramblers Tools</author>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>4.0.10</version>
+    <version>4.0.11</version>
     <description>Admin tools and member utilities for Ramblers groups</description>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
     <updateservers>

@@ -21,7 +21,7 @@ $wa->registerAndUseStyle('ramblers', 'com_ra_tools/ramblers.css');
 $wa->registerAndUseStyle('dashboard', 'com_ra_tools/dashboard.css');
 
 $target_display = 'administrator/index.php?option=com_ra_tools&view=standardarticle&id=';
-$target_refresh = 'administrator/index.php?option=com_ra_tools&task=standardarticles.refresh';    
+$target_refresh = 'administrator/index.php?option=com_ra_tools&task=standardarticles.refresh';
 ?>
 <form action="<?php echo Route::_('index.php?option=com_ra_tools&view=standardarticles'); ?>" method="post" name="adminForm" id="adminForm">
     <h1>Standard Articles</h1>
@@ -38,50 +38,42 @@ $target_refresh = 'administrator/index.php?option=com_ra_tools&task=standardarti
         </thead>
         <tbody>
             <?php if (!empty($this->items)) : ?>
-                <?php foreach ($this->items as $i => $item) :
- //           var_dump($item);
- //           die;
-                echo '<tr class="row' . ($i % 2) . '">';
-                echo '<td>';
-                $target = $target_display . $item->id;
-                echo $this->toolsHelper->buildLink($target, $this->escape($item->title));
-                echo '</td>';
-                echo '<td>' . $this->escape($item->modified) . '</td>';
-                
-                $local_article = $this->getLocal($item->title);
-                if ($local_article){
-                    $label = 'Overwrite';
-                    $local_id = $local_article->id;
-                    $modified = $local_article->modified;
-                } else {
-                    $label = 'Import';
-                    $local_id = 0;
-                    $modified = '';
+                <?php
+                foreach ($this->items as $i => $item) :
+                    //           var_dump($item);
+                    //           die;
+                    echo '<tr class="row' . ($i % 2) . '">';
+                    echo '<td>';
+                    $target = $target_display . $item->id;
+                    echo $this->toolsHelper->buildLink($target, $this->escape($item->title));
+                    echo '</td>';
+                    echo '<td>' . $this->escape($item->modified) . '</td>';
 
-                }
-                
-                echo '<td>' . $modified . '</td>';
-                $target = $target_refresh . '&remote_id=' . $item->id . '&local_id=' . $local_id;
-                echo '<td>' . $this->toolsHelper->buildButton($target, $label) . '</td>';
-?>
+                    $local_article = $this->getLocal($item->title);
+                    if ($local_article) {
+                        $label = 'Overwrite';
+                        $local_id = $local_article->id;
+                        $modified = $local_article->modified;
+                    } else {
+                        $label = 'Import';
+                        $local_id = 0;
+                        $modified = '';
+                    }
 
-                    <td>
-                        <form action="<?php echo Route::_('index.php?option=com_ra_tools&task=standardarticles.' . strtolower($item->action) . '&id=' . $item->id); ?>" method="post" name="adminForm_<?php echo $item->id; ?>" id="adminForm_<?php echo $item->id; ?>">
-                            <button type="submit" class="btn btn-mini <?php echo ($item->action === 'Overwrite') ? 'btn-danger' : 'btn-success'; ?>">
-                                <?php echo $this->escape($item->action); ?>
-                            </button>
-                            <?php echo HTMLHelper::_('form.token'); ?>
-                        </form>
-                    </td>
+                    echo '<td>' . $modified . '</td>';
+                    $target = $target_refresh . '&remote_id=' . $item->id . '&local_id=' . $local_id;
+                    echo '<td>' . $this->toolsHelper->buildButton($target, $label) . '</td>';
+                    ?>
+
+                    </tr>
+                <?php endforeach; ?>
+            <?php else : ?>
+                <tr>
+                    <td colspan="4">No articles found.</td>
                 </tr>
-            <?php endforeach; ?>
-        <?php else : ?>
-            <tr>
-                <td colspan="4">No articles found.</td>
-            </tr>
-        <?php endif; ?>
-    </tbody>
-</table>
-<input type="hidden" name="task" value="">
-<?php echo HTMLHelper::_('form.token'); ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+    <input type="hidden" name="task" value="">
+    <?php echo HTMLHelper::_('form.token'); ?>
 </form>
