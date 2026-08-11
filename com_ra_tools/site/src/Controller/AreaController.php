@@ -319,6 +319,7 @@ class AreaController extends FormController {
         echo '<b>Longitude </b> ' . $item->longitude . '<br>';
         echo '<b>Location </b> ' . $toolsHelper->showLocation($item->latitude, $item->longitude, 'Ggit status') . '<br>';
 
+        $toolsHelper->getNearestOrganisations($item->code, 5, 'Y');
         $jsonHelper = new JsonHelper;
 
         echo '<b>Events in WalksManager</b> ';

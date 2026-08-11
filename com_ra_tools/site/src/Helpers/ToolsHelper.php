@@ -25,7 +25,8 @@
  * 06/07/26 CB invoke ra-delivery/SmtpHelper to send email using API if component is installed and enabled
  * 15/07/26 CB improved image hanling for emails: insert code required for embedLocalEmailImages
  * 17/07/26 CB added function buildDashboardReportBlock (for dashboard and reports menus)
-*/
+ * 10/08/26 CB added getNearestOrganisations, allow new windows in buildDashboardBlock
+ */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
 
@@ -108,7 +109,7 @@ class ToolsHelper {
         return $this->buildLink($url, $text, $newWindow, $class);
     }
 
-    public function buildDashboardReportBlock($title, array $links) {
+    public function buildDashboardReportBlock($title, array $links, $newWindow = false) {
         if (empty($links)) {
             return '';
         }
@@ -124,7 +125,7 @@ class ToolsHelper {
             if (is_int($caption)) {
                 $html .= '<li>' . $task . '</li>';
             } else {
-                $html .= '<li>' . $this->buildLink($task, $caption) . '</li>';
+                $html .= '<li>' . $this->buildLink($task, $caption, $newWindow) . '</li>';
             }
         }
 
@@ -1097,6 +1098,72 @@ class ToolsHelper {
 //            }
             return false;
         }
+    }
+
+    public function getNearestOrganisations($code, int $limit = 5, $display = 'N') {
+        // First get the latitude and longitude of the selected organisation
+        if (strlen($code) == 4) {
+            $type = 'groups';
+        } else {
+            $type .= 'areas';
+        }
+        $sql = 'SELECT latitude, longitude FROM #__ra_' . $type . ' WHERE code = "' . $code . '"';
+        $org = $this->getItem($sql);
+
+        if (!$org) {
+            $this->app->enqueueMessage('Group not found for ' . $code, 'warning');
+            return false;
+        }
+
+        $lat = (float) $org->latitude;
+        $lon = (float) $org->longitude;
+//        $lat = $org->latitude;
+//        $lon = $org->longitude;
+        if ($lat == 0) {
+            $this->app->enqueueMessage('Latitude is zero for ' . $code, 'warning');
+            return false;
+        }
+        if ($lon == 0) {
+            $this->app->enqueueMessage('Longitude is zero for ' . $code, 'warning');
+            return false;
+        }
+        // Earth's radius in miles
+        $earthRadius = 6371;
+
+        // Find the five nearest organisations
+        $sql = 'SELECT id, code, name, latitude, longitude,
+      (
+      ' . $earthRadius . ' * ACOS(
+      COS(RADIANS(' . $lat . '))
+     * COS(RADIANS(latitude))
+     * COS(RADIANS(longitude) - RADIANS(' . $lon . '))
+      + SIN(RADIANS(' . $lat . '))
+     * SIN(RADIANS(latitude))
+      )
+      ) AS distance ';
+        $sql .= 'FROM #__ra_' . $type . ' ';
+        $sql .= 'WHERE code <> "' . $code . '" ';
+        $sql .= 'ORDER BY distance ASC LIMIT ' . $limit;
+        $rows = $this->getRows($sql);
+        //       echo $sql;
+        if ($display == 'Y') {
+            $objTable = new ToolsTable;
+            echo '<h4>' . $limit . ' Nearest ' . $type . '<h4>';
+            $objTable->add_header("Num,Code,Name,Miles");
+            $i = 0;
+            foreach ($rows as $row) {
+                $i++;
+                $objTable->add_item($i);
+                $objTable->add_item($row->code);
+                $objTable->add_item($row->name);
+                $objTable->add_item(round($row->distance));
+                //$objTable->add_item($row->distance);
+
+                $objTable->generate_line();
+            }
+            $objTable->generate_table();
+        }
+        return $rows;
     }
 
     public function getRows($sql) {

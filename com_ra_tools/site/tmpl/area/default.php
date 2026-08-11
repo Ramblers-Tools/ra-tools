@@ -25,6 +25,7 @@
  * 24/07/23 CB correct link to external website, add display of walks
  * 21/08/23 CB use JsonHelper
  * 09/10/24 CB delete code for import/export of walks
+ * 10/08/26 CB show nearest 
  */
 //
 // No direct access

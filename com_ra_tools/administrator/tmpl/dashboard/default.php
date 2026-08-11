@@ -50,32 +50,36 @@ $canDo = ContentHelper::getActions('com_ra_tools');
 // Build blocks array - permission checks at construction time
 $blocks = [];
 
-// ========== SYSTEM TOOLS BLOCK (SUPERUSER ONLY) ==========
-if ($toolsHelper->isSuperuser()) {
-    $sysToolsItems = [
-        ['label' => 'Show your access permissions', 'url' => 'index.php?option=com_ra_tools&task=system.showAccess'],
-    ];
-
-    if ((ComponentHelper::isEnabled('com_ra_events', true)) || (ComponentHelper::isEnabled('com_ra_mailman', true))) {
-        $sysToolsItems[] = ['label' => 'List Users', 'url' => 'index.php?option=com_ra_tools&view=users'];
-    }
-
+// ============= SYSTEM TOOLS BLOCK  =============
+if ($toolsHelper->isSuperuser()) { // (SUPERUSER ONLY)
     $sysToolsItems[] = ['label' => 'Standard Articles', 'url' => 'index.php?option=com_ra_tools&view=standardarticles'];
     $sysToolsItems[] = ['label' => 'API sites', 'url' => 'index.php?option=com_ra_tools&view=apisites'];
     $sysToolsItems[] = ['label' => 'Access Configuration Wizard', 'url' => 'index.php?option=com_ra_tools&task=system.AccessWizard'];
-    $sysToolsItems[] = ['label' => 'System Reports', 'url' => 'index.php?option=com_ra_tools&view=reports'];
-
-    if ($canDo->get('core.admin')) {
-        $versions = $toolsHelper->getVersions('com_ra_tools');
-        $sysToolsItems[] = ['label' => 'Configure com_ra_tools (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_tools'];
-        $sysToolsItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
+    if ((ComponentHelper::isEnabled('com_ra_events', true)) 
+        || (ComponentHelper::isEnabled('com_ra_mailman', true))) {
+        $sysToolsItems[] = ['label' => 'List Users', 'url' => 'index.php?option=com_ra_tools&view=users'];
     }
-
-    $blocks[] = [
-        'title' => 'System Tools',
-        'items' => $sysToolsItems
-    ];
+    if ((ComponentHelper::isEnabled('com_ra_mailman', true))) {
+        $sysToolsItems[] = ['label' => 'Process MailMan Renewals', 'url' => 'index.php?option=com_ra_mailman&task=system.checkRenewals'];    
+    }
 }
+$sysToolsItems[] =  ['label' => 'Show your access permissions', 'url' => 'index.php?option=com_ra_tools&task=system.showAccess'];
+$sysToolsItems[] = ['label' => 'System Reports', 'url' => 'index.php?option=com_ra_tools&view=reports'];
+
+
+
+
+if ($canDo->get('core.admin')) {
+    $versions = $toolsHelper->getVersions('com_ra_tools');
+    $sysToolsItems[] = ['label' => 'Configure com_ra_tools (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_tools'];
+    $sysToolsItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
+}
+
+$blocks[] = [
+    'title' => 'System Tools',
+    'items' => $sysToolsItems
+];
+
 
 // ========== MAIL MANAGER BLOCK ==========
 if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
@@ -93,7 +97,6 @@ if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
         $mailmanItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_mailman&view=dataload'];
         $mailmanItems[] = ['label' => 'Import Reports', 'url' => 'index.php?option=com_ra_mailman&view=import_reports'];
         $mailmanItems[] = ['label' => 'Mailman Reports', 'url' => 'index.php?option=com_ra_mailman&view=reports'];
-        $mailmanItems[] = ['label' => 'Process Renewals', 'url' => 'index.php?option=com_ra_mailman&task=system.checkRenewals'];
     }
 
     if ($mailmanCanDo->get('core.admin')) {
@@ -218,6 +221,36 @@ if (ComponentHelper::isEnabled('com_ra_events', true)) {
             'items' => $eventsItems
         ];
     }
+}
+// ========== RA SSO BLOCK ==========
+if (ComponentHelper::isEnabled('com_ra_sso', true)) {
+    $ssoItems = [
+        ['label' => 'SSO Account Setup', 'url' => 'index.php?option=com_ra_sso'],
+    ];
+
+    $blocks[] = [
+        'title' => 'RA SSO',
+        'items' => $ssoItems
+    ];
+}
+// ========== RA DELIVERY BLOCK ==========
+if (ComponentHelper::isEnabled('com_ra_delivery', true)) {
+    $deliveryCanDo = ContentHelper::getActions('com_ra_delivery');
+
+    $deliveryItems = [
+        ['label' => 'List Email exceptions', 'url' => 'index.php?option=com_ra_delivery'],
+    ];
+
+    if ($deliveryCanDo->get('core.admin')) {
+        $versions = $toolsHelper->getVersions('com_ra_delivery');
+        $deliveryItems[] = ['label' => 'Configure com_ra_delivery (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_delivery'];
+        $deliveryItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
+    }
+
+    $blocks[] = [
+        'title' => 'RA Delivery',
+        'items' => $deliveryItems
+    ];
 }
 
 // ========== WALKS BLOCK ==========
@@ -346,36 +379,6 @@ if (ComponentHelper::isEnabled('com_ra_paths', true)) {
     $blocks[] = [
         'title' => 'Path Maintenance',
         'items' => $pathsItems
-    ];
-}
-// ========== RA SSO BLOCK ==========
-if (ComponentHelper::isEnabled('com_ra_sso', true)) {
-    $ssoItems = [
-        ['label' => 'SSO Account Setup', 'url' => 'index.php?option=com_ra_sso'],
-    ];
-
-    $blocks[] = [
-        'title' => 'RA SSO',
-        'items' => $ssoItems
-    ];
-}
-// ========== RA DELIVERY BLOCK ==========
-if (ComponentHelper::isEnabled('com_ra_delivery', true)) {
-    $deliveryCanDo = ContentHelper::getActions('com_ra_delivery');
-
-    $deliveryItems = [
-        ['label' => 'List Email exceptions', 'url' => 'index.php?option=com_ra_delivery'],
-    ];
-
-    if ($deliveryCanDo->get('core.admin')) {
-        $versions = $toolsHelper->getVersions('com_ra_delivery');
-        $deliveryItems[] = ['label' => 'Configure com_ra_delivery (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_delivery'];
-        $deliveryItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-    }
-
-    $blocks[] = [
-        'title' => 'RA Delivery',
-        'items' => $deliveryItems
     ];
 }
 ?>

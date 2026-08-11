@@ -7,7 +7,8 @@
  * 24/10/24 CB correct lookupArea
  * 16/12/24 CB show_criteria
  * 19/01/26 CB Changes to implement new radius selection
- * 02/02/26 CB Always show criteria if not from menu 
+ * 02/02/26 CB Always show criteria if not from menu
+ * 10/08/26 CB use search radius from component params, not menu params
  */
 
 namespace Ramblers\Component\Ra_tools\Site\View\Programme;
@@ -57,7 +58,7 @@ class HtmlView extends BaseHtmlView {
             $this->intro = $menu_params->get('intro');
             $this->filter_type = $menu_params->get('filter_type', 'group');
             if ($this->filter_type == 'radius') {
-                $this->radius = $menu_params->get('radius', '25');
+                $this->radius = $params->get('radius', '25');
                 $this->group = $params->get('default_group', '');
             } else {
                 $group_type = $menu_params->get('group_type', 'single');
@@ -66,9 +67,9 @@ class HtmlView extends BaseHtmlView {
                     echo 'single group: ' . $this->group . '<br>';
                 } elseif ($group_type == "list") {
                     $this->group = $params->get('group_list');
-                } else {                	
+                } else {
                     $this->group = $menu_params->get('code');
-                    echo 'Getting specified ' . $this->group  . '<br>';
+                    echo 'Getting specified ' . $this->group . '<br>';
                 }
             }
             $this->display_type = $menu_params->get('display_type', 'simple');
@@ -88,7 +89,6 @@ class HtmlView extends BaseHtmlView {
             $this->filter_type = 'group';
             $this->display_type = $params->get('display_type', 'simple');
             $this->limit = (int) $params->get('limit');
-            
 
             $title = 'Walks for ';
             if (strlen($this->group) == 2) {
