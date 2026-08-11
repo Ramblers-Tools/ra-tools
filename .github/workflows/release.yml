@@ -54,6 +54,11 @@ jobs:
           zip -r ../dist/packages/mod_ra_tools.zip .
           cd ..
 
+          # mod_ra_facebook
+          cd mod_ra_facebook
+          zip -r ../dist/packages/mod_ra_facebook.zip .
+          cd ..
+
           # plg_webservices_ra_tools
           cd plg_ra_tools
           zip -r ../dist/packages/plg_webservices_ra_tools.zip .
@@ -69,6 +74,7 @@ jobs:
           mkdir -p dist/pkg/packages
           cp dist/packages/com_ra_tools.zip             dist/pkg/packages/
           cp dist/packages/mod_ra_tools.zip             dist/pkg/packages/
+          cp dist/packages/mod_ra_facebook.zip          dist/pkg/packages/
           cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
           cp dist/packages/plg_finder_ra_toolswalks.zip dist/pkg/packages/
 

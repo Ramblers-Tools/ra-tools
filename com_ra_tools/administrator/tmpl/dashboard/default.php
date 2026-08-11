@@ -51,6 +51,7 @@ $canDo = ContentHelper::getActions('com_ra_tools');
 $blocks = [];
 
 // ============= SYSTEM TOOLS BLOCK  =============
+$sysToolsItems = [];
 if ($toolsHelper->isSuperuser()) { // (SUPERUSER ONLY)
     $sysToolsItems[] = ['label' => 'Standard Articles', 'url' => 'index.php?option=com_ra_tools&view=standardarticles'];
     $sysToolsItems[] = ['label' => 'API sites', 'url' => 'index.php?option=com_ra_tools&view=apisites'];
