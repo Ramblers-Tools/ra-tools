@@ -13,6 +13,7 @@
  * 13/10/23 CB allow selection by cluster
  * 16/10/23 CB Clusters, Chair email
  * 08/11/24 CB filter by nation and cluster
+ * 14/08/26 CB delete references to Chair
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Model;
@@ -55,12 +56,10 @@ class Area_listModel extends ListModel {
 
         $query->select('a.id, a.code, a.name,a.website,a.co_url, a.nation_id, a.cluster');
         $query->select("n.name AS nation");
-        $query->select("a.chair_id, c.name as chair");
         $query->select('a.latitude,a.longitude');
 
         $query->from($db->quoteName('#__ra_areas', 'a'));
         $query->innerJoin('#__ra_nations AS n ON n.id = a.nation_id');
-        $query->leftJoin('#__contact_details AS c ON c.id = a.chair_id');
         // Filter by search
         $search = $this->getState('filter.search');
 
