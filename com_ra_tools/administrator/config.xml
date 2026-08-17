@@ -40,6 +40,31 @@
               label="Logo"
               description="Upload a logo for use in the header of any emails."
         />
+        <field name="note2" type="note" label="You can specify here the size at which it should be displayed."/>
+        <field name="height"
+               maxlength="3" 
+               filter="safehtml" 
+               type="text" 
+               label="Height" 
+               description="Height of the image, in pixels" 
+               default="90"/>     
+        <field name="width"
+               maxlength="3" 
+               filter="safehtml" 
+               type="text" 
+               label="Width" 
+               description="Width of the image, in pixels" 
+               default="90"/>             
+        <field
+            name="logo_align"
+            type="radio"
+            label="Logo alignment:"
+            description="Whether logo should float to the right or to the left"
+            default="right"
+            >
+            <option value="right">Right</option>
+            <option value="left">Left</option>
+        </field>    
         <field name="email_new_user" 
             validate="email" 
             type="email" 
