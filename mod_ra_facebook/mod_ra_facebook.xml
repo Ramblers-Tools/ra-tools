@@ -7,7 +7,7 @@
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <description>Displays a link to a Facebook site</description>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
     <updateservers>
@@ -32,7 +32,8 @@
                 </field>
                 <field name="caption" 
                     type="text" 
-                    label="Caption">
+                    label="Caption"
+                    default="Join us on Facebook!">
                 </field>                       
 
             </fieldset>

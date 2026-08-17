@@ -1,35 +1,41 @@
 <?php
+
 /**
  * @version     5.1.0
  * @package     com_ra_tools
  * @copyright   Copyright (C) 2020. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * @author      Charlie Bigley <webmaster@bigley.me.uk> - https://www.developer-url.com
- * 
+ *
  * 14/08/26 CB Created
  */
+
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
 
 defined('_JEXEC') or die;
+
 use Joomla\CMS\Factory;
 use Joomla\CMS\Mail\MailTemplate;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\User\UserFactoryInterface;
+use Joomla\Component\Contact\Administrator\Table\ContactTable;
+use Joomla\Database\DatabaseInterface;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
-class PersonHelper
-{
+
+class PersonHelper {
+
     protected $app;
     protected $db;
     protected $toolsHelper;
     protected $userFactory;
-    public function __construct()
-    {
+
+    public function __construct() {
         $this->db = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $this->toolsHelper = new ToolsHelper;
         $this->userFactory = Factory::getContainer()->get(UserFactoryInterface::class);
     }
- 
-    private function addUserToGroup(int $userId, string $title): bool {
+
+    public function addUserToGroup(int $userId, string $title): bool {
         $groupId = (int) $this->toolsHelper->getValue(
                         'SELECT id FROM #__usergroups WHERE title = ' . $this->db->quote($title) . ' LIMIT 1'
         );
@@ -53,8 +59,16 @@ class PersonHelper
         return true;
     }
 
+    public function getPerson(string $email): array {
+        $sql = 'SELECT u.id, u.name, u.email, p.home_group, p.preferred_name ';
+        $sql .= 'FROM #__users AS u ';
+        $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
+        $sql .= 'WHERE u.email = ' . $this->db->quote(strtolower($email)) . ') ';
+        return $this->toolsHelper->getItem($sql);
+    }
 
-    private function saveContact(int $userId, array $person, int $categoryId): void {
+    public function saveContact(int $userId, array $person, int $categoryId): void {
+        $person['full_name'] = $this->normaliseName((string) ($person['full_name'] ?? ''));
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         Factory::getApplication()->bootComponent('com_contact');
         $contactId = (int) $this->toolsHelper->getValue(
@@ -73,7 +87,6 @@ class PersonHelper
                     'name' => $person['full_name'],
                     'alias' => strtolower(trim((string) preg_replace('/[^a-z0-9]+/i', '-', $person['full_name']))) . '-' . $userId,
                     'con_position' => implode('+', $person['roles']),
-                    'email_to' => $person['email'],
                     'user_id' => $userId,
                     'catid' => $categoryId,
                     'published' => 1,
@@ -86,7 +99,8 @@ class PersonHelper
         }
     }
 
-    private function saveProfile(int $userId, string $name, string $homeGroup): void {
+    public function saveProfile(int $userId, string $name, string $homeGroup): void {
+        $name = $this->normaliseName($name);
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         $exists = (int) $this->toolsHelper->getValue('SELECT COUNT(*) FROM #__ra_profiles WHERE id = ' . $userId) > 0;
         $now = Factory::getDate()->toSql();
@@ -125,6 +139,7 @@ class PersonHelper
     }
 
     public function saveUser(string $name, string $email): int {
+        $name = $this->normaliseName($name);
         $email = strtolower(trim($email));
         $sql = 'SELECT id FROM #__users WHERE LOWER(email) = ' . $this->db->quote($email) . ' LIMIT 1';
         $userId = (int) $this->toolsHelper->getValue($sql);
@@ -146,17 +161,17 @@ class PersonHelper
             $user = $this->userFactory->loadUserById(0);
             $password = bin2hex(random_bytes(24));
             $data = [
-                    'name' => $name,
-                    'username' => $email,
-                    'email' => $email,
-                    'password' => $password,
-                    'password2' => $password,
-                    'block' => 0,
-                    'sendEmail' => 0,
-                    'registerDate' => Factory::getDate()->toSql(),
-                    'activation' => '',
-                    'params' => '{}',
-                    'requireReset' => 1,
+                'name' => $name,
+                'username' => $email,
+                'email' => $email,
+                'password' => $password,
+                'password2' => $password,
+                'block' => 0,
+                'sendEmail' => 0,
+                'registerDate' => Factory::getDate()->toSql(),
+                'activation' => '',
+                'params' => [],
+                'requireReset' => 1,
             ];
         }
 
@@ -170,9 +185,9 @@ class PersonHelper
             }
         } catch (\Throwable $e) {
             throw new \RuntimeException(
-                    'Unable to save the Joomla user for ' . $name . ': ' . $e->getMessage(),
-                    0,
-                    $e
+                            'Unable to save the Joomla user for ' . $name . ': ' . $e->getMessage(),
+                            0,
+                            $e
             );
         }
 
@@ -187,16 +202,36 @@ class PersonHelper
         return (int) $user->id;
     }
 
-    private function sendNewUserEmail(string $name, string $email, string $password): void {
+    private function normaliseName(string $name): string {
+        $name = trim((string) preg_replace('/\s+/u', ' ', $name));
+
+        if ($name === '') {
+            return '';
+        }
+
+        if (function_exists('mb_convert_case')) {
+            $name = mb_convert_case($name, MB_CASE_TITLE, 'UTF-8');
+
+            return (string) preg_replace_callback(
+                            "/([-\x{2019}'])(\p{L})/u",
+                            static fn($match) => $match[1] . mb_strtoupper($match[2], 'UTF-8'),
+                            $name
+            );
+        }
+
+        return ucwords(strtolower($name), " \t\r\n\f\v-'");
+    }
+
+    public function sendNewUserEmail(string $name, string $email, string $password): void {
         $app = Factory::getApplication();
         $mailer = new MailTemplate('plg_user_joomla.mail', $app->getLanguage()->getTag());
         $mailer->addTemplateData([
-                    'name' => $name,
-                    'sitename' => $app->get('sitename'),
-                    'url' => Uri::root(),
-                    'username' => $email,
-                    'password' => $password,
-                    'email' => $email,
+            'name' => $name,
+            'sitename' => $app->get('sitename'),
+            'url' => Uri::root(),
+            'username' => $email,
+            'password' => $password,
+            'email' => $email,
         ]);
         $mailer->addUnsafeTags(['username', 'password', 'name', 'email']);
         $mailer->addRecipient($email, $name);
@@ -205,9 +240,9 @@ class PersonHelper
             $sent = $mailer->send();
         } catch (\Throwable $e) {
             throw new \RuntimeException(
-                    'Unable to send the Joomla new-user email to ' . $email . ': ' . $e->getMessage(),
-                    0,
-                    $e
+                            'Unable to send the Joomla new-user email to ' . $email . ': ' . $e->getMessage(),
+                            0,
+                            $e
             );
         }
 
