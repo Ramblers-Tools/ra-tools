@@ -63,7 +63,7 @@ class PersonHelper {
         $sql = 'SELECT u.id, u.name, u.email, p.home_group, p.preferred_name ';
         $sql .= 'FROM #__users AS u ';
         $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
-        $sql .= 'WHERE u.email = ' . $this->db->quote(strtolower($email)) . ') ';
+        $sql .= 'WHERE u.email = ' . $this->db->quote(strtolower($email)) . ' ';
         return $this->toolsHelper->getItem($sql);
     }
 
