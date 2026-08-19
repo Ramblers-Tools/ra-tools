@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" version="3.0" client="site" method="upgrade">
+    <name>RA Facebook</name>
+    <author>Ramblers Tools</author>
+    <creationDate>2026</creationDate>
+    <copyright>2024-2026 Ramblers Tools</copyright>
+    <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
+    <authorEmail>support@ramblers.tools</authorEmail>
+    <authorUrl>https://ramblers.tools</authorUrl>
+    <version>1.0.1</version>
+    <description>Displays a link to a Facebook site</description>
+    <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
+    <updateservers>
+        <server type="extension" name="RA Tools Update Server">https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/updates/pkg_ra_tools.xml</server>
+    </updateservers>
+    <namespace>Ramblers\Module\Ra_facebook</namespace>
+    <files>
+        <filename module="mod_ra_facebook">mod_ra_facebook.php</filename>
+        <folder>tmpl</folder>
+    </files>
+    <config>
+       <fields name="params">
+            <fieldset name="basic">
+                <field name="note1"
+                    type="note"
+                    label="For information about this module please visit: https://ramblers.tools and read the Guide to Ramblers Tools"
+                />
+                <field name="note2" type="note" label="This is used by the Setup Wizard, or from the administrator back end"/>
+                 <field name="url" 
+                     type="text" 
+                     label="Website address">
+                </field>
+                <field name="caption" 
+                    type="text" 
+                    label="Caption"
+                    default="Join us on Facebook!">
+                </field>                       
+
+            </fieldset>
+            <fieldset name="advanced">
+                <field name="layout"
+                    type="modulelayout"
+                    label="JFIELD_ALT_LAYOUT_LABEL"
+                    description="JFIELD_ALT_MODULE_LAYOUT_DESC"
+                />
+                <field name="moduleclass_sfx"
+                    type="text"
+                    label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL"
+                    description="COM_MODULES_FIELD_MODULECLASS_SFX_DESC"
+                />
+            </fieldset>
+        </fields>
+    </config>
+</extension>

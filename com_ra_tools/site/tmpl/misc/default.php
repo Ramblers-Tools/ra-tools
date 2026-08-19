@@ -35,8 +35,8 @@ if (file_exists($table)) {
 }
 //JLoader::register('ToolsHelper', $helper);
 
-$objHelper = new ToolsHelper;
-echo $objHelper->showQuery('Select * from #__mywalks');
+//$objHelper = new ToolsHelper;
+echo $this->toolsHelper->showQuery('Select * from #__mywalks');
 
 //$objTable = new Table;
 
@@ -45,7 +45,7 @@ $sql = "SELECT code, name,website,co_url ";
 $sql .= "FROM #__ra_areas ";
 $sql .= "ORDER BY code LIMIT 20";
 echo $sql;
-$rows = $objHelper->getRows($sql);
+$rows = $this->toolsHelper->getRows($sql);
 //$objTable = new Table();
 //$objTable->add_header('Code,Name,website,CO site');
 foreach ($rows as $row) {

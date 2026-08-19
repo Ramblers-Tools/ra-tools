@@ -3,6 +3,30 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.0.11</version>
+        <date>2026-08-19</date>
+        <note>
+            <item><![CDATA[Add mod_ra_facebook module for linking to a Facebook page]]></item>
+            <item><![CDATA[Standard Articles import now uses Joomla's article model and workflow association instead of a raw table save]]></item>
+            <item><![CDATA[Walk radius is now read from component configuration instead of menu item parameters]]></item>
+            <item><![CDATA[Add PersonHelper for creating/updating Joomla users, profiles and contacts]]></item>
+            <item><![CDATA[Add logo height/width/alignment options to Component Configuration]]></item>
+            <item><![CDATA[Add RA Setup block to the dashboard]]></item>
+            <item><![CDATA[Fix error in Area List view]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
+        <version>4.0.9</version>
+        <date>2026-07-21</date>
+        <note>
+            <item><![CDATA[Fix RA SSO dashboard block after com_ra_sso installer rebuild changed its component ID]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.0.8</version>
         <date>2026-07-21</date>
         <note>
