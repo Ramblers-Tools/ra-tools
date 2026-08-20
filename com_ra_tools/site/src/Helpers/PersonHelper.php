@@ -24,7 +24,6 @@ use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 class PersonHelper {
 
-    protected $app;
     protected $db;
     protected $toolsHelper;
     protected $userFactory;
@@ -59,12 +58,28 @@ class PersonHelper {
         return true;
     }
 
-    public function getPerson(string $email): array {
+    public function getPerson(string $email): ?object {
+        $email = strtolower(trim($email));
         $sql = 'SELECT u.id, u.name, u.email, p.home_group, p.preferred_name ';
         $sql .= 'FROM #__users AS u ';
         $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
-        $sql .= 'WHERE u.email = ' . $this->db->quote(strtolower($email)) . ') ';
-        return $this->toolsHelper->getItem($sql);
+        $sql .= 'WHERE LOWER(u.email) = ' . $this->db->quote($email) . ' ';
+        $sql .= 'LIMIT 2';
+
+        $person = $this->toolsHelper->getItem($sql);
+
+        if ($person === false) {
+            throw new \RuntimeException('Unable to find person by email: ' . $this->toolsHelper->error);
+        }
+
+        if ($this->toolsHelper->rows > 1) {
+            throw new \RuntimeException(
+                    'Unable to return one person because email ' . $email
+                    . ' is linked to more than one profile.'
+            );
+        }
+
+        return $person;
     }
 
     public function saveContact(int $userId, array $person, int $categoryId): void {
@@ -101,19 +116,29 @@ class PersonHelper {
 
     public function saveProfile(int $userId, string $name, string $homeGroup): void {
         $name = $this->normaliseName($name);
-        $db = Factory::getContainer()->get(DatabaseInterface::class);
-        $exists = (int) $this->toolsHelper->getValue('SELECT COUNT(*) FROM #__ra_profiles WHERE id = ' . $userId) > 0;
+        $homeGroup = strtoupper(trim($homeGroup));
+        $db = $this->db;
+        $profileCount = (int) $this->toolsHelper->getValue(
+                        'SELECT COUNT(*) FROM #__ra_profiles WHERE id = ' . $userId
+        );
         $now = Factory::getDate()->toSql();
         $actorId = (int) Factory::getApplication()->getIdentity()->id;
 
-        if ($exists) {
+        if ($profileCount > 1) {
+            throw new \RuntimeException(
+                    'Unable to save a profile by Joomla user ID because user ' . $userId
+                    . ' is linked to more than one profile.'
+            );
+        }
+
+        if ($profileCount === 1) {
             $query = $db->getQuery(true)
                     ->update($db->quoteName('#__ra_profiles'))
                     ->set($db->quoteName('home_group') . ' = ' . $db->quote($homeGroup))
                     ->set($db->quoteName('preferred_name') . ' = ' . $db->quote($name))
                     ->set($db->quoteName('state') . ' = 1')
-                    ->set($db->quoteName('created') . ' = ' . $db->quote($now))
-                    ->set($db->quoteName('created_by') . ' = ' . $actorId)
+                    ->set($db->quoteName('modified') . ' = ' . $db->quote($now))
+                    ->set($db->quoteName('modified_by') . ' = ' . $actorId)
                     ->where($db->quoteName('id') . ' = ' . $userId);
             $db->setQuery($query)->execute();
 

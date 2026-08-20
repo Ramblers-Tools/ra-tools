@@ -2,13 +2,13 @@
 <extension type="component" method="upgrade">
     <name>RA Tools</name>
     <element>com_ra_tools</element>
-    <creationDate>2024</creationDate>
+    <creationDate>17/08/26</creationDate>
     <copyright>2024-2026 Ramblers Tools</copyright>
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <author>Ramblers Tools</author>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>4.0.11</version>
+    <version>4.0.12</version>
     <description>Admin tools and member utilities for Ramblers groups</description>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
     <updateservers>
@@ -16,7 +16,7 @@
     </updateservers>
     <namespace path="src">Ramblers\Component\Ra_tools</namespace>
     
-    <scriptfile>script.php</scriptfile>
+    <!-- scriptfile>script.php</scriptfile -->
     
     <install> <!-- Runs on install -->
         <sql>

@@ -9,6 +9,8 @@
  * 20/07/26 add RA SSO block
  * 20/07/26 add RA Delivery block, move List Email exceptions out of System Tools
  * 17/08/26 CB add RA Setup block
+ * 18/08/26 CB add Setup / Reports; sub_systems to Products
+ * 19/08/26 CB RA Develop - change reference to ProductUsage
  */
 // No direct access
 \defined('_JEXEC') or die;
@@ -212,6 +214,7 @@ if (ComponentHelper::isEnabled('com_ra_setup', true)) {
 
     $setupItems = [
         ['label' => 'Wizard', 'url' => 'index.php?option=com_ra_setup&view=wizard'],
+        ['label' => 'Reports', 'url' => 'index.php?option=com_ra_setup&view=reports'],
     ];
 
 //  if ($setupCanDo->get('core.admin')) {
@@ -314,9 +317,10 @@ if (ComponentHelper::isEnabled('com_ra_develop', true)) {
     $developItems = [
         ['label' => 'Summary of extensions', 'url' => 'index.php?option=com_ra_develop&task=extensions.listExtensions'],
         ['label' => 'Builds', 'url' => 'index.php?option=com_ra_develop&view=builds'],
-        ['label' => 'Sub Systems', 'url' => 'index.php?option=com_ra_develop&view=subsystems'],
+        ['label' => 'Products', 'url' => 'index.php?option=com_ra_develop&view=products'],
         ['label' => 'Extension Types', 'url' => 'index.php?option=com_ra_develop&view=extension_types'],
         ['label' => 'Extensions', 'url' => 'index.php?option=com_ra_develop&view=extensions'],
+        ['label' => 'Product by Organisations', 'url' => 'index.php?option=com_ra_develop&view=productusage'],
     ];
 
     if ($developCanDo->get('core.admin')) {

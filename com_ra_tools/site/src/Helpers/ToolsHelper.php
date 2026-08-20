@@ -422,19 +422,26 @@ class ToolsHelper {
     /**
      * Gets the edit permission for an user
      *
+     * @param   string  $component  The component asset name
+     *
      * @param   mixed  $item  The item
      *
      * @return  bool
      */
     public static function canUserEdit($component, $item) {
-        $permission = false;
-        $user = Factory::getApplication()->getSession()->get('user');
-        var_dump($user);
-        if ($user->authorise('core.edit', $component) || (isset($item->created_by) && $user->$component)) {
-            $permission = true;
+        $user = Factory::getApplication()->getIdentity();
+
+        if (empty($item->id)) {
+            return $user->authorise('core.create', $component);
         }
-        die;
-        return $permission;
+
+        if ($user->authorise('core.edit', $component)) {
+            return true;
+        }
+
+        return isset($item->created_by)
+            && (int) $item->created_by === (int) $user->id
+            && $user->authorise('core.edit.own', $component);
     }
 
     static function convert_to_ASCII($name) {
