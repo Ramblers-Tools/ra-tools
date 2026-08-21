@@ -172,7 +172,7 @@ class ToolsTable {
                 }
                 echo ">";
                 if ($this->value[$i] == "") {
-                    echo "&nbsp";
+                    echo "&nbsp;</TD>";
                 } else {
                     echo $this->value[$i] . "</TD>";
                 }

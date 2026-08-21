@@ -37,6 +37,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Object\CMSObject;
+use Joomla\CMS\Router\Route;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
@@ -2083,7 +2084,11 @@ class ToolsHelper {
             echo $missing;
         } else {
             $this->toolsTable->add_header("Date,Group,Event,Type,Max places,Notify,Count bookings,Total places,Emails");
-            echo '<h2>Future Events organised by you</h2>';
+            if ($future == 'Y') {
+                echo '<h2>Future Events organised by you</h2>';
+            } else {
+                echo '<h2>Past Events organised by you</h2>';
+            }
             $sql = 'SELECT COUNT(id) as num ';
             $sql .= 'FROM #__ra_emails AS e ';
             $sql .= 'WHERE sub_system="RA Events" ';
@@ -2093,7 +2098,8 @@ class ToolsHelper {
                 $count = $this->getValue($sql . $row->id);
                 $this->toolsTable->add_item($row->event_date);
                 $this->toolsTable->add_item($row->group_code);
-                $this->toolsTable->add_item($row->title);
+                $event_link = Route::_('index.php?option=com_ra_events&view=event&id=' . $row->id);
+                $this->toolsTable->add_item('<a href="' . $event_link . '">' . $row->title . '</a>');
                 $this->toolsTable->add_item($row->description);
                 $this->toolsTable->add_item($row->max_bookings);
                 if ($row->notify_organiser == 1) {
