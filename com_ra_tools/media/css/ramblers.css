@@ -1104,3 +1104,82 @@ ul.userkunenacatorgories li{
 .jsn-daterangepicker  {
     width: calc(50% - 44px)
 }
+
+/* Icon action buttons - event bookings page */
+.ra-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin: 2px;
+    border-radius: 6px;
+    border: 1px solid #bbb;
+    background: #fff;
+    text-decoration: none;
+    font-size: 16px;
+}
+.ra-icon-btn:hover {
+    background: #f2f2f2;
+    text-decoration: none;
+}
+.ra-icon-btn.ra-dark {
+    color: #222;
+}
+.ra-icon-btn.ra-orange {
+    color: #d68a1d;
+}
+.ra-icon-btn.ra-green {
+    color: #2f8f4e;
+}
+.ra-icon-btn.ra-red {
+    color: #c0392b;
+}
+
+/* Stat tiles - event bookings page */
+.ra-stat-tiles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 1em;
+}
+.ra-stat-tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 10px 16px;
+    min-width: 170px;
+}
+.ra-stat-tile .ra-stat-icon {
+    font-size: 22px;
+}
+.ra-stat-tile .ra-stat-title {
+    font-weight: bold;
+    display: block;
+}
+.ra-stat-tile.ra-orange {
+    border-color: #d68a1d;
+}
+.ra-stat-tile.ra-orange .ra-stat-icon {
+    color: #d68a1d;
+}
+.ra-stat-tile.ra-green {
+    border-color: #2f8f4e;
+}
+.ra-stat-tile.ra-green .ra-stat-icon {
+    color: #2f8f4e;
+}
+.ra-stat-tile.ra-teal {
+    border-color: #147a7a;
+}
+.ra-stat-tile.ra-teal .ra-stat-icon {
+    color: #147a7a;
+}
+.ra-stat-tile.ra-grey {
+    border-color: #999;
+}
+.ra-stat-tile.ra-grey .ra-stat-icon {
+    color: #666;
+}
