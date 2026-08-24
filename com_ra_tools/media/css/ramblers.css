@@ -1135,6 +1135,19 @@ ul.userkunenacatorgories li{
 .ra-icon-btn.ra-red {
     color: #c0392b;
 }
+.ra-icon-btn.ra-strike {
+    position: relative;
+}
+.ra-icon-btn.ra-strike::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 50%;
+    height: 2px;
+    background: currentColor;
+    transform: rotate(-45deg);
+}
 
 /* Stat tiles - event bookings page */
 .ra-stat-tiles {
