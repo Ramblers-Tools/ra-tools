@@ -10,6 +10,7 @@
  * 21/01/26 CB 3.5.1 correct ra_emails addressee_email
  * 17/06/26 CB api_sites: sub_system -> varchar(12)
  * 19/07/26 CB api_sites: sub_system -> varchar(20) (12 truncated existing data on upgrade)
+ * 30/08/26 CB consolidate installed component version lookup
  */
 
 \defined('_JEXEC') or die;
@@ -21,11 +22,13 @@ use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Installer\InstallerAdapter;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
-use \Joomla\CMS\Object\CMSObject;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
+use Joomla\Database\ParameterType;
 
 class Com_Ra_toolsInstallerScript {
+
+    private const VERSION_REQUIRING_NO_PROCESSING = '3.7.4';
 
     private $component;
     private $current_version;
@@ -33,15 +36,13 @@ class Com_Ra_toolsInstallerScript {
     protected $deleteFolders = array();
     private $minimumJoomlaVersion = '4.0';
     private $minimumPHPVersion = JOOMLA_MINIMUM_PHP;
-    private $reconfigure_message;
-    private $version_required;
+    private $reconfigure_message = false;
 
     function buildButton($url, $text, $newWindow = 0, $colour = '') {
         if ($colour == '') {
             $colour = 'sunrise';
         }
         $class = 'link-button ' . $colour;
-        //       echo "colour=$colour, code=$code, class=$class<br>";
         $q = chr(34);
         $out = "<a class=" . $q . $class . $q;
         $out .= " href=" . $q . $url . $q;
@@ -202,12 +203,52 @@ class Com_Ra_toolsInstallerScript {
         return $db->execute();
     }
 
-    public function getDbVersion($component = 'com_ra_tools') {
-        $sql = 'SELECT s.version_id ';
-        $sql .= 'FROM #__extensions as e ';
-        $sql .= 'LEFT JOIN #__schemas AS s ON s.extension_id = e.extension_id ';
-        $sql .= 'WHERE e.element="' . $component . '"';
-        return $this->getValue($sql);
+    private function fail(string $message): bool {
+        Factory::getApplication()->enqueueMessage($message, 'error');
+        Log::add($message, Log::ERROR, 'jerror');
+
+        return false;
+    }
+
+    /**
+     * Return the installed manifest version for a component.
+     */
+    private function getInstalledComponentVersion(string $component = 'com_ra_tools'): ?string {
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true);
+        $extensionType = 'component';
+
+        $query->select($db->quoteName('e.manifest_cache'))
+                ->from($db->quoteName('#__extensions', 'e'))
+                ->where($db->quoteName('e.element') . ' = :component')
+                ->where($db->quoteName('e.type') . ' = :extensionType')
+                ->bind(':component', $component, ParameterType::STRING)
+                ->bind(':extensionType', $extensionType, ParameterType::STRING);
+
+        $db->setQuery($query);
+        $manifestCache = $db->loadResult();
+
+        if ($manifestCache === null) {
+            return null;
+        }
+
+        try {
+            $manifest = json_decode((string) $manifestCache, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException(
+                    'Installer could not decode version information for ' . $component . '.',
+                    0,
+                    $exception
+            );
+        }
+
+        if (!is_array($manifest)) {
+            throw new \RuntimeException('Installer found invalid version information for ' . $component . '.');
+        }
+
+        $installedVersion = $manifest['version'] ?? null;
+
+        return is_scalar($installedVersion) ? (string) $installedVersion : null;
     }
 
     private function getValue($sql) {
@@ -217,46 +258,52 @@ class Com_Ra_toolsInstallerScript {
         return $db->loadResult();
     }
 
-    public function getVersion($component = 'com_ra_tools') {
-        // This retuns the version as display by System / Manage extensions
-        $sql = 'SELECT manifest_cache ';
-        $sql .= 'FROM  #__extensions  ';
-        $sql .= 'WHERE element="' . $component . '"';
-        $data = json_decode($this->getValue($sql));
-        return $data->version;
-    }
-
     public function install($parent): bool {
-        echo '<p>Installing RA Tools (com_ra_tools) ' . '</p>';
+        $this->message('Installing RA Tools (com_ra_tools).');
         if (ComponentHelper::isEnabled('com_ra_tools', true)) {
-            $this->original_version = $this->getVersion();
-            echo '<p>com_ra_tools found, version ' . $this->original_version;
-            echo ', database version ' . $this->getDbVersion() . '</p>';
+            try {
+                $installedVersion = $this->getInstalledComponentVersion();
+            } catch (\RuntimeException $exception) {
+                return $this->fail($exception->getMessage());
+            }
+
+            $this->message('com_ra_tools found, version ' . ($installedVersion ?? 'not recorded') . '.');
         }
         return true;
     }
 
+    private function message(string $message): void {
+        Factory::getApplication()->enqueueMessage($message, 'message');
+    }
+
     public function postflight($type, $parent) {
-        echo '<p>Postflight RA Tools (com_ra_tools)</p>';
+        $this->message('Postflight RA Tools (com_ra_tools).');
 
         if ($type == 'uninstall') {
             return true;
         }
-        echo '<p>com_ra_tools is now at ' . $this->getVersion() . '</p>';
+        try {
+            $installedVersion = $this->getInstalledComponentVersion();
+        } catch (\RuntimeException $exception) {
+            return $this->fail($exception->getMessage());
+        }
+
+        $this->message('com_ra_tools is now at ' . ($installedVersion ?? 'not recorded') . '.');
 //        $this->removeFiles();
-        if ($reconfigure_message == true) {
-            echo '<p>Version was originally ' . $this->current_version . ', ';
-            echo 'Requires version >= ' . $this->version_required . '</p>';
+        if ($this->reconfigure_message == true) {
+            $this->message('Version was originally ' . $this->current_version
+                    . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
+                    . ' or later is required to skip upgrade processing.');
             $this->red('Please review and update the configuration settings for com_ra_tools.');
         }
-        echo '<b>Useful links</b><br>';
-        echo $this->buildButton('index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>';
-        echo $this->buildButton('index.php?option=com_config&view=component&component=com_ra_tools', 'Configure');
+        $this->message('<b>Useful links</b><br>'
+                . $this->buildButton('index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>'
+                . $this->buildButton('index.php?option=com_config&view=component&component=com_ra_tools', 'Configure'));
         return true;
     }
 
     public function preflight($type, $parent): bool {
-        echo '<p>Preflight RA Tools (type=' . $type . ')</p>';
+        $this->message('Preflight RA Tools (type=' . $type . ').');
         if ($type == 'uninstall') {
             return true;
         }
@@ -279,21 +326,34 @@ class Com_Ra_toolsInstallerScript {
         }
 
         if (ComponentHelper::isEnabled('com_ra_tools', true)) {
-            $this->current_version = $this->getVersion();
-            echo 'com_ra_tools already present, version=' . $this->getVersion();
-            echo ', DB version=' . $this->getDbVersion() . '<br>';
+            try {
+                $this->current_version = $this->getInstalledComponentVersion();
+            } catch (\RuntimeException $exception) {
+                return $this->fail($exception->getMessage());
+            }
+
+            if ($this->current_version === null) {
+                return $this->fail('Installer could not find readable version information for com_ra_tools.');
+            }
+
+            $this->message('com_ra_tools already present, version=' . $this->current_version . '.');
         }
         if ($type == 'install') {
             return true;
         }
-        $this->version_required = '3.7.4';
-        $reconfigure_message = false;
+        if ($this->current_version === null) {
+            return $this->fail('Installer could not find the existing com_ra_tools installation.');
+        }
+
+        $this->reconfigure_message = false;
         $this->deleteFiles[] = 'components/com_ra_tools/tmpl/emailform/default.xml';
-        if (version_compare($this->current_version, $this->version_required, 'ge')) {
-            echo 'Current version is ' . $this->current_version . ', no additional processing required</p>';
+        if (version_compare($this->current_version, self::VERSION_REQUIRING_NO_PROCESSING, 'ge')) {
+            $this->message('Current version is ' . $this->current_version
+                    . '; no additional processing required.');
         } else {
-            echo '<p>Version was originally ' . $this->current_version . ', ';
-            echo 'Requires version >= ' . $this->version_required . '</p>';
+            $this->message('Version was originally ' . $this->current_version
+                    . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
+                    . ' or later is required to skip upgrade processing.');
             if (version_compare($this->current_version, '3.5.2', 'le')) {
                 $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT; ');
                 $this->checkColumn('ra_clusters', 'website', 'A', 'VARCHAR(100) NOT NULL AFTER area_list; ');
@@ -326,12 +386,12 @@ class Com_Ra_toolsInstallerScript {
             }
             if (version_compare($this->current_version, '3.3.7', 'le')) {
                 $this->updateSites();
-                $reconfigure_message = true;
+                $this->reconfigure_message = true;
             }
 
 
             if (version_compare($this->current_version, '3.3.1', 'le')) {
-                $reconfigure_message = true;
+                $this->reconfigure_message = true;
                 $this->checkColumn('ra_api_sites', 'sub_system', 'A', 'VARCHAR(10) NOT NULL AFTER id; ');
                 $this->checkColumn('ra_emails', 'ref', 'A', 'VARCHAR(2) NOT NULL AFTER date_sent; ');
                 $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL AFTER date_sent; ');
@@ -367,13 +427,18 @@ class Com_Ra_toolsInstallerScript {
     }
 
     public function red($text) {
-        echo '<p><span style="color: #ff0000;"><strong>';
-        echo $text;
-        echo '</strong></span></p>';
+        Factory::getApplication()->enqueueMessage($text, 'warning');
     }
 
     public function uninstall($parent): bool {
-        echo '<p>Uninstalling RA Tools (com_ra_tools) version=' . $this->current_version . '<br>';
+        try {
+            $installedVersion = $this->getInstalledComponentVersion();
+        } catch (\RuntimeException $exception) {
+            Log::add($exception->getMessage(), Log::WARNING, 'jerror');
+            $installedVersion = null;
+        }
+
+        echo '<p>Uninstalling RA Tools (com_ra_tools) version=' . ($installedVersion ?? 'not recorded') . '<br>';
         return true;
     }
 

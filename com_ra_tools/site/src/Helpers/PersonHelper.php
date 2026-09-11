@@ -8,6 +8,7 @@
  * @author      Charlie Bigley <webmaster@bigley.me.uk> - https://www.developer-url.com
  *
  * 14/08/26 CB Created
+ * 07/09/26 CB improve reporting if unable to create a user
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -18,8 +19,10 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Mail\MailTemplate;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\User\UserFactoryInterface;
+use Joomla\CMS\Table\Category;
 use Joomla\Component\Contact\Administrator\Table\ContactTable;
 use Joomla\Database\DatabaseInterface;
+use Ramblers\Component\Ra_tools\Administrator\Table\ProfileTable;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 class PersonHelper {
@@ -82,16 +85,50 @@ class PersonHelper {
         return $person;
     }
 
+    public function findUserByEmail(string $email): ?object {
+        $email = strtolower(trim($email));
+
+        if ($email === '') {
+            return null;
+        }
+
+        $user = $this->toolsHelper->getItem(
+                'SELECT id, name, username, email, block FROM #__users WHERE LOWER(email) = '
+                . $this->db->quote($email) . ' LIMIT 1'
+        );
+
+        if ($user === false) {
+            throw new \RuntimeException('Unable to find user by email: ' . $this->toolsHelper->error);
+        }
+
+        return $user ?: null;
+    }
+
+    public function findUserById(int $userId): ?object {
+        if ($userId < 1) {
+            return null;
+        }
+
+        $user = $this->toolsHelper->getItem(
+                'SELECT id, name, username, email, block FROM #__users WHERE id = ' . $userId . ' LIMIT 1'
+        );
+
+        if ($user === false) {
+            throw new \RuntimeException('Unable to find user ' . $userId . ': ' . $this->toolsHelper->error);
+        }
+
+        return $user ?: null;
+    }
+
     public function saveContact(int $userId, array $person, int $categoryId): void {
         $person['full_name'] = $this->normaliseName((string) ($person['full_name'] ?? ''));
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         Factory::getApplication()->bootComponent('com_contact');
         $contactId = (int) $this->toolsHelper->getValue(
                         'SELECT c.id FROM #__contact_details AS c '
-                        . 'INNER JOIN #__categories AS cat ON cat.id = c.catid '
-                        . 'WHERE c.user_id = ' . $userId . ' AND cat.extension = "com_contact" '
-                        . 'AND LOWER(cat.title) = "committee" ORDER BY c.id LIMIT 1'
-        );
+                        . 'WHERE c.user_id = ' . $userId . ' AND c.catid = ' . $categoryId
+                        . ' ORDER BY c.id LIMIT 1'
+                );
         $contact = new ContactTable($db);
 
         if ($contactId > 0 && !$contact->load($contactId)) {
@@ -117,50 +154,177 @@ class PersonHelper {
     public function saveProfile(int $userId, string $name, string $homeGroup): void {
         $name = $this->normaliseName($name);
         $homeGroup = strtoupper(trim($homeGroup));
-        $db = $this->db;
-        $profileCount = (int) $this->toolsHelper->getValue(
-                        'SELECT COUNT(*) FROM #__ra_profiles WHERE id = ' . $userId
-        );
-        $now = Factory::getDate()->toSql();
-        $actorId = (int) Factory::getApplication()->getIdentity()->id;
+        $this->saveProfileData($userId, [
+            'preferred_name' => $name,
+            'home_group' => $homeGroup,
+            'state' => 1,
+        ]);
+    }
 
-        if ($profileCount > 1) {
+    public function profileExistsForUser(int $userId): bool {
+        return (int) $this->toolsHelper->getValue(
+                        'SELECT COUNT(*) FROM #__ra_profiles WHERE id = ' . $userId
+                ) > 0;
+    }
+
+    public function saveProfileData(int $userId, array $data): void {
+        if ($userId < 1) {
+            throw new \InvalidArgumentException('A valid Joomla user ID is required to save a profile.');
+        }
+
+        $query = $this->db->getQuery(true)
+                ->select($this->db->quoteName('member_id'))
+                ->from($this->db->quoteName('#__ra_profiles'))
+                ->where($this->db->quoteName('id') . ' = ' . $userId)
+                ->order($this->db->quoteName('member_id') . ' ASC');
+        $this->db->setQuery($query);
+        $profileIds = $this->db->loadColumn();
+
+        if (count($profileIds) > 1) {
             throw new \RuntimeException(
                     'Unable to save a profile by Joomla user ID because user ' . $userId
                     . ' is linked to more than one profile.'
             );
         }
 
-        if ($profileCount === 1) {
-            $query = $db->getQuery(true)
-                    ->update($db->quoteName('#__ra_profiles'))
-                    ->set($db->quoteName('home_group') . ' = ' . $db->quote($homeGroup))
-                    ->set($db->quoteName('preferred_name') . ' = ' . $db->quote($name))
-                    ->set($db->quoteName('state') . ' = 1')
-                    ->set($db->quoteName('modified') . ' = ' . $db->quote($now))
-                    ->set($db->quoteName('modified_by') . ' = ' . $actorId)
-                    ->where($db->quoteName('id') . ' = ' . $userId);
-            $db->setQuery($query)->execute();
+        $profile = new ProfileTable($this->db);
 
-            return;
+        if (!empty($profileIds) && !$profile->load((int) $profileIds[0])) {
+            throw new \RuntimeException('Unable to load the existing profile for user ' . $userId . '.');
         }
 
-        $columns = $db->getTableColumns('#__ra_profiles', false);
-        $record = (object) [
+        if (!$profile->bind([
                     'id' => $userId,
-                    'home_group' => $homeGroup,
-                    'preferred_name' => $name,
-                    'state' => 1,
-                    'created' => $now,
-                    'created_by' => $actorId,
-        ];
+                ] + $data) || !$profile->check() || !$profile->store()) {
+            throw new \RuntimeException(
+                    'Unable to save the profile for user ' . $userId . ': ' . $profile->getError()
+            );
+        }
+    }
 
-        if (isset($columns['member_id']) && stripos((string) ($columns['member_id']->Extra ?? ''), 'auto_increment') === false) {
-            $nextId = (int) $this->toolsHelper->getValue('SELECT COALESCE(MAX(member_id), 0) + 1 FROM #__ra_profiles');
-            $record->member_id = max(1, $nextId);
+    public function contactExists(int $userId, int $categoryId): bool {
+        return (int) $this->toolsHelper->getValue(
+                        'SELECT COUNT(*) FROM #__contact_details WHERE user_id = ' . $userId
+                        . ' AND catid = ' . $categoryId
+                ) > 0;
+    }
+
+    public function removeUserFromGroup(int $userId, string $title): bool {
+        $groupId = (int) $this->toolsHelper->getValue(
+                        'SELECT id FROM #__usergroups WHERE title = ' . $this->db->quote($title) . ' LIMIT 1'
+                );
+
+        if ($groupId < 1) {
+            return false;
         }
 
-        $db->insertObject('#__ra_profiles', $record);
+        $query = $this->db->getQuery(true)
+                ->delete($this->db->quoteName('#__user_usergroup_map'))
+                ->where($this->db->quoteName('user_id') . ' = ' . $userId)
+                ->where($this->db->quoteName('group_id') . ' = ' . $groupId);
+        $this->db->setQuery($query)->execute();
+
+        return true;
+    }
+
+    public function syncUserGroup(int $userId, string $title, bool $enabled): ?string {
+        $groupId = (int) $this->toolsHelper->getValue(
+                        'SELECT id FROM #__usergroups WHERE title = ' . $this->db->quote($title) . ' LIMIT 1'
+                );
+
+        if ($groupId < 1) {
+            return null;
+        }
+
+        $exists = (int) $this->toolsHelper->getValue(
+                        'SELECT COUNT(*) FROM #__user_usergroup_map WHERE user_id = ' . $userId
+                        . ' AND group_id = ' . $groupId
+                ) > 0;
+
+        if ($enabled) {
+            if ($exists) {
+                return 'unchanged';
+            }
+
+            return $this->addUserToGroup($userId, $title) ? 'added' : false;
+        }
+
+        if (!$exists) {
+            return 'unchanged';
+        }
+
+        return $this->removeUserFromGroup($userId, $title) ? 'removed' : false;
+    }
+
+    public function isEnabledSuperUser(int $userId): bool {
+        return (int) $this->toolsHelper->getValue(
+                        'SELECT COUNT(*) FROM #__users AS u '
+                        . 'INNER JOIN #__user_usergroup_map AS m ON m.user_id = u.id '
+                        . 'INNER JOIN #__usergroups AS g ON g.id = m.group_id '
+                        . 'WHERE u.id = ' . $userId . ' AND u.block = 0 '
+                        . 'AND g.title = ' . $this->db->quote('Super Users')
+                ) > 0;
+    }
+
+    public function unpublishContacts(array $userIds, int $categoryId): array {
+        $userIds = array_values(array_filter(array_map('intval', $userIds), static fn($id) => $id > 0));
+
+        if ($userIds === []) {
+            return [];
+        }
+
+        $query = $this->db->getQuery(true)
+                ->select($this->db->quoteName('name'))
+                ->from($this->db->quoteName('#__contact_details'))
+                ->where($this->db->quoteName('catid') . ' = ' . $categoryId)
+                ->where($this->db->quoteName('published') . ' = 1')
+                ->where($this->db->quoteName('user_id') . ' NOT IN (' . implode(',', $userIds) . ')');
+        $names = $this->db->setQuery($query)->loadColumn();
+
+        if ($names === []) {
+            return [];
+        }
+
+        $query = $this->db->getQuery(true)
+                ->update($this->db->quoteName('#__contact_details'))
+                ->set($this->db->quoteName('published') . ' = 0')
+                ->where($this->db->quoteName('catid') . ' = ' . $categoryId)
+                ->where($this->db->quoteName('published') . ' = 1')
+                ->where($this->db->quoteName('user_id') . ' NOT IN (' . implode(',', $userIds) . ')');
+        $this->db->setQuery($query)->execute();
+
+        return array_map('strval', $names);
+    }
+
+    public function getOrCreateContactCategory(string $extension, string $title): int {
+        $categoryId = (int) $this->toolsHelper->getValue(
+                        'SELECT id FROM #__categories WHERE extension = ' . $this->db->quote($extension)
+                        . ' AND LOWER(title) = ' . $this->db->quote(strtolower($title))
+                        . ' ORDER BY id LIMIT 1'
+                );
+
+        if ($categoryId > 0) {
+            return $categoryId;
+        }
+
+        $category = new Category($this->db);
+        $category->setLocation(1, 'last-child');
+
+        if (!$category->bind([
+                    'parent_id' => 1,
+                    'extension' => $extension,
+                    'title' => $title,
+                    'alias' => strtolower(trim((string) preg_replace('/[^a-z0-9]+/i', '-', $title))),
+                    'published' => 1,
+                    'access' => 1,
+                    'language' => '*',
+                    'params' => '{}',
+                    'metadata' => '{}',
+                ]) || !$category->check() || !$category->store()) {
+            throw new \RuntimeException('Unable to create the ' . $title . ' contact category: ' . $category->getError());
+        }
+
+        return (int) $category->id;
     }
 
     public function saveUser(string $name, string $email): int {
@@ -174,6 +338,7 @@ class PersonHelper {
         if ($userId > 0) {
             $user = $this->userFactory->loadUserById($userId);
             $data = ['name' => $name];
+            $action = 'update';
         } else {
             $usernameOwner = (int) $this->toolsHelper->getValue(
                             'SELECT id FROM #__users WHERE LOWER(username) = ' . $this->db->quote($email) . ' LIMIT 1'
@@ -198,22 +363,35 @@ class PersonHelper {
                 'params' => [],
                 'requireReset' => 1,
             ];
+            $action = 'create';
         }
 
-        try {
-            if (!$user->bind($data)) {
-                throw new \RuntimeException('Joomla rejected the user data.');
-            }
+        $saveRequired = $isNew || strcasecmp(trim((string) $user->name), $name) !== 0;
 
-            if (!$user->save()) {
-                throw new \RuntimeException('Joomla was unable to save the user.');
+        if ($saveRequired) {
+            try {
+                if (!$user->bind($data)) {
+                    $error = trim((string) $user->getError());
+                    throw new \RuntimeException(
+                            'Joomla rejected the user data.'
+                            . ($error !== '' ? ' Details: ' . $error : '')
+                    );
+                }
+
+                if (!$user->save()) {
+                    $error = trim((string) $user->getError());
+                    throw new \RuntimeException(
+                            'Joomla was unable to ' . $action . ' the user.'
+                            . ($error !== '' ? ' Details: ' . $error : '')
+                    );
+                }
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                                'Unable to ' . $action . ' the Joomla user for ' . $name . ': ' . $e->getMessage(),
+                                0,
+                                $e
+                );
             }
-        } catch (\Throwable $e) {
-            throw new \RuntimeException(
-                            'Unable to save the Joomla user for ' . $name . ': ' . $e->getMessage(),
-                            0,
-                            $e
-            );
         }
 
         if ((int) $user->id < 1) {

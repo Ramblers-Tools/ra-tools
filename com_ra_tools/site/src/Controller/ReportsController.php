@@ -580,6 +580,9 @@ class ReportsController extends FormController {
         $sql .= "WHERE log_date >='" . date_format($target, "Y/m/d H:i:s") . "' ";
         $sql .= "AND log_date <'" . date_format($target, "Y/m/d 23:59:59") . "' ";
         $sql .= "ORDER BY log_date DESC, record_type ";
+        if (JDEBUG) {
+            echo $sql . "<br>";
+        }
         if ($this->toolsHelper->showSql($sql)) {
             echo "<h5>End of logfile records for " . date_format($target, "D d M") . "</h5>";
         } else {

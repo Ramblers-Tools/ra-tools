@@ -1,15 +1,12 @@
 <?php
 
 /**
- * @version     3.7.4
- * @package     com_ra_tools
- *
- * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 13/10/25 CB optional start parameter for showTable,  resetHitCounters
  * 10/05/26 CB blockedUsers from mailman
  * 20/05/26 CB resetUsers from mailman
  * 27/06/26 CB change sort order in showLogfile
+ * 03/09/26 CB change to showMenus
+ * 06/09/26 CB use htmlspecialchars for message output
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -812,7 +809,7 @@ class ReportsController extends FormController {
 //echo $option;
         $sql = "SELECT date_format(log_date, '%a %e-%m-%y') as Date, ";
         $sql .= "date_format(log_date, '%H:%i:%s.%u') as Time, ";
-        $sql .= "sub_system,record_type, ";
+        $sql .= "sub_system, record_type, ";
         $sql .= "ref, ";
         $sql .= "message ";
         $sql .= "FROM #__ra_logfile ";
@@ -831,7 +828,7 @@ class ReportsController extends FormController {
                 $objTable->add_item($row->sub_system);
                 $objTable->add_item($row->record_type);
                 $objTable->add_item($row->ref);
-                $objTable->add_item($row->message);
+                $objTable->add_item(htmlspecialchars($row->message));
                 $objTable->generate_line();
             }
             $objTable->generate_table();
@@ -904,7 +901,7 @@ class ReportsController extends FormController {
         $this->toolsHelper->showDayMatrix($field, $table, $yyyy, $mm, $criteria, $title, $link, $back);
     }
 
-    public function showMenus() {
+public function showMenus() {
         ToolBarHelper::title($this->prefix . 'Menu items');
         echo $this->breadcrumbs . '<br>';
 //      Show link that allows page to be printed
@@ -912,16 +909,22 @@ class ReportsController extends FormController {
         echo $this->toolsHelper->showPrint($target) . '<br>' . PHP_EOL;
         $sql = 'SELECT  p.title AS "Parent", m.link, m.title, m.published, m.link, ';
         $sql .= "CASE WHEN p.menutype='main' THEN 'Admin' WHEN p.menutype='mainmenu' THEN 'Site' ELSE '' END AS 'Type', ";
-        $sql .= 'm.id, m.parent_id ';
+        $sql .= 'm.note, m.id, m.parent_id ';
         $sql .= 'FROM `#__menu` AS m ';
         $sql .= 'INNER JOIN `#__menu` AS p ON p.id = m.parent_id ';
         $sql .= "WHERE m.link like 'index.php?option=com_ra%' ";
-        $sql .= 'ORDER BY m.link, m.menutype, p.title';
+        $sql .= 'ORDER BY m.menutype, m.link, p.title, m.title';
 
         $rows = $this->toolsHelper->getRows($sql);
         $objTable = new ToolsTable();
-        $objTable->add_header('Component,Location, Parent,Title,Link,Published,id');
+$objTable->add_header('Location,Component,Parent,Title,Link,Note,Published,id');
         foreach ($rows as $row) {
+            if ($row->Type == '') {
+                $objTable->add_item('Sidebar');
+            } else {
+                $objTable->add_item($row->Type);
+            }
+
             $component = substr($row->link, 17);
             $pointer = strpos($component, '&');
             if ($pointer == 0) {
@@ -946,15 +949,10 @@ class ReportsController extends FormController {
                 $objTable->add_item($component);
             }
 
-            if ($row->Type == '') {
-                $objTable->add_item('Sidebar');
-            } else {
-                $objTable->add_item($row->Type);
-            }
-
             $objTable->add_item($row->Parent);
             $objTable->add_item($row->title);
             $objTable->add_item($view);
+            $objTable->add_item($row->note);
             if ($row->published == '1') {
                 $icon = 'publish';    // tick
             } else {
@@ -965,15 +963,6 @@ class ReportsController extends FormController {
             $objTable->generate_line();
         }
         $objTable->generate_table();
-//       echo"$sql <br>";
-//        $sql = 'SELECT  p.title AS "Parent", m.link, m.title, m.published, m.link, ';
-//        $sql .= "CASE WHEN p.menutype='main' THEN 'Admin' WHEN p.menutype='mainmenu' THEN 'Site' ELSE '' END AS 'Type', ";
-//        $sql .= 'm.id, m.parent_id ';
-//        $sql .= 'FROM `#__menu` AS m ';
-//        $sql .= 'INNER JOIN `#__menu` AS p ON p.id = m.parent_id ';
-//        $sql .= "WHERE m.title = 'Dashboard' ";
-//        $sql .= 'ORDER BY m.link, m.menutype, p.title';
-//        $this->toolsHelper->showQuery($sql);
 ////////////////////////////////////////////////////////////////////////////////
         $sql = 'SELECT m.id, p.title AS "Parent", m.link, m.title, m.published, m.link, m.parent_id ';
         $sql .= 'FROM `#__menu` AS m ';
@@ -993,6 +982,7 @@ class ReportsController extends FormController {
         $target = "administrator/index.php?option=com_ra_tools&view=reports";
         echo $this->toolsHelper->backButton($target);
     }
+
 
     public function showHitCounters() {
         if (!$this->toolsHelper->isSuperuser()) {

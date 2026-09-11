@@ -16,7 +16,7 @@
     </updateservers>
     <namespace path="src">Ramblers\Component\Ra_tools</namespace>
     
-    <!-- scriptfile>script.php</scriptfile -->
+    <scriptfile>script.php</scriptfile>
     
     <install> <!-- Runs on install -->
         <sql>

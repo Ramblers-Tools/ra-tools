@@ -14,6 +14,7 @@
  * 29/09/24 CB replace JPATH_SITE by JPATH_ROOT
  * 22/12/24 CB specify folder as a recursive folder
  * 25/10/25 CB allow pdf file (should do a redirect)
+ * 27/08/26 CB correct objHelper to toolsHelper
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -70,8 +71,7 @@ if ($error == '') {
     } elseif ($file_extension == 'txt') {
         echo file_get_contents($target) . '<br>';
     } elseif ($file_extension == 'pdf') {
-        //echo $this->objHelper->buildLink('images/' . $folder . '/' . $file, 'Show file', true, 'link-button button-p0186');
-        echo $this->objHelper->buildLink('images/' . $folder . '/' . $file, 'Show file', true) . '<br>';
+        echo ToolsHelper::buildLink('images/' . $folder . '/' . $file, 'Show file', true) . '<br>';
     } else {
         $data_file = new SplFileObject($target);
 
@@ -88,7 +88,7 @@ if ($error == '') {
     }
 
     if ($download == 'Y') {
-        echo $this->objHelper->buildLink($folder . '/' . $file, 'Download', False, 'link-button button-p0186');
+        echo $this->toolsHelper->buildLink($folder . '/' . $file, 'Download', False, 'link-button button-p0186');
     }
     echo '<br>';
 } else {

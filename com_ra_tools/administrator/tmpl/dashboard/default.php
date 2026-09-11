@@ -11,6 +11,7 @@
  * 17/08/26 CB add RA Setup block
  * 18/08/26 CB add Setup / Reports; sub_systems to Products
  * 19/08/26 CB RA Develop - change reference to ProductUsage
+ * 24/08/26 CB RA members: invoke dataload from com_ra_members
  */
 // No direct access
 \defined('_JEXEC') or die;
@@ -108,7 +109,7 @@ if (ComponentHelper::isEnabled('com_ra_members', true)) {
 
     if ($membersCanDo->get('core.create')) {
 //        $membersItems[] = ['label' => 'Recipients', 'url' => 'index.php?option=com_ra_mailman&view=recipients'];
-        $membersItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_mailman&view=dataload'];
+        $membersItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_members&view=dataload'];
         $membersItems[] = ['label' => 'Import Reports', 'url' => 'index.php?option=com_ra_mailman&view=import_reports'];
         $membersItems[] = ['label' => 'Membership Reports', 'url' => 'index.php?option=com_ra_members&view=reports'];
         // $membersItems[] = ['label' => 'Process Renewals', 'url' => 'index.php?option=com_ra_mailman&task=system.checkRenewals'];

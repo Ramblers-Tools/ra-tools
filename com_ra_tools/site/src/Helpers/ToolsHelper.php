@@ -821,6 +821,7 @@ class ToolsHelper {
         $sql .= ',' . $this->db->quote($record_type);
         $sql .= ',' . $this->db->quote(substr($ref, 0, 10));
         $sql .= ',' . $this->db->quote($message) . ')';
+        echo "Helper::createLog: $sql<br>";
         $this->executeCommand($sql);
         /*
           $db = $this->getDbo();

@@ -1,13 +1,9 @@
 <?php
 
 /**
- * @version     3.5.2
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2021. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
  * 19/01/26 CB Changes to implement new radius selection
  * 20/11/26 CB show radius distance as miles
+ * 30/08/28 CB correct use of menu setting
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -22,10 +18,12 @@ $group = $this->app->input->getCmd('group', '');
 if ($group == '') {
     $group = $params->get('default_group', '');
 }
-$radius = $params->get('radius', '');
+// If vaule is given as a parameter, use that, otherwise use the menu setting
+$radius = $this->app->input->getInt('radius', '');
 if ($radius == '') {
-    $radius = $this->app->input->getInt('radius', 25);
+   $radius = $this->menu_params->get('radius_miles', '25');
 }
+
 echo '<h2>Map showing ' . $radius . ' miles radius around group ' . $group . ' ' . PHP_EOL;    
 echo $this->toolsHelper->lookupGroup($group) . '</h2>' . PHP_EOL;
 $intro = $this->menu_params->get('page_intro', '');
