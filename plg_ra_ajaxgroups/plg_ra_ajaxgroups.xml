@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="ajax" method="upgrade">
+  <name>plg_ajax_plg_ra_ajaxgroups</name>
+  <author>Ramblers-Tools</author>
+  <version>1.0.0</version>
+  <description>Returns groups for selected area code</description>
+  <files>
+    <filename plugin="plg_ra_ajaxgroups">plg_ra_ajaxgroups.php</filename>
+  </files>
+</extension>
