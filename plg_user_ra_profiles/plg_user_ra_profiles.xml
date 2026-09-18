@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" group="user" method="upgrade">
-    <name>plg_user_ra_profile</name>
+    <name>plg_user_ra_profiles</name>
     <author>Ramblers Tools</author>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
     <creationDate>September 2026</creationDate>
     <copyright>Copyright 2026 Ramblers Tools</copyright>
     <license>GNU General Public License version 3 or later</license>
-    <version>1.0.0</version>
+    <version>1.0.13</version>
     <description>Creates an unpublished RA profile placeholder for newly-created Joomla users.</description>
     <scriptfile>script.php</scriptfile>
+    <namespace path="src">Ramblers\Plugin\User\Ra_profiles</namespace>
     <files>
-        <filename plugin="ra_profile">ra_profile.php</filename>
+        <filename plugin="ra_profiles">ra_profiles.php</filename>
         <filename>script.php</filename>
+        <folder plugin="ra_profiles">services</folder>
+        <folder>src</folder>
     </files>
 </extension>
-
