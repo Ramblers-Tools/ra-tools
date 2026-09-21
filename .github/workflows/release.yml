@@ -64,6 +64,11 @@ jobs:
           zip -r ../dist/packages/plg_webservices_ra_tools.zip .
           cd ..
 
+          # plg_user_ra_profiles
+          cd plg_user_ra_profiles
+          zip -r ../dist/packages/plg_user_ra_profiles.zip .
+          cd ..
+
       - name: Build package zip
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
@@ -77,6 +82,7 @@ jobs:
           cp dist/packages/mod_ra_facebook.zip          dist/pkg/packages/
           cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
           cp dist/packages/plg_finder_ra_toolswalks.zip dist/pkg/packages/
+          cp dist/packages/plg_user_ra_profiles.zip       dist/pkg/packages/
 
           cd dist/pkg
           zip -r ../pkg_ra_tools-${VERSION}.zip .

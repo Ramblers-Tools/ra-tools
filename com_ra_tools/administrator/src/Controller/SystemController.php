@@ -35,6 +35,7 @@ use Ramblers\Component\Ra_tools\Site\Helpers\SchemaHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHtml;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
+use Ramblers\Component\Ra_tools\Site\Helpers\PersonHelper;
 
 class SystemController extends FormController {
 
@@ -48,29 +49,6 @@ class SystemController extends FormController {
     protected $toolsHelper;
     protected $wrong_parent;
     protected $yes;
-
-    public function temp() {
-        $body = '<table>';
-        $body .= '<thead>';
-        $body .= '<th>Date</th><th>Reason</th><th>Sender</th><th>Recipient</th><th>User</th>';
-        $body .= '</thead>';
-        $body .= '<tbody>';
-
-        $details = '<tr>';
-        $details .= '<td>' . 'D d/m/y H:i' . '</td>';
-        $details .= '<td>' . 1 . '</td>';
-        $details .= '<td>' . 2 . '</td>';
-        $details .= '<td>' . 3 . '</td>';
-        $details .= '<td>';
-        $details .= 'No user found';
-        $details .= '</td>';
-        $details .= '</tr>';
-
-        $body .= $details;
-        $body .= '</tbody>';
-        $body .= '</table>';
-        echo $body;
-    }
 
     public function __construct() {
         parent::__construct();
@@ -158,6 +136,20 @@ class SystemController extends FormController {
         echo 'It is recommended you make the changes suggested above.';
         echo '<br>';
         echo $this->toolsHelper->backButton($this->back);
+    }
+
+        /**
+     * Reconcile Joomla users which have no RA profile by creating the
+     * standard unpublished ZZ99 placeholder. Super User only.
+     */
+    public function backfillProfiles(): void {
+        if (!$this->toolsHelper->isSuperuser()) {
+            throw new \RuntimeException('Only a Super User may backfill RA profiles.', 403);
+        }
+
+        $count = (new PersonHelper())->createMissingPlaceholderProfiles();
+        $this->app->enqueueMessage('Created ' . $count . ' RA profile placeholder(s).', 'message');
+        $this->setRedirect('index.php?option=com_ra_tools&task=reports.checkDatabase&finding=users_without_profiles');
     }
 
     private function checkComponentAccess($component) {
@@ -288,6 +280,26 @@ class SystemController extends FormController {
         echo "deleting folder $target<br>";
     }
 
+    public function deleteProfilesWithoutUsers() {
+        if (!$this->toolsHelper->isSuperuser()) {
+            Factory::getApplication()->enqueueMessage('Access only permitted for Superusers', 'warning');
+            $this->setRedirect('index.php?option=com_ra_tools&view=dashboard');
+            return;
+        }
+
+        $sql = 'DELETE p FROM #__ra_profiles AS p ';
+        $sql .= 'LEFT JOIN #__users AS u ON u.id = p.id ';
+        $sql .= 'WHERE u.id IS NULL';
+        $count = $this->toolsHelper->executeCommand($sql);
+        if ($count !== false) {
+            Factory::getApplication()->enqueueMessage('Deleted ' . number_format($count) . ' orphaned RA profile(s).', 'notice');
+        } else {
+            Factory::getApplication()->enqueueMessage('Unable to delete orphaned RA profiles.', 'error');
+        }
+
+        $this->setRedirect('index.php?option=com_ra_tools&task=reports.checkDatabase');
+    }   
+
     public function deleteView($component = 'com_ra_events', $view = 'Myevents') {
 // first character of View must be upper case
         $application[0] = 'administrator/';
@@ -303,48 +315,6 @@ class SystemController extends FormController {
 
     private function executeCommand($sql) {
         return $this->toolsHelper->executeCommand($sql);
-    }
-
-    public function getDbVersion($component = 'com_ra_events') {
-        $sql = 'SELECT s.version_id ';
-        $sql .= 'FROM #__extensions as e ';
-        $sql .= 'LEFT JOIN #__schemas AS s ON s.extension_id = e.extension_id ';
-        $sql .= 'WHERE e.element="' . $component . '"';
-        return $this->toolsHelper->getValue($sql);
-    }
-
-    public function getVersion($component = 'com_ra_events') {
-        // This retuns the nversion as display by System / Manage extensions
-//        $db = Factory::getDbo();
-//
-//        $query = $db->getQuery(true);
-//        $query->select('manifest_cache')
-//                ->from('#__extensions')
-//                ->where($db->qn('element') . ' = ' . $db->q($component));
-//        $db->setQuery($query);
-////
-//        echo $db->replacePrefix($query) . '<br>';
-//        $data = $db->loadResult();
-//        var_dump($data);
-//        return;
-
-        $sql = 'SELECT manifest_cache ';
-        $sql .= 'FROM  #__extensions  ';
-        $sql .= 'WHERE element="' . $component . '"';
-        //       echo "$sql<br>";
-//        echo 'data ' . $this->toolsHelper->getValue($sql);
-        $data = json_decode($this->toolsHelper->getValue($sql));
-        //       json_decode($item->manifest_cache);
-        return $data->version;
-    }
-
-    public function showAccess() {
-// Invoked from dashboard
-        ToolBarHelper::title('Show your access permissions');
-
-        $user = Factory::getApplication()->getIdentity();
-        $this->toolsHelper->showAccess($user->id);
-        echo $this->toolsHelper->backButton($this->back);
     }
 
     public function resetHitCounters() {
@@ -369,6 +339,15 @@ class SystemController extends FormController {
         }
 
         $this->setRedirect('index.php?option=com_ra_tools&view=dashboard');
+    }
+
+    public function showAccess() {
+// Invoked from dashboard
+        ToolBarHelper::title('Show your access permissions');
+
+        $user = Factory::getApplication()->getIdentity();
+        $this->toolsHelper->showAccess($user->id);
+        echo $this->toolsHelper->backButton($this->back);
     }
 
     private function showLists() {
@@ -482,6 +461,29 @@ rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
 
     private function getValue($sql) {
         return $this->toolsHelper->getValue($sql);
+    }
+
+        public function temp() {
+        $body = '<table>';
+        $body .= '<thead>';
+        $body .= '<th>Date</th><th>Reason</th><th>Sender</th><th>Recipient</th><th>User</th>';
+        $body .= '</thead>';
+        $body .= '<tbody>';
+
+        $details = '<tr>';
+        $details .= '<td>' . 'D d/m/y H:i' . '</td>';
+        $details .= '<td>' . 1 . '</td>';
+        $details .= '<td>' . 2 . '</td>';
+        $details .= '<td>' . 3 . '</td>';
+        $details .= '<td>';
+        $details .= 'No user found';
+        $details .= '</td>';
+        $details .= '</tr>';
+
+        $body .= $details;
+        $body .= '</tbody>';
+        $body .= '</table>';
+        echo $body;
     }
 
 }

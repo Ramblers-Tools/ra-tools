@@ -1,11 +1,6 @@
 <?php
 
 /*
- * @version     3.7.4
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2020. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie Bigley <webmaster@bigley.me.uk> - https://www.developer-url.com
  * 11/11/23 CB table-reponsive
  * 13/04/24 CB table-striped, correct spelling of responsive
  * 26/06/24 CB change specification of class for table
@@ -13,6 +8,7 @@
  * 07/07/25 CB correct line colour
  * 23/05/26 CB change generation of <TD> to allow for row colour (otherwise overridden by table-striped)
  * 09/07/26 CB replace DateTine with /DateTime in set_csv 
+ * 19/09/26 CB add option total count at the end of the table
 */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -185,7 +181,7 @@ class ToolsTable {
         $this->num_rows++;
     }
 
-    function generate_table() {
+    function generate_table($total='') {
         if ($this->csv == 'Y') {
             fclose($this->handle);
             header('Content-Type: text/csv; charset=utf-8');
@@ -195,6 +191,13 @@ class ToolsTable {
         } else {
             echo '</table>' . PHP_EOL;
             echo '</div>' . PHP_EOL;    // table-responsive
+            if ($total != '') {
+                if (strtolower($total) == 'y') {
+                    echo '<p>' . $this->get_rows() . ' records found</p>' . PHP_EOL;
+                } else {    
+                    echo '<p>' . $this->get_rows() . ' ' . $total . ' found</p>' . PHP_EOL;
+                }
+            }
         }
     }
 

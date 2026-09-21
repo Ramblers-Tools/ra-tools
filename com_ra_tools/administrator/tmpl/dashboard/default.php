@@ -49,6 +49,12 @@ if ($toolsHelper->isSuperuser()) { // (SUPERUSER ONLY)
     if ((ComponentHelper::isEnabled('com_ra_mailman', true))) {
         $sysToolsItems[] = ['label' => 'Process MailMan Renewals', 'url' => 'index.php?option=com_ra_mailman&task=system.checkRenewals'];    
     }
+    if (ComponentHelper::isEnabled('com_ra_members', true)) {
+        $sysToolsItems[] = [
+            'label' => 'Attach shared-email Member profiles',
+            'url' => 'index.php?option=com_ra_members&task=system.attachSharedProfile'
+        ];
+    }
 }
 $sysToolsItems[] =  ['label' => 'Show your access permissions', 'url' => 'index.php?option=com_ra_tools&task=system.showAccess'];
 $sysToolsItems[] = ['label' => 'System Reports', 'url' => 'index.php?option=com_ra_tools&view=reports'];
@@ -415,5 +421,4 @@ if (ComponentHelper::isEnabled('com_ra_paths', true)) {
         </div>
     <?php endforeach; ?>
 </div>
-
 

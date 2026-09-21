@@ -338,6 +338,12 @@ class Com_Ra_toolsInstallerScript {
 
             $this->message('com_ra_tools already present, version=' . $this->current_version . '.');
         }
+        if (!ComponentHelper::isEnabled('plg_user_ra_profiles', true)) {
+            return $this->fail('This version of RA Tools requires the enabled plugin plg_user_ra_profiles.');
+        }
+        if (!ComponentHelper::isEnabled('plg_system_ra_tools', true)) {
+            return $this->fail('This version of RA Tools requires the enabled plugin plg_system_ra_tools.');
+        }
         if ($type == 'install') {
             return true;
         }

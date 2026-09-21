@@ -162,7 +162,7 @@ class ProfileTable extends Table {
                 $this->created = $now;
             }
 
-            if (empty($this->created_by)) {
+            if ($this->created_by === null || $this->created_by === '') {
                 $this->created_by = $actorId;
             }
 

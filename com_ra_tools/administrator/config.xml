@@ -65,13 +65,6 @@
             <option value="right">Right</option>
             <option value="left">Left</option>
         </field>    
-        <field name="email_new_user" 
-            validate="email" 
-            type="email" 
-            label="Email" 
-            description="Email address to be informed when a User self-registers" 
-            hint="aaaa@bbb.com"
-        />   
     </fieldset>
     <fieldset name="walks" label="Group Walks">
         <field 
@@ -155,6 +148,24 @@
             <option value="100">100</option>
             </field>
     </fieldset>
+     <fieldset name="user_registration" label="User Registration">
+        <field name="allow_self_registration"
+            type="radio"
+            label="Allow self-registration"
+            description="Allow visitors to create an unpublished RA profile through a front-end registration form"
+            default="1"
+            filter="integer">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </field>
+        <field name="email_new_user" 
+            validate="email" 
+            type="email" 
+            label="Email" 
+            description="Email address to be informed when a User self-registers" 
+            hint="aaaa@bbb.com"
+        />   
+     </fieldset>
     <fieldset name="standard_articles" label="Standard Articles">
         <field 
             name="note4" 
@@ -213,5 +224,4 @@
         />
     </fieldset>
 </config>
-
 

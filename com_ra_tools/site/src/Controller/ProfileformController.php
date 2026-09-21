@@ -154,10 +154,8 @@ class ProfileformController extends FormController {
             $this->setMessage(Text::_('COM_RA_TOOLS_ITEM_SAVED_SUCCESSFULLY'));
         }
 
-        $menu = Factory::getApplication()->getMenu();
-        $item = $menu->getActive();
-        $url = (empty($item->link) ? 'index.php?option=com_ra_tools&view=profiles' : $item->link);
-        $this->setRedirect(Route::_($url, false));
+        $home = Factory::getApplication()->getMenu()->getDefault();
+        $this->setRedirect(Route::_('index.php' . ($home ? '?Itemid=' . (int) $home->id : ''), false));
 
         // Flush the data from the session.
         $this->app->setUserState('com_ra_tools.edit.profile.data', null);
@@ -186,10 +184,8 @@ class ProfileformController extends FormController {
             $model->checkin($editId);
         }
 
-        $menu = Factory::getApplication()->getMenu();
-        $item = $menu->getActive();
-        $url = (empty($item->link) ? 'index.php?option=com_ra_tools&view=profiles' : $item->link);
-        $this->setRedirect(Route::_($url, false));
+        $home = Factory::getApplication()->getMenu()->getDefault();
+        $this->setRedirect(Route::_('index.php' . ($home ? '?Itemid=' . (int) $home->id : ''), false));
     }
 
     /**

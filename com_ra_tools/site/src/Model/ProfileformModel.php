@@ -10,7 +10,7 @@
  * 04/02/26 CB correct access validation
  */
 
-namespace Ramblers\Component\Ra_events\Site\Model;
+namespace Ramblers\Component\Ra_tools\Site\Model;
 
 // No direct access.
 defined('_JEXEC') or die;
@@ -24,6 +24,8 @@ use \Joomla\CMS\MVC\Model\FormModel;
 use \Joomla\CMS\Object\CMSObject;
 use \Joomla\CMS\Helper\TagsHelper;
 use \Joomla\CMS\User\CurrentUserInterface;
+use Joomla\Database\DatabaseInterface;
+use Ramblers\Component\Ra_tools\Site\Table\Ra_profilesTable;
 
 /**
  * Ra_events model.
@@ -47,7 +49,7 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
      */
     // $user = Factory::getApplication()->getSession()->get('user');
     protected function populateState() {
-        $app = Factory::getApplication('com_ra_events');
+        $app = Factory::getApplication('com_ra_tools');
 
         // Load state from the request userState on edit or from the passed variable on default
         if (Factory::getApplication()->input->get('layout') == 'edit') {
@@ -80,52 +82,19 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
      * @throws  Exception
      */
     public function getItem($id = null) {
-        $user = $this->getCurrentUser();
-        $user_id = $user->id;
-
-        if ($this->item === null) {
-            $this->item = false;
-
-            // commented out 22/03/25 (otherwise gets record where id=1)
-//            if (empty($id)) {
-//                $id = $this->getState('profile.id');
-//            }
-            // Get a level row instance.
-            $table = $this->getTable();
-            $properties = $table->getProperties();
-            $this->item = ArrayHelper::toObject($properties, CMSObject::class);
-
-            if ($table !== false && $table->load($id) && !empty($table->id)) {
-                $user = $this->getCurrentUser();
-                $id = $table->id;
-
-                $canEdit = ($user_id == 0) || $user->authorise('core.edit', 'com_ra_tools') || $user->authorise('core.create', 'com_ra_tools');
-                //               }
-                if (!$canEdit && $user->authorise('core.edit.own', 'com_ra_tools')) {
-                    $canEdit = $user->id == $table->created_by;
-                }
-
-                if (!$canEdit) {
-                    throw new \Exception(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-                }
-
-                // Check published state.
-                if ($published = $this->getState('filter.published')) {
-                    if (isset($table->state) && $table->state != $published) {
-                        return $this->item;
-                    }
-                }
-
-                // Convert the Table to a clean CMSObject.
-                $properties = $table->getProperties(1);
-                $this->item = ArrayHelper::toObject($properties, CMSObject::class);
-            }
-
-
-            $this->item->name = 'zzzz';
-
+        if ($this->item !== null) {
             return $this->item;
         }
+        $user = $this->getCurrentUser();
+        $id = (int) ($id ?: $user->id);
+        if (!$id || (int) $user->id !== $id) {
+            return $this->item = false;
+        }
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true)->select('*')->from($db->quoteName('#__ra_profiles'))
+            ->where('id = ' . $id);
+        $db->setQuery($query);
+        return $this->item = $db->loadObject() ?: false;
     }
 
     /**
@@ -137,8 +106,8 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
      *
      * @return  Table|boolean Table if found, boolean false on failure
      */
-    public function getTable($type = 'Profile', $prefix = 'Administrator', $config = array()) {
-        return parent::getTable($type, $prefix, $config);
+    public function getTable($type = 'ra_profiles', $prefix = 'Ra_toolsTable', $config = array()) {
+        return new Ra_profilesTable(Factory::getContainer()->get(DatabaseInterface::class));
     }
 
     /**
@@ -236,7 +205,7 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
     public function getForm($data = array(), $loadData = true) {
 
         // Get the form.
-        $form = $this->loadForm('com_ra_events.profile', 'profileform', array(
+        $form = $this->loadForm('com_ra_tools.profile', 'profileform', array(
             'control' => 'jform',
             'load_data' => $loadData
                 )
@@ -268,7 +237,7 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
      * @since   2.0
      */
     protected function loadFormData() {
-        $data = Factory::getApplication()->getUserState('com_ra_events.edit.profile.data', array());
+        $data = Factory::getApplication()->getUserState('com_ra_tools.edit.profile.data', array());
 
         if (empty($data)) {
             $data = $this->getItem();
@@ -300,7 +269,7 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
 
         if ($id) {
             // Check the user can edit this item
-            $authorised = $user->authorise('core.edit', 'com_ra_tools') || $authorised = $user->authorise('core.edit.own', 'com_ra_events');
+            $authorised = $user->authorise('core.edit', 'com_ra_tools') || $user->authorise('core.edit.own', 'com_ra_tools');
         } else {
             if ($user->id == 0) {
                 $authorised = true;

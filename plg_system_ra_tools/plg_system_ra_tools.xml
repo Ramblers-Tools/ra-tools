@@ -8,7 +8,7 @@
 	<copyright>Copyright (C) 2026 Charlie Bigley. All rights reserved.</copyright>
 	<license>GNU General Public License version 2 or later;</license>
 	<version>1.0.2</version>
-	<description>System plugin for RA Tools - Cascade delete of related records from ra_emails and ra_profiles tables when a user is deleted. If com_ra_mailman is installed, deletes mailshots and subscriptions. If com_ra_events is installed, deletes bookings.	</description>
+	<description>System plugin for RA Tools - removes component-owned records when a Joomla user is deleted.</description>
 	<files>
 		<filename plugin="ra_tools">ra_tools.php</filename>
 	</files>

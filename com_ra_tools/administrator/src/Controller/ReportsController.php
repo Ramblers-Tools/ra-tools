@@ -49,68 +49,29 @@ class ReportsController extends FormController {
         $wa->registerAndUseStyle('ramblers', 'com_ra_tools/ramblers.css');
         $this->breadcrumbs = $this->toolsHelper->buildLink('administrator/index.php', 'Home Dashboard');
         $this->breadcrumbs .= '>' . $this->toolsHelper->buildLink('administrator/index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard');
-        $this->breadcrumbs .= '>' . $this->toolsHelper->buildLink($this->back, 'System Reports');
+$this->breadcrumbs .= '>' . $this->toolsHelper->buildLink($this->back, 'System Reports');
     }
-
-    public function areasLatitude() {
-// display address of Areas, sorted by Latitude
-        ToolBarHelper::title('Areas, sorted by Latitude');
-        echo $this->breadcrumbs;
-        $sql = 'SELECT latitude, longitude, code, name ';
-        $sql .= "FROM #__ra_areas ";
-        $sql .= 'ORDER BY latitude ';
-        $objTable = new ToolsTable;
-        $objTable->add_header("Latitude,Longitude,,Code,Name");
-        $rows = $this->toolsHelper->getRows($sql);
-        foreach ($rows as $row) {
-            $objTable->add_item($row->latitude);
-            $objTable->add_item($row->longitude);
-            $pin = $this->toolsHelper->showLocation($row->latitude, $row->longitude);
-            $objTable->add_item($pin);
-            $objTable->add_item($row->code);
-            $objTable->add_item($row->name);
-            $objTable->generate_line();
-        }
-        $objTable->generate_table();
-
-        $sql = "SELECT COUNT(*) FROM #__ra_areas ";
-        echo 'Number of Areas ' . $this->toolsHelper->getValue($sql) . '<br>';
-        echo $this->toolsHelper->backButton($this->back);
-    }
-
-    public function areasLongitude() {
-// display address of Areas, sorted by Longitude
-        ToolBarHelper::title('Areas, sorted by Longitude');
-        echo $this->breadcrumbs;
-        $sql = 'SELECT longitude, latitude, code, name ';
-        $sql .= "FROM #__ra_areas ";
-        $sql .= 'ORDER BY longitude ';
-        $this->toolsHelper->showQuery($sql);
-        $sql = "SELECT COUNT(*) FROM #__ra_areas ";
-        echo 'Number of Areas ' . $this->toolsHelper->getValue($sql) . '<br>';
-        echo $this->toolsHelper->backButton($this->back);
-    }
-
 
     public function blockedUsers() {
         ToolBarHelper::title($this->prefix . 'Blocked users');
         echo $this->breadcrumbs;
         $table = new ToolsTable();
-        $table->add_header("Name,email,Lists,Audit,ID");
+        $table->add_header("Name,Username,Email,Registered,Last visited,Requires reset,ID,Action");
 
-        $sql = "SELECT id, name as 'User', email  ";
+        $sql = "SELECT *  ";
         $sql .= 'FROM `#__users` ';
         $sql .= ' WHERE block=1';
-        $sql .= ' ORDER BY id';
+        $sql .= ' ORDER BY name';
         $target = 'administrator/index.php?option=com_ra_mailman&task=system.purgeUser&id=';
         $rows = $this->toolsHelper->getRows($sql);
         foreach ($rows as $row) {
-            $table->add_item($row->User);
+            $table->add_item($row->name);
+            $table->add_item($row->username);
             $table->add_item($row->email);
-            $count = $this->countLists($row->id);
-            $table->add_item($count);
-            $count = $this->countAudit($row->id);
-            $table->add_item($count);
+            $table->add_item($row->registerDate);
+            $table->add_item($row->lastvisitDate);
+            $table->add_item($row->requireReset);
+            $table->add_item($row->id);
             if ($this->toolsHelper->isSuperuser()) {
                 $table->add_item($this->toolsHelper->buildButton($target . $row->id, 'Purge', false, 'orange'));
             } else {
@@ -127,10 +88,132 @@ class ReportsController extends FormController {
 
         echo $this->toolsHelper->backButton($this->back);
     }
+
     private function breadcrumbsExtra($label, $report) {
 // generates a link to be added to the standard breadcrumbs
         $target = 'administrator/index.php?option=com_ra_tools&task=reports.' . $report;
         return '>' . $this->toolsHelper->buildLink($target, $label);
+    }
+     
+    /**
+     * Read-only reconciliation report for the shared Joomla user/profile
+     * lifecycle. Component-specific repairs remain owned by those components.
+     */
+    public function checkDatabase(): void {
+
+        ToolBarHelper::title($this->prefix . 'Check Database');
+        echo $this->breadcrumbs;
+
+        $checks = [
+            'placeholders' => [
+                'label' => 'Joomla users with a generated profile (home group ZZ99)',
+                'sql' => "SELECT COUNT(u.id) FROM #__users as u INNER JOIN #__ra_profiles AS p ON p.id = u.id WHERE p.state = 0 AND p.home_group = 'ZZ99'",
+                'owner' => 'RA Tools',
+                'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showUsersZZ99',               
+                'button' => '',
+            ],
+            'shared_profiles' => [
+                'label' => 'Joomla users linked to multiple profiles',
+                'sql' => 'SELECT COUNT(*) FROM (SELECT id FROM #__ra_profiles WHERE id IS NOT NULL AND id > 0 GROUP BY id HAVING COUNT(*) > 1) AS shared_profiles',
+                'owner' => 'RA Members',
+                'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showUsersMultipleProfiles',
+                'button' => '',
+                'action' => '',
+            ],
+            'users_without_profiles' => [
+                'label' => 'Joomla users without an RA profile',
+                'sql' => 'SELECT COUNT(*) FROM #__users AS u LEFT JOIN #__ra_profiles AS p ON p.id = u.id WHERE p.id IS NULL',
+                'owner' => 'RA Tools',             
+                'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showUsersWithoutProfile',
+                'button' => 'Generate',
+                'action' => 'administrator/index.php?option=com_ra_tools&task=system.backfillProfiles',
+            ],
+            'profiles_without_users' => [
+                'label' => 'RA profiles without a Joomla user',
+                'sql' => 'SELECT COUNT(*) FROM #__ra_profiles AS p LEFT JOIN #__users AS u ON u.id = p.id WHERE u.id IS NULL',
+                'owner' => 'RA Tools',
+                'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showProfilesWithoutUsers',
+                'button' => 'Delete',
+                'action' => 'administrator/index.php?option=com_ra_tools&task=system.deleteProfilesWithoutUsers',
+            ],
+        ];
+if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
+            $checks['mailman_orphan_profiles'] = [
+                'label' => 'MailMan subscriptions without an RA profile',
+                'sql' => 'SELECT COUNT(*) FROM #__ra_mail_subscriptions AS s LEFT JOIN #__ra_profiles AS p ON p.id = s.user_id WHERE p.id IS NULL',
+                'owner' => 'RA MailMan',
+                'report' => 'administrator/index.php?option=com_ra_mailman&task=reports.showSubscriptionsNoProfile',
+                'button' => 'Delete',
+                'action' => 'administrator/index.php?option=com_ra_mailman&task=system.deleteSubscriptionsNoProfile',
+            ];
+            $checks['mailman_orphan_lists'] = [
+                'label' => 'MailMan subscriptions without a mailing list',
+                'sql' => 'SELECT COUNT(*) FROM #__ra_mail_subscriptions AS s LEFT JOIN #__ra_mail_lists AS l ON l.id = s.list_id WHERE l.id IS NULL',
+                'owner' => 'RA MailMan',
+                'report' => 'administrator/index.php?option=com_ra_mailman&task=reports.showSubscriptionsNoList',
+                'button' => 'Delete',
+                'action' => 'administrator/index.php?option=com_ra_mailman&task=system.deleteSubscriptionsNoList',
+            ];
+            $checks['mailman_orphan_audit'] = [
+                'label' => 'MailMan subscription audit rows without a subscription',
+                'sql' => 'SELECT COUNT(*) FROM #__ra_mail_subscriptions_audit AS a LEFT JOIN #__ra_mail_subscriptions AS s ON s.id = a.object_id WHERE s.id IS NULL',
+                'owner' => 'RA MailMan',
+                'report' => 'administrator/index.php?option=com_ra_mailman&task=reports.showSubscriptionAuditNoSub',
+                'button' => 'Delete',
+                'action' => 'administrator/index.php?option=com_ra_mailman&task=system.deleteSubscriptionAuditNoSub',
+            ];
+        }
+
+        if (ComponentHelper::isEnabled('com_ra_events', true)) {
+            $checks['events_orphan_bookings'] = [
+                'label' => 'Events bookings without a Joomla user',
+                'sql' => 'SELECT COUNT(*) FROM #__ra_bookings AS b LEFT JOIN #__ra_profiles AS p ON p.id = b.user_id WHERE p.id IS NULL',
+                'owner' => 'RA Events',
+                'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showBookingNoProfile',
+ //               'button' => 'Delete',
+ //               'action' => 'administrator/index.php?option=com_ra_events&task=system.deleteBookingNoProfiles',
+            ];
+        }
+
+        $results = [];
+        foreach ($checks as $key => $check) {
+            try {
+                $this->db->setQuery($check['sql']);
+                $count = (int) $this->db->loadResult();
+            } catch (\Throwable $exception) {
+                $count = 'Unavailable: ' . $exception->getMessage();
+            }
+
+            // RA Members repairs are surfaced with the core profile lifecycle;
+            // keep the report organised into the three operational sections.
+            $sectionOwner = $check['owner'] === 'RA Members' ? 'RA Tools' : $check['owner'];
+            $results[$sectionOwner][$key] = [$check, $count];
+        }
+
+        $sectionNames = [
+            'RA Tools' => 'RA Tools user/profile integrity',
+            'RA MailMan' => 'RA MailMan integrity',
+            'RA Events' => 'RA Events integrity',
+        ];
+        foreach ($sectionNames as $owner => $heading) {
+            if (empty($results[$owner])) {
+                continue;
+            }
+            echo '<h3>' . htmlspecialchars($heading, ENT_QUOTES, 'UTF-8') . '</h3>';
+            $table = new ToolsTable();
+            $table->add_header('Category,Count,Action');
+            foreach ($results[$owner] as $key => [$check, $count]) {
+                $table->add_item($check['label']);
+                $detailUrl = $check['report'];
+                $table->add_item(is_int($count) && $count > 0
+                    ? $this->toolsHelper->buildLink($detailUrl, (string) $count) : (string) $count);
+                $table->add_item(is_int($count) && $count > 0 && $check['button'] !== ''
+                    ? $this->toolsHelper->buildButton($check['action'], $check['button'],false,'lightgreen') : ' ');
+                $table->generate_line();
+            }
+            $table->generate_table();
+        }
+        echo $this->toolsHelper->backButton($this->back);
     }
 
     public function contactsByCategory() {
@@ -425,11 +508,37 @@ class ReportsController extends FormController {
             $objTable->add_item($row->details);
             $objTable->generate_line();
         }
-        $objTable->generate_table();
-        echo "$count records<br>";
+        $objTable->generate_table('Groups');
+
         $back = 'administrator/index.php?option=com_ra_tools&task=reports.showBespoke';
         echo $this->toolsHelper->backButton($back);
     }
+
+    public function showBookingNoProfile() {
+        ToolBarHelper::title($this->prefix . 'Bookings with no associated user');
+        echo $this->breadcrumbs;
+        $sql = 'SELECT b.id, b.created, b.num_places, b.user_id, e.title AS `event` ';
+        $sql .= 'FROM `#__ra_bookings` AS b ';
+        $sql .= 'LEFT JOIN `#__ra_events` AS e ON e.id = b.event_id ';
+        $sql .= 'LEFT JOIN `#__ra_profiles` AS p ON p.id = b.user_id ';
+        $sql .= 'WHERE p.id IS NULL ';
+        $sql .= 'ORDER BY b.created DESC';
+echo $sql . '<br>';
+        $objTable = new ToolsTable;
+        $objTable->add_header("Booking ID,Created,Num places,User ID,Event name");
+        $rows = $this->toolsHelper->getRows($sql);
+        foreach ($rows as $row) {
+            $objTable->add_item($row->id);
+            $objTable->add_item($row->created);
+            $objTable->add_item($row->num_places);
+            $objTable->add_item($row->user_id);
+            $objTable->add_item($row->event);
+            $objTable->generate_line();
+        }
+        $objTable->generate_table('Bookings');
+        $back = 'administrator/index.php?option=com_ra_tools&task=reports.checkDatabase';
+        echo $this->toolsHelper->backButton($back);
+    }   
 
     public function showClusters() {
         ToolBarHelper::title($this->prefix . 'Clusters and their contacts'); // `#__contact_details`
@@ -1092,6 +1201,65 @@ $objTable->add_header('Location,Component,Parent,Title,Link,Note,Published,id');
         echo $this->toolsHelper->backButton($target);
     }
 
+    public function showProfilesWithoutUsers() {
+        ToolBarHelper::title('Check Database Reports');
+       echo '<h4>Profiles without a User</h4>';
+        $sql = 'SELECT p.id, p.home_group, p.preferred_name,p.membershipNo, p.created, c.preferred_name AS created_by_name, u.email ';
+        $sql .= 'FROM #__ra_profiles AS p ';
+        $sql .= 'LEFT JOIN #__ra_profiles AS c ON c.id = p.created_by ';
+        $sql .= 'LEFT JOIN #__users AS u ON u.id = p.id ';
+        $sql .= 'WHERE u.id IS NULL ' ;
+        $sql .= 'ORDER BY p.home_group, p.preferred_name';
+//        echo $sql . '<br>' . PHP_EOL;
+        $rows = $this->toolsHelper->getRows($sql);
+        if ($rows) {
+//      Show link that allows page to be printed
+//            $target = 'index.php?option=com_ra_tools&task=reports.showProfilesWithoutUsers';
+//            echo $this->toolsHelper->showPrint($target) . '<br>' . PHP_EOL;
+            $objTable = new ToolsTable;
+            $objTable->add_header("Group,Preferred Name,Membership No,Created,Created by,ID");  
+            foreach ($rows as $row) {
+                $objTable->add_item($row->home_group);
+                $objTable->add_item($row->preferred_name);
+                $objTable->add_item($row->membershipNo);
+                $objTable->add_item(HTMLHelper::_('date', $row->created, 'H:i d/m/y'));
+                $objTable->add_item($row->created_by_name);
+                $objTable->add_item($row->id);
+                $objTable->generate_line();
+            }
+            $objTable->generate_table('Users');
+        }else {
+            echo 'No users found without a profile<br>';
+        }
+        echo $this->toolsHelper->backButton('administrator/index.php?option=com_ra_tools&task=reports.checkDatabase');
+    }
+
+    public function showProfileZeroId() {
+        ToolBarHelper::title('Check Database Reports');
+        echo '<h4>Profiles with Zero IDs</h4>';
+        $sql = 'SELECT p.id, p.home_group, p.preferred_name, p.created, c.preferred_name AS created_by_name ';
+        $sql .= 'FROM #__ra_profiles AS p ';
+        $sql .= 'LEFT JOIN #__ra_profiles AS c ON c.id = p.created_by ';
+        $sql .= 'WHERE p.id = 0 ';
+        $sql .= 'ORDER BY p.home_group, p.preferred_name';
+        $rows = $this->toolsHelper->getRows($sql);
+        if ($rows) {
+            $objTable = new ToolsTable;
+            $objTable->add_header("Group,Name,Created,Created by");  
+            foreach ($rows as $row) {
+                $objTable->add_item($row->home_group);
+                $objTable->add_item($row->preferred_name);
+                $objTable->add_item($row->created);
+                $objTable->add_item($row->created_by_name);
+                $objTable->generate_line();
+            }
+            $objTable->generate_table('Profiles');
+        } else {
+            echo 'No profiles found with zero IDs<br>';
+        }
+        echo $this->toolsHelper->backButton('administrator/index.php?option=com_ra_tools&task=reports.checkDatabase');
+    }
+
     public function showRegistrations() {
         echo $this->breadcrumbs . '<br>';
         $field = 'registerDate';
@@ -1258,6 +1426,100 @@ $objTable->add_header('Location,Component,Parent,Title,Link,Note,Published,id');
         $objTable->generate_table();
         echo $this->toolsHelper->backButton('administrator/index.php?option=com_ra_tools&task=reports.countUsers');
 //        echo "<p>";
+    }
+
+    public function showUsersMultipleProfiles() {
+        ToolBarHelper::title('Check Database Reports');
+        echo '<h4>Joomla users with multiple profiles</h4>';
+        $sql = 'SELECT u.id, u.name, u.email, COUNT(p.id) AS profile_count ';
+        $sql .= 'FROM #__users AS u ';
+        $sql .= 'INNER JOIN #__ra_profiles AS p ON p.id = u.id ';
+        $sql .= 'GROUP BY u.id, u.name, u.email ';
+        $sql .= 'HAVING COUNT(p.id) > 1 ';
+        $sql .= 'ORDER BY profile_count DESC';
+        $rows = $this->toolsHelper->getRows($sql);
+        if ($rows) {
+//      Show link that allows page to be printed
+              $target = 'index.php?option=com_ra_tools&task=reports.showUsersMultipleProfiles';
+//            echo $this->toolsHelper->showPrint($target) . '<br>' . PHP_EOL;
+            $objTable = new ToolsTable;
+            $objTable->add_header("Name,Email,Profile Count");
+            foreach ($rows as $row) {
+                $objTable->add_item($row->name);
+                $objTable->add_item($row->email);
+                $objTable->add_item($row->profile_count);
+                //  $objTable->add_item(HTMLHelper::_('date', $row->created, 'H:i d/m/y'));
+                $objTable->generate_line();
+            }
+            $objTable->generate_table('Users with Multiple Profiles');
+        } else {
+            echo 'No users found with multiple profiles<br>';
+        }
+        echo $this->toolsHelper->backButton('administrator/index.php?option=com_ra_tools&task=reports.checkDatabase');
+    }   
+
+    public function showUsersWithoutProfile() {
+        ToolBarHelper::title('Check Database Reports');
+        echo '<h4>Joomla users without a profile</h4>';
+        $sql = 'SELECT u.id, u.name, u.email, u.registerDate, u.block, u.requireReset ';
+        $sql .= 'FROM #__users AS u ';
+        $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
+        $sql .= 'WHERE p.id IS NULL ';
+        $sql .= 'ORDER BY u.name';
+        echo $sql . '<br>' . PHP_EOL;
+        $rows = $this->toolsHelper->getRows($sql);
+        if ($rows) {
+//      Show link that allows page to be printed
+//            $target = 'index.php?option=com_ra_tools&task=reports.showUsersWithoutProfile';
+//            echo $this->toolsHelper->showPrint($target) . '<br>' . PHP_EOL;
+            $objTable = new ToolsTable;             
+            $objTable->add_header("Name,Email,Registered,Blocked,Require Reset");
+            foreach ($rows as $row) {
+                $objTable->add_item($row->name);
+                $objTable->add_item($row->email);
+                $objTable->add_item(HTMLHelper::_('date', $row->registerDate, 'H:i d/m/y'));
+                $objTable->add_item($row->block);
+                $objTable->add_item($row->requireReset);
+                $objTable->generate_line();
+            }
+            $objTable->generate_table('Users without a profile');
+        } else {
+            echo 'No users found without a profile<br>';
+        }
+        echo $this->toolsHelper->backButton('administrator/index.php?option=com_ra_tools&task=reports.checkDatabase');
+    }
+
+    public function showUsersZZ99() {
+        ToolBarHelper::title('Check Database Reports');
+        echo '<h4>Joomla users with a generated profile</h4>';
+        $sql = 'SELECT p.id, u.name, p.home_group, p.preferred_name, p.created_by, p.created, u.name AS created_by_name, u.email ';
+        $sql .= 'FROM #__ra_profiles AS p ';
+        $sql .= 'LEFT JOIN #__users AS c ON c.id = p.created_by ';
+        $sql .= 'INNER JOIN #__users AS u ON u.id = p.id ';
+        $sql .= 'WHERE p.home_group ="ZZ99" ' ;
+        $sql .= 'ORDER BY p.preferred_name';
+//        echo $sql . '<br>' . PHP_EOL;
+        $rows = $this->toolsHelper->getRows($sql);
+        if ($rows) {
+//      Show link that allows page to be printed
+//            $target = 'index.php?option=com_ra_tools&task=reports.showZZ99';      
+//        echo $this->toolsHelper->showPrint($target) . '<br>' . PHP_EOL;
+            echo '<p>These profile records were generated by the system when User records were created manually, or were present when MailMan was installed. They were given a dummy Group code as an actual value was not known. The correct value should be given before they can be used.</p>';
+            $objTable = new ToolsTable;
+            $objTable->add_header("Group,Name,Email,Created,Created by");  
+            foreach ($rows as $row) {
+                $objTable->add_item($row->home_group);
+                $objTable->add_item($row->name);
+                $objTable->add_item($row->email);
+                $objTable->add_item(HTMLHelper::_('date', $row->created, 'H:i d/m/y'));
+                $objTable->add_item($row->created_by);
+                $objTable->generate_line();
+            }
+            $objTable->generate_table('Users');
+        }else {
+            echo 'No users found with home group ZZ99<br>';
+        }
+        echo $this->toolsHelper->backButton('administrator/index.php?option=com_ra_tools&task=reports.checkDatabase');
     }
 
     public function test() {

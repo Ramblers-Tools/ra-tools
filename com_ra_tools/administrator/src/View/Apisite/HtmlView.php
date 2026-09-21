@@ -1,11 +1,7 @@
 <?php
 
 /**
- * @version    2.1.0
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * 21/09/26 CB restrict access to superUsers only
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Apisite;
@@ -19,6 +15,7 @@ use \Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use \Joomla\CMS\Language\Text;
 use \Joomla\CMS\User\CurrentUserInterface;
+use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 /**
  * View class for a single Apisite.
@@ -31,6 +28,7 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
     protected $item;
     protected $form;
     protected $user;
+    protected $toolsHelper;
 
     /**
      * Display the view
@@ -42,6 +40,10 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
      * @throws Exception
      */
     public function display($tpl = null) {
+        $this->toolsHelper = new ToolsHelper;
+        if (!$this->toolsHelper->isSuperuser()) {
+            throw new \Exception('You do not have permission to update these records');
+        }
         $this->state = $this->get('State');
         $this->item = $this->get('Item');
         $this->form = $this->get('Form');

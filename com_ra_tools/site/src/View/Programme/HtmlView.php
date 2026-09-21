@@ -9,6 +9,7 @@
  * 19/01/26 CB Changes to implement new radius selection
  * 02/02/26 CB Always show criteria if not from menu
  * 10/08/26 CB use search radius from component params, not menu params
+ * 21/09/26 CB remove diagnostic display
  */
 
 namespace Ramblers\Component\Ra_tools\Site\View\Programme;
@@ -69,7 +70,6 @@ class HtmlView extends BaseHtmlView {
                     $this->group = $params->get('group_list');
                 } else {
                     $this->group = $menu_params->get('code');
-                    echo 'Getting specified ' . $this->group . '<br>';
                 }
             }
             $this->display_type = $menu_params->get('display_type', 'simple');

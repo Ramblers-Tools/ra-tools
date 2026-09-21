@@ -61,28 +61,36 @@ class PersonHelper {
         return true;
     }
 
-    public function getPerson(string $email): ?object {
-        $email = strtolower(trim($email));
-        $sql = 'SELECT u.id, u.name, u.email, p.home_group, p.preferred_name ';
-        $sql .= 'FROM #__users AS u ';
-        $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
-        $sql .= 'WHERE LOWER(u.email) = ' . $this->db->quote($email) . ' ';
-        $sql .= 'LIMIT 2';
+    public function contactExists(int $userId, int $categoryId): bool {
+        return (int) $this->toolsHelper->getValue(
+                        'SELECT COUNT(*) FROM #__contact_details WHERE user_id = ' . $userId
+                        . ' AND catid = ' . $categoryId
+                ) > 0;
+    }
 
-        $person = $this->toolsHelper->getItem($sql);
+       /**
+     * Create unpublished placeholders for all Joomla users that do not yet
+     * have a profile. This is idempotent and is used by installation/backfill
+     * jobs; the user-save plugin uses ensurePlaceholderProfile() for the
+     * equivalent online, single-user operation.
+     *
+     * @return int Number of profiles created.
+     */
+    public function createMissingPlaceholderProfiles(): int {
+        $columns = implode(
+                ', ',
+                $this->db->quoteName(['id', 'home_group', 'preferred_name', 'state', 'created_by'])
+        );
+        $query = 'INSERT INTO ' . $this->db->quoteName('#__ra_profiles')
+                . ' (' . $columns . ') '
+                . 'SELECT u.id, ' . $this->db->quote('ZZ99') . ', u.name, 0, 0 '
+                . 'FROM ' . $this->db->quoteName('#__users', 'u') . ' '
+                . 'LEFT JOIN ' . $this->db->quoteName('#__ra_profiles', 'p') . ' ON p.id = u.id '
+                . 'WHERE p.id IS NULL';
+//        echo $query . '<br>';
+        $this->db->setQuery($query)->execute();
 
-        if ($person === false) {
-            throw new \RuntimeException('Unable to find person by email: ' . $this->toolsHelper->error);
-        }
-
-        if ($this->toolsHelper->rows > 1) {
-            throw new \RuntimeException(
-                    'Unable to return one person because email ' . $email
-                    . ' is linked to more than one profile.'
-            );
-        }
-
-        return $person;
+        return (int) $this->db->getAffectedRows();
     }
 
     public function findUserByEmail(string $email): ?object {
@@ -118,6 +126,115 @@ class PersonHelper {
         }
 
         return $user ?: null;
+    }
+
+    public function findUserByName(string $name): ?object {
+        $name = trim($name);
+
+        if ($name === '') {
+            return null;
+        }
+
+        $user = $this->toolsHelper->getItem(
+                'SELECT id, name, username, email, block FROM #__users WHERE name = '
+                . $this->db->quote($name) . ' LIMIT 1'
+        );
+
+        if ($user === false) {
+            throw new \RuntimeException('Unable to find user by name: ' . $this->toolsHelper->error);
+        }
+
+        return $user ?: null;
+    }
+
+    public function findUserIdentityConflicts(string $email, string $name, int $excludeUserId = 0): array {
+        $emailUser = $this->findUserByEmail($email);
+        $nameUser = $this->findUserByName($name);
+
+        if ($excludeUserId > 0) {
+            if ($emailUser && (int) $emailUser->id === $excludeUserId) {
+                $emailUser = null;
+            }
+
+            if ($nameUser && (int) $nameUser->id === $excludeUserId) {
+                $nameUser = null;
+            }
+        }
+
+        return [
+            'email' => $emailUser,
+            'name' => $nameUser,
+        ];
+    }
+
+    public function findUserByEmailAndProfile(string $email, string $name, string $homeGroup): ?int {
+        $email = strtolower(trim($email));
+        $name = trim($name);
+        $homeGroup = strtoupper(trim($homeGroup));
+
+        if ($email === '' || $name === '' || $homeGroup === '') {
+            return null;
+        }
+
+        $userId = $this->toolsHelper->getValue(
+                'SELECT u.id FROM #__users AS u '
+                . 'INNER JOIN #__ra_profiles AS p ON p.id = u.id '
+                . 'WHERE LOWER(u.email) = ' . $this->db->quote($email)
+                . ' AND u.name = ' . $this->db->quote($name)
+                . ' AND p.home_group = ' . $this->db->quote($homeGroup)
+                . ' LIMIT 1'
+        );
+
+        if ($userId === false) {
+            throw new \RuntimeException('Unable to match the existing user profile: ' . $this->toolsHelper->error);
+        }
+
+        return (int) $userId > 0 ? (int) $userId : null;
+    }
+
+    public function getPerson(string $email): ?object {
+        $email = strtolower(trim($email));
+        $sql = 'SELECT u.id, u.name, u.email, p.home_group, p.preferred_name ';
+        $sql .= 'FROM #__users AS u ';
+        $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
+        $sql .= 'WHERE LOWER(u.email) = ' . $this->db->quote($email) . ' ';
+        $sql .= 'LIMIT 2';
+
+        $person = $this->toolsHelper->getItem($sql);
+
+        if ($person === false) {
+            throw new \RuntimeException('Unable to find person by email: ' . $this->toolsHelper->error);
+        }
+
+        if ($this->toolsHelper->rows > 1) {
+            throw new \RuntimeException(
+                    'Unable to return one person because email ' . $email
+                    . ' is linked to more than one profile.'
+            );
+        }
+
+        return $person;
+    }
+
+    public function purgeUser(int $userId){
+        if ($userId > 0) {
+            $sql = 'DELETE FROM #__ra_profiles WHERE id=' . $userId;
+            $this->toolsHelper->executeCommand($sql);
+            // delete details of any emails sent
+            $sql = 'DELETE FROM #__ra_mail_recipients WHERE user_id=' . $userId;
+            $this->toolsHelper->executeCommand($sql);
+
+            // Delete any subscriptions
+            $sql = 'SELECT id FROM #__ra_mail_subscriptions WHERE user_id=' . $userId;
+            $rows = $this->toolsHelper->getRows($sql);
+            foreach ($rows as $row) {
+                $sql = 'DELETE FROM  #__ra_mail_subscriptions_audit ';
+                $sql .= 'WHERE object_id=' . $row->id;
+                $this->toolsHelper->executeCommand($sql);
+                $sql = 'DELETE FROM #__ra_mail_subscriptions WHERE user_id=' . $userId;
+                $this->toolsHelper->executeCommand($sql);
+            }
+        }
     }
 
     public function saveContact(int $userId, array $person, int $categoryId): void {
@@ -167,6 +284,48 @@ class PersonHelper {
                 ) > 0;
     }
 
+    /**
+     * Ensure that a newly-created Joomla user has an unassigned profile row.
+     *
+     * The placeholder is deliberately unpublished and uses the reserved
+     * ZZ99 group code until an administrator or an import supplies a real
+     * group. This operation is idempotent because user-save events may be
+     * delivered more than once.
+     */
+    public function ensurePlaceholderProfile(int $userId, string $name = ''): bool {
+        if ($userId < 1) {
+            throw new \InvalidArgumentException('A valid Joomla user ID is required to create a placeholder profile.');
+        }
+
+        if ($this->profileExistsForUser($userId)) {
+            return true;
+        }
+
+        $name = $this->normaliseName($name);
+
+        if ($name === '') {
+            $user = $this->findUserById($userId);
+            $name = $this->normaliseName((string) ($user->name ?? ''));
+        }
+
+        $profile = new ProfileTable($this->db);
+
+        if (!$profile->bind([
+                    'id' => $userId,
+                    'home_group' => 'ZZ99',
+                    'preferred_name' => $name,
+                    'state' => 0,
+                    'created_by' => 0,
+                ]) || !$profile->check() || !$profile->store()) {
+            throw new \RuntimeException(
+                    'Unable to create the placeholder profile for user ' . $userId . ': ' . $profile->getError()
+            );
+        }
+
+        return true;
+    }
+
+
     public function saveProfileData(int $userId, array $data): void {
         if ($userId < 1) {
             throw new \InvalidArgumentException('A valid Joomla user ID is required to save a profile.');
@@ -187,9 +346,18 @@ class PersonHelper {
             );
         }
 
+        // A user-save plugin normally creates this row.  For imports and
+        // older installations, repair the missing row through the same
+        // idempotent placeholder path before completing it.
+        if (empty($profileIds)) {
+            $this->ensurePlaceholderProfile($userId);
+            $this->db->setQuery($query);
+            $profileIds = $this->db->loadColumn();
+        }
+
         $profile = new ProfileTable($this->db);
 
-        if (!empty($profileIds) && !$profile->load((int) $profileIds[0])) {
+        if (empty($profileIds) || !$profile->load((int) $profileIds[0])) {
             throw new \RuntimeException('Unable to load the existing profile for user ' . $userId . '.');
         }
 
@@ -202,11 +370,25 @@ class PersonHelper {
         }
     }
 
-    public function contactExists(int $userId, int $categoryId): bool {
-        return (int) $this->toolsHelper->getValue(
-                        'SELECT COUNT(*) FROM #__contact_details WHERE user_id = ' . $userId
-                        . ' AND catid = ' . $categoryId
-                ) > 0;
+        public function setRequireReset(int $userId, bool $required): bool {
+        return $this->updateUserFlag($userId, 'requireReset', $required ? 1 : 0);
+    }
+
+    public function setBlocked(int $userId, bool $blocked): bool {
+        return $this->updateUserFlag($userId, 'block', $blocked ? 1 : 0);
+    }
+
+    private function updateUserFlag(int $userId, string $column, int $value): bool {
+        if ($userId < 1 || !in_array($column, ['requireReset', 'block'], true)) {
+            return false;
+        }
+
+        $query = $this->db->getQuery(true)
+                ->update($this->db->quoteName('#__users'))
+                ->set($this->db->quoteName($column) . ' = ' . $value)
+                ->where($this->db->quoteName('id') . ' = ' . $userId);
+
+        return (bool) $this->db->setQuery($query)->execute();
     }
 
     public function removeUserFromGroup(int $userId, string $title): bool {
@@ -327,7 +509,7 @@ class PersonHelper {
         return (int) $category->id;
     }
 
-    public function saveUser(string $name, string $email): int {
+    public function saveUser(string $name, string $email, int $requireReset = 1): int {
         $name = $this->normaliseName($name);
         $email = strtolower(trim($email));
         $sql = 'SELECT id FROM #__users WHERE LOWER(email) = ' . $this->db->quote($email) . ' LIMIT 1';
@@ -361,7 +543,7 @@ class PersonHelper {
                 'registerDate' => Factory::getDate()->toSql(),
                 'activation' => '',
                 'params' => [],
-                'requireReset' => 1,
+                'requireReset' => $requireReset,
             ];
             $action = 'create';
         }
@@ -396,6 +578,17 @@ class PersonHelper {
 
         if ((int) $user->id < 1) {
             throw new \RuntimeException('Joomla did not return a user ID for ' . $name . '.');
+        }
+
+        if ($isNew) {
+            foreach (['Public', 'Registered'] as $groupTitle) {
+                if (!$this->addUserToGroup((int) $user->id, $groupTitle)) {
+                    throw new \RuntimeException(
+                            'Unable to add the new Joomla user ' . $user->id
+                            . ' to the ' . $groupTitle . ' group.'
+                    );
+                }
+            }
         }
 
         if ($isNew && !Factory::getApplication()->isClient('administrator')) {

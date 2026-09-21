@@ -3,6 +3,15 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.0.13</version>
+        <date>2026-09-11</date>
+        <note>
+            <item><![CDATA[Centralise person persistence and improve profile, contact and user management services]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.0.11</version>
         <date>2026-08-19</date>
         <note>

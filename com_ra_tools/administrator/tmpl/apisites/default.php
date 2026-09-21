@@ -20,7 +20,6 @@ use \Joomla\CMS\Router\Route;
 use \Joomla\CMS\Layout\LayoutHelper;
 use \Joomla\CMS\Language\Text;
 use Joomla\CMS\Session\Session;
-use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 HTMLHelper::_('bootstrap.tooltip');
 HTMLHelper::_('behavior.multiselect');
@@ -33,11 +32,8 @@ $userId = $this->user->id;
 $listOrder = $this->state->get('list.ordering');
 $listDirn = $this->state->get('list.direction');
 $canOrder = $this->user->authorise('core.edit.state', 'com_ra_tools');
-$toolsHelper = new ToolsHelper;
-if (!empty($saveOrder)) {
-    $saveOrderingUrl = 'index.php?option=com_ra_tools&task=apisites.saveOrderAjax&tmpl=component&' . Session::getFormToken() . '=1';
-    HTMLHelper::_('draggablelist.draggable');
-}
+$isSuperuser = $this->toolsHelper->isSuperuser();
+
 $target_info = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=3&id=';
 $target_refresh = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=2&id=';
 $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisites.testDeliveryActivity&id=';
@@ -117,7 +113,7 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                     <?php if (isset($item->checked_out) && $item->checked_out && ($canEdit || $canChange)) : ?>
                                         <?php echo HTMLHelper::_('jgrid.checkedout', $i, $item->uEditor, $item->checked_out_time, 'apisites.', $canCheckin); ?>
                                     <?php endif; ?>
-                                    <?php if ($canEdit) : ?>
+                                    <?php if ($isSuperuser) : ?>
                                         <a href="<?php echo Route::_('index.php?option=com_ra_tools&task=apisite.edit&id=' . (int) $item->id); ?>">
                                             <?php echo $this->escape($item->url); ?>
                                         </a>
@@ -138,14 +134,14 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                 echo '</a>';
                                 echo '</td>';
                                 if ($item->state ==1 AND ($item->sub_system == 'RA Events')) {
-                                    echo '<td>' . $toolsHelper->imageButton('I', $target_info . $item->id) . '</td>';
+                                    echo '<td>' . $this->toolsHelper->imageButton('I', $target_info . $item->id) . '</td>';
                                     echo '<td>';
-                                    echo $toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'red');
+                                    echo $this->toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'red');
                                     echo '</td>';
                                 } elseif ($item->state == 1 AND ($item->sub_system == 'RA Delivery')) {
                                     echo '<td></td>';
                                     echo '<td>';
-                                    echo $toolsHelper->buildButton($target_delivery_test . $item->id, 'Test', false, 'red');
+                                    echo $this->toolsHelper->buildButton($target_delivery_test . $item->id, 'Test', false, 'red');
                                     echo '</td>';
                                 } else {
                                     echo '<td></td>';
