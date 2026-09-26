@@ -1,14 +1,10 @@
 <?php
 /**
- * @version    3.5.3
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 30/06/25 CB show background colours
  * 27/08/25 CB correct refresh
  * 22/09/25 CB show colour in colour, show title
  * 09/03/26 CB only refresh events for active sites
+ * 24/09/26 CB add LoadUsers
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -36,6 +32,7 @@ $isSuperuser = $this->toolsHelper->isSuperuser();
 
 $target_info = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=3&id=';
 $target_refresh = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=2&id=';
+$target_refresh_members = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshMembers&id=';
 $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisites.testDeliveryActivity&id=';
 ?>
 
@@ -136,13 +133,18 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                 if ($item->state ==1 AND ($item->sub_system == 'RA Events')) {
                                     echo '<td>' . $this->toolsHelper->imageButton('I', $target_info . $item->id) . '</td>';
                                     echo '<td>';
-                                    echo $this->toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'red');
+                                    echo $this->toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'button-p0583');
                                     echo '</td>';
                                 } elseif ($item->state == 1 AND ($item->sub_system == 'RA Delivery')) {
                                     echo '<td></td>';
                                     echo '<td>';
-                                    echo $this->toolsHelper->buildButton($target_delivery_test . $item->id, 'Test', false, 'red');
-                                    echo '</td>';
+                                    echo $this->toolsHelper->buildButton($target_delivery_test . $item->id, 'Test', false, 'button-p0583');
+                                    echo '</td>'; 
+                                 } elseif ($item->state == 1 AND ($item->sub_system == 'RA Members')) {
+                                    echo '<td></td>';
+                                    echo '<td>';
+                                    echo $this->toolsHelper->buildButton($target_refresh_members . $item->id, 'Load', false, 'button-p0583');
+                                    echo '</td>';  
                                 } else {
                                     echo '<td></td>';
                                     echo '<td></td>';

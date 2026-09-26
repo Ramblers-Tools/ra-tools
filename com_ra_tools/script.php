@@ -11,6 +11,7 @@
  * 17/06/26 CB api_sites: sub_system -> varchar(12)
  * 19/07/26 CB api_sites: sub_system -> varchar(20) (12 truncated existing data on upgrade)
  * 30/08/26 CB consolidate installed component version lookup
+ * 22/09/26 CB remove dependcies of plugins (needed by mailman)
  */
 
 \defined('_JEXEC') or die;
@@ -296,9 +297,9 @@ class Com_Ra_toolsInstallerScript {
                     . ' or later is required to skip upgrade processing.');
             $this->red('Please review and update the configuration settings for com_ra_tools.');
         }
-        $this->message('<b>Useful links</b><br>'
-                . $this->buildButton('index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>'
-                . $this->buildButton('index.php?option=com_config&view=component&component=com_ra_tools', 'Configure'));
+        echo '<b>Useful links</b><br>';
+        echo $this->buildButton('index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>';
+        echo $this->buildButton('index.php?option=com_config&view=component&component=com_ra_tools', 'Configure');
         return true;
     }
 
@@ -337,12 +338,6 @@ class Com_Ra_toolsInstallerScript {
             }
 
             $this->message('com_ra_tools already present, version=' . $this->current_version . '.');
-        }
-        if (!ComponentHelper::isEnabled('plg_user_ra_profiles', true)) {
-            return $this->fail('This version of RA Tools requires the enabled plugin plg_user_ra_profiles.');
-        }
-        if (!ComponentHelper::isEnabled('plg_system_ra_tools', true)) {
-            return $this->fail('This version of RA Tools requires the enabled plugin plg_system_ra_tools.');
         }
         if ($type == 'install') {
             return true;
