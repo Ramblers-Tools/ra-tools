@@ -1,20 +1,15 @@
-
-/components/com_yourcomponent/src/Field/AreaGroupField.php
-
-
 <?php
 /**
  * @package Joomla.Component
  */
 
-namespace YourVendor\Component\Yourcomponent\Administrator\Field;
+namespace Ramblers\Component\Ra_tools\Site\Field;
 
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Field\ListField;
-use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
 
 final class AreaGroupField extends ListField
@@ -28,8 +23,8 @@ final class AreaGroupField extends ListField
 
         // Load your JS
         $wa->registerAndUseScript(
-            'com_t.areagroup-field',
-            'media/com_yourcomponent/js/areagroup-field.js',
+            'com_ra_tools.area-group-field',
+            'media/com_ra_tools/js/area-group-modal.js',
             [],
             ['defer' => true]
         );
@@ -49,14 +44,16 @@ final class AreaGroupField extends ListField
         $currentLabel = $this->getGroupLabel((string) $this->value);
 
         // Pass per-field config to JS
-        $doc->addScriptOptions('areagroupField.' . $hiddenId, [
+        $fieldOptions = $doc->getScriptOptions('areaGroupField') ?: [];
+        $fieldOptions[$hiddenId] = [
             'fieldId' => $hiddenId,
             'modalId' => $modalId,
             'areaId' => $areaId,
             'groupId' => $groupId,
             'labelId' => $labelId,
-            'ajaxUrl' => 'index.php?option=com_ajax&plugin=plg_ra_ajaxgroups&format=json',
-        ]);
+            'ajaxUrl' => Uri::base() . 'index.php?option=com_ajax&plugin=ra_selectgroup&group=ajax&format=json',
+        ];
+        $doc->addScriptOptions('areaGroupField', $fieldOptions);
 
         $html = [];
 
@@ -67,48 +64,49 @@ final class AreaGroupField extends ListField
             . ' value="' . htmlspecialchars((string) $this->value, ENT_QUOTES, 'UTF-8') . '">';
 
         // Visible launcher + current selection
-        $html[] = '<div class="d-flex align-items-center gap-2">';
-        $html[] = ' <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#' . $modalId . '">'
-            . Text::_('COM_YOURCOMPONENT_SELECT_AREA_GROUP') . '</button>';
+        $html[] = '<div class="d-flex align-items-center gap-2" data-ra-area-group-field="' . htmlspecialchars($hiddenId, ENT_QUOTES, 'UTF-8') . '">';
+        $html[] = ' <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#' . $modalId . '" data-ra-area-group-launch>'
+            . 'Select Area / Group</button>';
         $html[] = ' <span id="' . $labelId . '" class="text-muted">'
-            . htmlspecialchars($currentLabel ?: Text::_('JNONE'), ENT_QUOTES, 'UTF-8') . '</span>';
+            . htmlspecialchars($currentLabel ?: 'No selection', ENT_QUOTES, 'UTF-8') . '</span>';
         $html[] = '</div>';
 
         // Modal
         $html[] = '<div class="modal fade" id="' . $modalId . '" tabindex="-1" aria-hidden="true">';
         $html[] = ' <div class="modal-dialog"><div class="modal-content">';
         $html[] = ' <div class="modal-header">';
-        $html[] = ' <h5 class="modal-title">' . Text::_('COM_YOURCOMPONENT_SELECT_AREA_GROUP') . '</h5>';
-        $html[] = ' <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="' . Text::_('JCLOSE') . '"></button>';
+        $html[] = ' <h5 class="modal-title">Select Area / Group</h5>';
+        $html[] = ' <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>';
         $html[] = ' </div>';
         $html[] = ' <div class="modal-body">';
 
         $html[] = ' <div class="mb-3">';
-        $html[] = ' <label for="' . $areaId . '" class="form-label">' . Text::_('COM_YOURCOMPONENT_AREA') . '</label>';
-        $html[] = ' <select id="' . $areaId . '" class="form-select">';
-        $html[] = ' <option value="">' . Text::_('COM_YOURCOMPONENT_SELECT_AREA') . '</option>';
+        $html[] = ' <label for="' . $areaId . '" class="form-label">Area</label>';
+        $html[] = ' <select id="' . $areaId . '" class="form-select" data-ra-area-group-area>';
+        $html[] = ' <option value="">Select Area</option>';
+        $html[] = ' <option value="N">All groups</option>';
         foreach ($areas as $area) {
             $code = (string) $area['code'];
             $name = (string) $area['name'];
             $html[] = ' <option value="' . htmlspecialchars($code, ENT_QUOTES, 'UTF-8') . '">'
-                . htmlspecialchars($code . ' - ' . $name, ENT_QUOTES, 'UTF-8')
+                . htmlspecialchars($name, ENT_QUOTES, 'UTF-8')
                 . '</option>';
         }
         $html[] = ' </select>';
         $html[] = ' </div>';
 
         $html[] = ' <div class="mb-3">';
-        $html[] = ' <label for="' . $groupId . '" class="form-label">' . Text::_('COM_YOURCOMPONENT_GROUP') . '</label>';
-        $html[] = ' <select id="' . $groupId . '" class="form-select" disabled>';
-        $html[] = ' <option value="">' . Text::_('COM_YOURCOMPONENT_SELECT_GROUP') . '</option>';
+        $html[] = ' <label for="' . $groupId . '" class="form-label">Group</label>';
+        $html[] = ' <select id="' . $groupId . '" class="form-select" data-ra-area-group-group disabled>';
+        $html[] = ' <option value="">Select Group</option>';
         $html[] = ' </select>';
         $html[] = ' </div>';
 
         $html[] = ' </div>';
         $html[] = ' <div class="modal-footer">';
-        $html[] = ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">' . Text::_('JCANCEL') . '</button>';
-        $html[] = ' <button type="button" class="btn btn-success js-areagroup-confirm" data-field-id="' . $hiddenId . '" disabled>'
-            . Text::_('JSELECT') . '</button>';
+        $html[] = ' <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>';
+        $html[] = ' <button type="button" class="btn btn-success js-areagroup-confirm" data-field-id="' . $hiddenId . '" data-ra-area-group-confirm disabled>'
+            . 'Use Selection</button>';
         $html[] = ' </div>';
         $html[] = ' </div></div>';
         $html[] = '</div>';
@@ -132,11 +130,36 @@ final class AreaGroupField extends ListField
         $query = $db->getQuery(true)
             ->select([$db->quoteName('code'), $db->quoteName('name')])
             ->from($db->quoteName('#__ra_areas'))
-            ->order($db->quoteName('code') . ' ASC');
+            ->order($db->quoteName('name') . ' ASC');
 
         $db->setQuery($query);
 
-        return $db->loadAssocList() ?: [];
+        $areas = $db->loadAssocList() ?: [];
+
+        if ($areas !== []) {
+            return $areas;
+        }
+
+        // Some installations have groups populated before the area table has
+        // been refreshed. Derive the two-character area choices so the
+        // selector remains usable.
+        $query = $db->getQuery(true)
+            ->select('DISTINCT ' . $db->quoteName('code'))
+            ->from($db->quoteName('#__ra_groups'))
+            ->order($db->quoteName('code') . ' ASC');
+        $db->setQuery($query);
+        $areas = [];
+        foreach ($db->loadColumn() ?: [] as $groupCode) {
+            $areaCode = strtoupper(substr((string) $groupCode, 0, 2));
+            if ($areaCode !== '' && !isset($areas[$areaCode])) {
+                $areas[$areaCode] = ['code' => $areaCode, 'name' => 'Area ' . $areaCode];
+            }
+        }
+
+        $areas = array_values($areas);
+        usort($areas, static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name']));
+
+        return $areas;
     }
 
     private function getGroupLabel(string $groupCode): string
@@ -159,4 +182,3 @@ final class AreaGroupField extends ListField
         return $row ? ($row['code'] . ' - ' . $row['name']) : $groupCode;
     }
 }
-

@@ -2,7 +2,7 @@
 <extension type="component" method="upgrade">
     <name>RA Tools</name>
     <element>com_ra_tools</element>
-    <creationDate>22/09/26</creationDate>
+    <creationDate>28/09/26</creationDate>
     <copyright>2024-2026 Ramblers Tools</copyright>
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <author>Ramblers Tools</author>

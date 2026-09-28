@@ -1,13 +1,9 @@
 <?php
 /**
- * @version    3.7.4
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 03/05/25 CB allow edit if MailMan installed (should use tools.profile, not mailman.profile)
  * 05/10/25 CB show SuperUsers
  * 06/07/26 CB show Members
+ * 28/09/26 CB added lastVisitDate
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -74,6 +70,9 @@ $sql_lookup .= 'WHERE map.group_id=8 AND  map.user_id=';
                                 <?php echo HTMLHelper::_('searchtools.sort', 'Email', 'a.email', $listDirn, $listOrder); ?>
                             </th>
                             <th class='left'>
+                                <?php echo HTMLHelper::_('searchtools.sort', 'Last visit', 'a.lastVisitDate', $listDirn, $listOrder); ?>
+                            </th>
+                            <th class='left'>
                                 <?php echo HTMLHelper::_('searchtools.sort', 'Blocked', 'a.block', $listDirn, $listOrder); ?>
                             </th>
                             <th class='left'>
@@ -129,6 +128,7 @@ $sql_lookup .= 'WHERE map.group_id=8 AND  map.user_id=';
                                 }
                                 echo '</td>';
                                 echo '<td>' . $item->email . '</td>';
+                                echo '<td>' . $item->lastvisitDate . '</td>';
                                 echo '<td>' . $item->block . '</td>';
                                 echo '<td>' . $item->requireReset . '</td>';
                                 echo '<td>' . $item->home_group . '</td>';

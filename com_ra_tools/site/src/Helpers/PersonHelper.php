@@ -16,6 +16,7 @@ namespace Ramblers\Component\Ra_tools\Site\Helpers;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Mail\MailTemplate;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\User\UserFactoryInterface;
@@ -26,6 +27,10 @@ use Ramblers\Component\Ra_tools\Administrator\Table\ProfileTable;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 class PersonHelper {
+
+    public const USER_MODE_MANUAL = 'manual';
+    public const USER_MODE_IMPORT = 'import';
+    public const USER_MODE_SELF_REGISTER = 'self_register';
 
     protected $db;
     protected $toolsHelper;
@@ -509,13 +514,22 @@ class PersonHelper {
         return (int) $category->id;
     }
 
-    public function saveUser(string $name, string $email, int $requireReset = 1): int {
+    public function saveUser(
+            string $name,
+            string $email,
+            int $requireReset = 1,
+            string $mode = self::USER_MODE_MANUAL
+    ): int {
         $name = $this->normaliseName($name);
         $email = strtolower(trim($email));
         $sql = 'SELECT id FROM #__users WHERE LOWER(email) = ' . $this->db->quote($email) . ' LIMIT 1';
         $userId = (int) $this->toolsHelper->getValue($sql);
         $isNew = $userId < 1;
         $password = '';
+
+        if (!in_array($mode, [self::USER_MODE_MANUAL, self::USER_MODE_IMPORT, self::USER_MODE_SELF_REGISTER], true)) {
+            throw new \InvalidArgumentException('Unknown user creation mode: ' . $mode);
+        }
 
         if ($userId > 0) {
             $user = $this->userFactory->loadUserById($userId);
@@ -538,7 +552,9 @@ class PersonHelper {
                 'email' => $email,
                 'password' => $password,
                 'password2' => $password,
-                'block' => 0,
+                // Self-registration remains blocked until an administrator
+                // approves it. Imports are active immediately.
+                'block' => $mode === self::USER_MODE_SELF_REGISTER ? 1 : 0,
                 'sendEmail' => 0,
                 'registerDate' => Factory::getDate()->toSql(),
                 'activation' => '',
@@ -580,6 +596,13 @@ class PersonHelper {
             throw new \RuntimeException('Joomla did not return a user ID for ' . $name . '.');
         }
 
+        // A blocked self-registration which subsequently appears in a
+        // validated Insight/JSON import is confirmed as a real person and may
+        // be activated automatically. Never unblock users for other modes.
+        if ($mode === self::USER_MODE_IMPORT && (int) $user->block === 1) {
+            $this->setBlocked((int) $user->id, false);
+        }
+
         if ($isNew) {
             foreach (['Public', 'Registered'] as $groupTitle) {
                 if (!$this->addUserToGroup((int) $user->id, $groupTitle)) {
@@ -596,6 +619,55 @@ class PersonHelper {
         }
 
         return (int) $user->id;
+    }
+
+    /**
+     * Notify the configured administrator that a self-registration is waiting
+     * for approval. The configuration value is normally an email address;
+     * older installations may contain a Joomla user id.
+     */
+    public function notifySelfRegistration(int $userId, string $name, string $email, string $group): bool {
+        $notifyValue = trim((string) ComponentHelper::getParams('com_ra_tools')->get('email_new_user', ''));
+
+        if ($notifyValue === '') {
+            return false;
+        }
+
+        // The configuration field is an email address. Retain a numeric-user
+        // ID fallback for older installations that stored the administrator's
+        // Joomla user ID in this parameter.
+        $to = filter_var($notifyValue, FILTER_VALIDATE_EMAIL)
+                ? $notifyValue
+                : (string) $this->toolsHelper->getValue(
+                        'SELECT email FROM #__users WHERE id = ' . (int) $notifyValue . ' LIMIT 1'
+                );
+
+        if ($to === '') {
+            Factory::getApplication()->enqueueMessage(
+                    'Unable to find the configured self-registration notification address.',
+                    'warning'
+            );
+            return false;
+        }
+
+        $subject = 'A new MailMan self-registration requires approval';
+        $body = 'A new user has self-registered and remains blocked pending approval:<br>'
+                . 'Name: <b>' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</b><br>'
+                . 'Email: <b>' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '</b><br>'
+                . 'Group: <b>' . htmlspecialchars($group, ENT_QUOTES, 'UTF-8') . '</b><br>'
+                . 'User ID: <b>' . $userId . '</b>';
+
+        if (!$this->toolsHelper->sendEmail($to, $to, $subject, $body)) {
+            Factory::getApplication()->enqueueMessage(
+                    'Unable to send the self-registration notification to ' . $to . '.',
+                    'warning'
+            );
+            return false;
+        }
+
+        Factory::getApplication()->enqueueMessage('Self-registration notification sent to ' . $to . '.', 'info');
+
+        return true;
     }
 
     private function normaliseName(string $name): string {

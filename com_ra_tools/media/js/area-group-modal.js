@@ -1,62 +1,93 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const opts = Joomla.getOptions('areaGroupModal') || {};
-  const ajaxUrl = opts.ajaxUrl || 'index.php?option=com_ajax&plugin=plg_ra_ajaxgroups&format=json';
+  document.querySelectorAll('[data-ra-area-group-field]').forEach((root) => {
+    const fieldId = root.getAttribute('data-ra-area-group-field');
+    const fieldOptions = Joomla.getOptions('areaGroupField') || {};
+    const options = fieldOptions[fieldId]
+      || Joomla.getOptions(`areaGroupField.${fieldId}`)
+      || {};
+    const area = document.getElementById(options.areaId);
+    const group = document.getElementById(options.groupId);
+    const label = document.getElementById(options.labelId);
+    const modalElement = document.getElementById(options.modalId);
+    const confirm = modalElement?.querySelector('[data-ra-area-group-confirm]');
+    const hidden = document.getElementById(fieldId);
+    const launch = root.querySelector('[data-ra-area-group-launch]');
 
-  const areaSelect = document.getElementById('areaSelect');
-  const groupSelect = document.getElementById('groupSelect');
-  const confirmBtn = document.getElementById('confirmAreaGroupSelection');
-  const label = document.getElementById('areaGroupSelectionLabel');
+    if (!area || !group || !label || !confirm || !hidden) return;
 
-  const areaHidden = document.getElementById('jform_area_code');
-  const groupHidden = document.getElementById('jform_group_code');
+    const closeModal = () => {
+      if (window.bootstrap?.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+      } else {
+        modalElement.style.display = 'none';
+        modalElement.classList.remove('show');
+        modalElement.setAttribute('aria-hidden', 'true');
+      }
+    };
 
-  if (!areaSelect || !groupSelect || !confirmBtn || !areaHidden || !groupHidden) return;
-
-  areaSelect.addEventListener('change', async () => {
-    const areaCode = areaSelect.value;
-
-    groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
-    groupSelect.disabled = true;
-    confirmBtn.disabled = true;
-
-    if (!areaCode) return;
-
-    try {
-      const url = `${ajaxUrl}&area=${encodeURIComponent(areaCode)}`;
-      const response = await fetch(url, { credentials: 'same-origin' });
-      const json = await response.json();
-
-      const groups = Array.isArray(json?.data) ? json.data : [];
-
-      groups.forEach((g) => {
-        const opt = document.createElement('option');
-        opt.value = g.code;
-        opt.textContent = `${g.code} - ${g.name}`;
-        groupSelect.appendChild(opt);
+    modalElement.querySelectorAll('[data-bs-dismiss="modal"]').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeModal();
       });
+    });
 
-      groupSelect.disabled = groups.length === 0;
-    } catch (e) {
-      console.error('Failed loading groups', e);
-    }
-  });
+    launch?.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (window.bootstrap?.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+      } else {
+        modalElement.style.display = 'block';
+        modalElement.classList.add('show');
+        modalElement.setAttribute('aria-hidden', 'false');
+      }
+    });
 
-  groupSelect.addEventListener('change', () => {
-    confirmBtn.disabled = !groupSelect.value;
-  });
+    area.addEventListener('change', async () => {
+      group.innerHTML = '<option value="">Select Group</option>';
+      group.disabled = true;
+      confirm.disabled = true;
+      if (!area.value) return;
 
-  confirmBtn.addEventListener('click', () => {
-    const areaCode = areaSelect.value;
-    const groupCode = groupSelect.value;
-    const areaText = areaSelect.options[areaSelect.selectedIndex]?.text || areaCode;
-    const groupText = groupSelect.options[groupSelect.selectedIndex]?.text || groupCode;
+      if (area.value === 'N') {
+        group.innerHTML = '<option value="N">All groups</option>';
+        group.disabled = false;
+        group.value = 'N';
+        confirm.disabled = false;
+        return;
+      }
 
-    areaHidden.value = areaCode;
-    groupHidden.value = groupCode;
-    label.textContent = `${areaText} / ${groupText}`;
+      try {
+        const response = await fetch(`${options.ajaxUrl}&area=${encodeURIComponent(area.value)}`, {
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const json = await response.json();
+        let groups = json?.data;
+        if (typeof groups === 'string') {
+          try { groups = JSON.parse(groups); } catch (error) { groups = []; }
+        }
+        if (!Array.isArray(groups) && Array.isArray(groups?.data)) groups = groups.data;
+        (Array.isArray(groups) ? groups : []).forEach((item) => {
+          const option = document.createElement('option');
+          option.value = item.code;
+          option.textContent = `${item.code} - ${item.name}`;
+          group.appendChild(option);
+        });
+        group.disabled = group.options.length <= 1;
+      } catch (error) {
+        console.error('Unable to load groups', error);
+      }
+    });
 
-    const modalEl = document.getElementById('areaGroupModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
+    group.addEventListener('change', () => {
+      confirm.disabled = !group.value;
+    });
+
+    confirm.addEventListener('click', () => {
+      hidden.value = group.value;
+      label.textContent = `${area.options[area.selectedIndex].text} / ${group.options[group.selectedIndex].text}`;
+      closeModal();
+    });
   });
 });

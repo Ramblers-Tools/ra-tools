@@ -2,21 +2,16 @@
 
 /*
  * Installation script
- * 01/08/23 CB Create from MailMan script
- * 07/08/23 copy checkColumn and checkTable from version 3
- * 21/08/23 CB copy walksprinted.php to Ramblers/jsonwalks/std
- * 21/08/23 CB correct location of walksprinted
- * 09/10/23 CB update clusters
- * 16/10/23 CB Clusters
- * 13/11/23 CB don't use ToolsHelper->executeCommand
- * 20/11/23 CB start deletion of obsolete praogramme_area view
- * 20/11/23 CB actually tried to delete obsolete View
- * 04/12/23 CB replace getDbo()
- * 04/01/23 CB copy framework.inc.php
- * 04/09/24 CB remove messages about Programme_area
- * 10/09/24 CB new getVersions, new deleteFiles (from version 5.0.3)
- * 19/10/24 CB checkGroups
- * 21/12/24 CB delete ra_feedback_summary
+ * 09/07/25 CB recreated from event script
+ * 31/07/25 CB deleteView
+ * 15/09/25 CB version 3.4.0 - add title to ra_api_sites
+ * 17/10/25 CB message if unable to delete file/folder
+ * 03/11/25 CB use built in function to delete files and folders (3.4.5)
+ * 21/01/26 CB 3.5.1 correct ra_emails addressee_email
+ * 17/06/26 CB api_sites: sub_system -> varchar(12)
+ * 19/07/26 CB api_sites: sub_system -> varchar(20) (12 truncated existing data on upgrade)
+ * 30/08/26 CB consolidate installed component version lookup
+ * 22/09/26 CB remove dependcies of plugins (needed by mailman)
  */
 
 \defined('_JEXEC') or die;
@@ -24,27 +19,49 @@
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Filesystem\File;
-// use Joomla\Filesystem\File;
+use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Installer\InstallerAdapter;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
-use Joomla\CMS\Object\CMSObject;
+use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
+use Joomla\Database\ParameterType;
 
 class Com_Ra_toolsInstallerScript {
 
+    private const VERSION_REQUIRING_NO_PROCESSING = '3.7.4';
+
     private $component;
+    private $current_version;
+    protected $deleteFiles = array();
+    protected $deleteFolders = array();
     private $minimumJoomlaVersion = '4.0';
     private $minimumPHPVersion = JOOMLA_MINIMUM_PHP;
+    private $reconfigure_message = false;
+
+    function buildButton($url, $text, $newWindow = 0, $colour = '') {
+        if ($colour == '') {
+            $colour = 'sunrise';
+        }
+        $class = 'link-button ' . $colour;
+        $q = chr(34);
+        $out = "<a class=" . $q . $class . $q;
+        $out .= " href=" . $q . $url . $q;
+        $out .= " target =" . $q . "_self" . $q;
+        $out .= ">";
+        $out .= $text;
+        $out .= "</a>";
+        return $out;
+    }
 
     function checkColumn($table, $column, $mode, $details = '') {
-//  $mode = A: add the field, using data suppied in $details
-//  $mode = U: update the field (keeping name the same), using $details
+//  $mode = A: add the field
+//  $mode = U: update the field (keeping name the same)
 //  $mode = D: delete the field
 
         $count = $this->checkColumnExists($table, $column);
         $table_name = $this->dbPrefix . $table;
-        //       echo 'mode=' . $mode . ': Seeking ' . $table_name . '/' . $column . ', count=' . $count . "<br>";
+        echo 'mode=' . $mode . ': Seeking ' . $table_name . '/' . $column . ', count=' . $count . "<br>";
         if (($mode == 'A') AND ($count == 1)
                 OR ($mode == 'D') AND ($count == 0)) {
             return true;
@@ -103,7 +120,7 @@ class Com_Ra_toolsInstallerScript {
 //        echo "$sql<br>";
 
         $count = $this->getValue($sql);
-        echo 'Seeking ' . $table_name . ', count = ' . $count . "<br>";
+        echo 'Seeking ' . $table_name . ', count=' . $count . "<br>";
         if ($count > 0) {
             return $count;
         }
@@ -128,39 +145,55 @@ class Com_Ra_toolsInstallerScript {
         }
     }
 
-    function check403() {
-        $details = '(`code` VARCHAR(3) NOT NULL, '
-                . '`name` VARCHAR(20) NOT NULL, '
-                . '`contact_id` INT NULL, '
-                . ' PRIMARY KEY(`code`)'
-                . ') ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 DEFAULT COLLATE = utf8mb4_unicode_ci;
-                ';
-        $details2 = 'INSERT INTO `#__ra_clusters`(code, name) values ';
-        $details2 .= "('ME','Midlands and East'),";
-        $details2 .= "('N','North and North West'),";
-        $details2 .= "('SE','South East'),";
-        $details2 .= "('SSW','South and South West')";
-        $this->checkTable('ra_clusters', $details, '');
-        $this->checkColumn('ra_areas', 'cluster', 'A', "ADD cluster VARCHAR(3) NOT NULL DEFAULT '' AFTER co_url; ");
-        $this->checkColumn('ra_areas', 'chair_id', 'A', "ADD chair_id INT NOT NULL DEFAULT '0' AFTER cluster; ");
-        $this->updateClusters();
-    }
+    private function createTables() {
+// table ra_ event_states
 
-    private function deleteFile($target) {
-        // Not needed, could use a built in function (if details were known!)
-        if (file_exists(JPATH_SITE . $target)) {
-            File::delete(JPATH_SITE . $target);
-            echo "$target deleted<br>";
+        $details = '(`id` int NOT NULL ,
+            `seq` INT NOT NULL,
+            `title` varchar(20) NOT NULL,
+            PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci; ';
+        $this->checkTable('ra_event_states', $details);
+
+        $sql = 'SELECT COUNT(id) FROM #__ra_event_states';
+        $count = $this->getValue($sql);
+        if ($count == 0) {
+            $sql = "INSERT INTO #__ra_event_states (seq,id,title) VALUES(1,0,'Provisional')";
+            $this->executeCommand($sql);
+            $sql = "INSERT INTO #__ra_event_states (seq,id,title) VALUES(2,1,'Confirmed')";
+            $this->executeCommand($sql);
+            $sql = "INSERT INTO #__ra_event_states (seq,id,title) VALUES(3,-2, 'Cancelled')";
+            $this->executeCommand($sql);
         }
+
+// ra_event_types
+        $details = '(
+            `id` int(11) UNSIGNED  NOT NULL AUTO_INCREMENT,
+            `description` varchar(20) NOT NULL,
+            `ordering` INT NOT NULL DEFAULT 0,
+            `state` TINYINT(1) NOT NULL DEFAULT 1,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci;';
+        $this->checkTable('ra_event_types', $details);
+
+        $sql = 'SELECT COUNT(id) FROM #__ra_event_types';
+        echo $sql;
+        $count = $this->getValue($sql);
+        echo 'Number of records ' . $count . '<br>';
     }
 
-    private function deleteFolder($target) {
-        // 08/10/24 CB does not seem to work!
-        if (file_exists(JPATH_SITE . $target)) {
-            Folder::delete(JPATH_SITE . $target);
-            echo JPATH_SITE . "$target deleted<br>";
-        } else {
-            echo "$target not found<br>";
+    public function deleteView($component = 'com_ra_events', $view = 'Myevents') {
+// first character of View must be upper case
+        $application[0] = 'administrator/';
+        $application[1] = '';
+        for ($i = 0; $i < 2; $i++) {
+            $this->deleteFiles[] = $application[$i] . 'components/' . $component . '/forms/filter_' . strtolower($view) . 'xml';
+            $this->deleteFiles[] = $application[$i] . 'components/' . $component . '/forms/filter_' . strtolower($view) . 'xml';
+            $this->deleteFiles[] = $application[$i] . 'components/' . $component . '/src/Controller/' . $view . 'Controller.php';
+            $this->deleteFiles[] = $application[$i] . 'components/' . $component . '/src/Model/' . $view . 'Model.php';
+            $this->deleteFiles[] = $application[$i] . 'components/' . $component . '/src/table/' . $view . 'Table.php';
+            $this->deleteFolders[] = $application[$i] . 'components/' . $component . '/src/View/' . $view;
+            $this->deleteFolders[] = $application[$i] . 'components/' . $component . '/tmpl/' . strtolower($view);
         }
     }
 
@@ -171,6 +204,54 @@ class Com_Ra_toolsInstallerScript {
         return $db->execute();
     }
 
+    private function fail(string $message): bool {
+        Factory::getApplication()->enqueueMessage($message, 'error');
+        Log::add($message, Log::ERROR, 'jerror');
+
+        return false;
+    }
+
+    /**
+     * Return the installed manifest version for a component.
+     */
+    private function getInstalledComponentVersion(string $component = 'com_ra_tools'): ?string {
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $query = $db->getQuery(true);
+        $extensionType = 'component';
+
+        $query->select($db->quoteName('e.manifest_cache'))
+                ->from($db->quoteName('#__extensions', 'e'))
+                ->where($db->quoteName('e.element') . ' = :component')
+                ->where($db->quoteName('e.type') . ' = :extensionType')
+                ->bind(':component', $component, ParameterType::STRING)
+                ->bind(':extensionType', $extensionType, ParameterType::STRING);
+
+        $db->setQuery($query);
+        $manifestCache = $db->loadResult();
+
+        if ($manifestCache === null) {
+            return null;
+        }
+
+        try {
+            $manifest = json_decode((string) $manifestCache, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException(
+                    'Installer could not decode version information for ' . $component . '.',
+                    0,
+                    $exception
+            );
+        }
+
+        if (!is_array($manifest)) {
+            throw new \RuntimeException('Installer found invalid version information for ' . $component . '.');
+        }
+
+        $installedVersion = $manifest['version'] ?? null;
+
+        return is_scalar($installedVersion) ? (string) $installedVersion : null;
+    }
+
     private function getValue($sql) {
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         $query = $db->getQuery(true);
@@ -178,187 +259,267 @@ class Com_Ra_toolsInstallerScript {
         return $db->loadResult();
     }
 
-    /**
-     *     returns details of the component version and the database version
-     *
-     * @return  CMSObject
-     *
-     */
-    public function getVersions($component = 'com_ra_tools') {
-        $sql = 'SELECT e.manifest_cache, s.version_id AS db_version ';
-        $sql .= 'FROM #__extensions as e ';
-        $sql .= 'LEFT JOIN #__schemas AS s ON s.extension_id = e.extension_id ';
-        $sql .= 'WHERE element="' . $component . '"';
-        $db = Factory::getContainer()->get(DatabaseInterface::class);
-        $query = $db->getQuery(true);
-        $db->setQuery($sql);
-        $db->execute();
-        $item = $db->loadObject();
-        if ($item == false) {
-            echo 'Can\'t find versions for ' . $component . '<br>';
-            return false;
-        }
-        $values = json_decode($item->manifest_cache);
-
-        $versions = new CMSObject;
-        $versions->component = $values->version;
-        $versions->db_version = $item->db_version;
-        return $versions;
-    }
-
     public function install($parent): bool {
-        echo '<p>Installing RA Tools (com_ra_tools) ' . '</p>';
+        $this->message('Installing RA Tools (com_ra_tools).');
         if (ComponentHelper::isEnabled('com_ra_tools', true)) {
-            $versions = $this->getVersions();
-            echo '<p>com_ra_tools found, version ' . $versions->component;
-            echo ', database version ' . $versions->db_version . '</p>';
+            try {
+                $installedVersion = $this->getInstalledComponentVersion();
+            } catch (\RuntimeException $exception) {
+                return $this->fail($exception->getMessage());
+            }
+
+            $this->message('com_ra_tools found, version ' . ($installedVersion ?? 'not recorded') . '.');
         }
         return true;
     }
 
-    public function uninstall($parent): bool {
-        echo '<p>Uninstalling RA Tools (com_ra_tools)</p>';
+    private function message(string $message): void {
+        Factory::getApplication()->enqueueMessage($message, 'message');
+    }
 
+    public function postflight($type, $parent) {
+        $this->message('Postflight RA Tools (com_ra_tools).');
+
+        if ($type == 'uninstall') {
+            return true;
+        }
+        try {
+            $installedVersion = $this->getInstalledComponentVersion();
+        } catch (\RuntimeException $exception) {
+            return $this->fail($exception->getMessage());
+        }
+
+        $this->message('com_ra_tools is now at ' . ($installedVersion ?? 'not recorded') . '.');
+//        $this->removeFiles();
+        if ($this->reconfigure_message == true) {
+            $this->message('Version was originally ' . $this->current_version
+                    . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
+                    . ' or later is required to skip upgrade processing.');
+            $this->red('Please review and update the configuration settings for com_ra_tools.');
+        }
+        echo '<b>Useful links</b><br>';
+        echo $this->buildButton('index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>';
+        echo $this->buildButton('index.php?option=com_config&view=component&component=com_ra_tools', 'Configure');
+        return true;
+    }
+
+    public function preflight($type, $parent): bool {
+        $this->message('Preflight RA Tools (type=' . $type . ').');
+        if ($type == 'uninstall') {
+            return true;
+        }
+
+        if (!empty($this->minimumPHPVersion) && version_compare(PHP_VERSION, $this->minimumPHPVersion, '<')) {
+            Log::add(
+                    Text::sprintf('JLIB_INSTALLER_MINIMUM_PHP', $this->minimumPHPVersion),
+                    Log::WARNING,
+                    'jerror'
+            );
+            return false;
+        }
+        if (!empty($this->minimumJoomlaVersion) && version_compare(JVERSION, $this->minimumJoomlaVersion, '<')) {
+            Log::add(
+                    Text::sprintf('JLIB_INSTALLER_MINIMUM_JOOMLA', $this->minimumJoomlaVersion),
+                    Log::WARNING,
+                    'jerror'
+            );
+            return false;
+        }
+
+        if (ComponentHelper::isEnabled('com_ra_tools', true)) {
+            try {
+                $this->current_version = $this->getInstalledComponentVersion();
+            } catch (\RuntimeException $exception) {
+                return $this->fail($exception->getMessage());
+            }
+
+            if ($this->current_version === null) {
+                return $this->fail('Installer could not find readable version information for com_ra_tools.');
+            }
+
+            $this->message('com_ra_tools already present, version=' . $this->current_version . '.');
+        }
+        if ($type == 'install') {
+            return true;
+        }
+        if ($this->current_version === null) {
+            return $this->fail('Installer could not find the existing com_ra_tools installation.');
+        }
+
+        $this->reconfigure_message = false;
+        $this->deleteFiles[] = 'components/com_ra_tools/tmpl/emailform/default.xml';
+        if (version_compare($this->current_version, self::VERSION_REQUIRING_NO_PROCESSING, 'ge')) {
+            $this->message('Current version is ' . $this->current_version
+                    . '; no additional processing required.');
+        } else {
+            $this->message('Version was originally ' . $this->current_version
+                    . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
+                    . ' or later is required to skip upgrade processing.');
+            if (version_compare($this->current_version, '3.5.2', 'le')) {
+                $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT; ');
+                $this->checkColumn('ra_clusters', 'website', 'A', 'VARCHAR(100) NOT NULL AFTER area_list; ');
+            }
+            if (version_compare($this->current_version, '3.4.2', 'le')) {
+                $this->checkColumn('ra_emails', 'ref', 'A', 'INT DEFAULT "0" AFTER `record_type`;');
+                $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'sender_email', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'addressee_name', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER sender_email; ');
+                $this->checkColumn('ra_emails', 'addressee_email', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER addressee_name; ');
+            }
+            if (version_compare($this->current_version, '3.4.1', 'le')) {
+                $this->updateAreas();
+            }
+            if (version_compare($this->current_version, '3.4.0', 'le')) {
+                $this->checkColumn('ra_api_sites', 'title', 'A', 'VARCHAR(100) NULL AFTER sub_system; ');
+            }
+            if (version_compare($this->current_version, '3.3.13', 'le')) {
+                $this->checkColumn('ra_groups', 'bespoke', 'A', 'VARCHAR(1) NOT NULL DEFAULT "0" AFTER name; ');
+                $this->checkColumn('ra_groups', 'latitude', 'U', 'DECIMAL(14,12) NOT NULL;');
+                $this->checkColumn('ra_groups', 'longitude', 'U', 'DECIMAL(14,12) NOT NULL;');
+            }
+            if (version_compare($this->current_version, '3.3.11', 'le')) {
+                $this->deleteView('com_ra_events', 'Apisites');
+                $this->deleteView('com_ra_events', 'Apisite');
+            }
+            if (version_compare($this->current_version, '3.3.10', 'le')) {
+                $this->checkColumn('ra_logfile', 'sub_system', 'U', 'VARCHAR(12) NOT NULL;');
+                $this->checkColumn('ra_logfile', 'sub_syatem', 'D', '');
+            }
+            if (version_compare($this->current_version, '3.3.7', 'le')) {
+                $this->updateSites();
+                $this->reconfigure_message = true;
+            }
+
+
+            if (version_compare($this->current_version, '3.3.1', 'le')) {
+                $this->reconfigure_message = true;
+                $this->checkColumn('ra_api_sites', 'sub_system', 'A', 'VARCHAR(10) NOT NULL AFTER id; ');
+                $this->checkColumn('ra_emails', 'ref', 'A', 'VARCHAR(2) NOT NULL AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'sender_email', 'A', 'VARCHAR(100) NOT NULL AFTER sender_name; ');
+                $this->checkColumn('ra_emails', 'addressee_name', 'A', 'VARCHAR(100) NOT NULL AFTER sender_email; ');
+                $this->checkColumn('ra_emails', 'addressee_email', 'A', 'TEXT AFTER addressee_name; ');
+                //       $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT AFTER addressee_name; ');
+                if (version_compare($this->current_version, '2.1.2', 'ge')) {
+                    $details = '`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                        `sub_system` VARCHAR(12) NOT NULL ,
+                        `url` VARCHAR(100) NOT NULL ,
+                        `token` VARCHAR(255) NOT NULL ,
+                        `colour` VARCHAR(22) NOT NULL ,
+                        `state` TINYINT(1) NULL  DEFAULT 1,
+                        `ordering` INT NULL DEFAULT 0,
+                        `checked_out` INT(11) UNSIGNED,
+                        `checked_out_time` DATETIME NULL DEFAULT NULL ,
+                        `created` DATETIME NULL DEFAULT NULL ,
+                        `created_by` INT(11)  NULL DEFAULT 0,
+                        `modified` DATETIME NULL  DEFAULT NULL ,
+                        `modified_by` INT(11) NULL  DEFAULT 0,
+                        PRIMARY KEY (`id`)
+                        ) DEFAULT COLLATE=utf8mb4_unicode_ci; ';
+                    $this->checkTable('ra_api_sites', $details);
+                }
+            }
+            if (version_compare($this->current_version, '3.7.4', 'le')) {
+                $this->checkColumn('ra_api_sites', 'sub_system', 'U', 'VARCHAR(20) NOT NULL;');
+            }
+        }
+
+        return true;
+    }
+
+    public function red($text) {
+        Factory::getApplication()->enqueueMessage($text, 'warning');
+    }
+
+    public function uninstall($parent): bool {
+        try {
+            $installedVersion = $this->getInstalledComponentVersion();
+        } catch (\RuntimeException $exception) {
+            Log::add($exception->getMessage(), Log::WARNING, 'jerror');
+            $installedVersion = null;
+        }
+
+        echo '<p>Uninstalling RA Tools (com_ra_tools) version=' . ($installedVersion ?? 'not recorded') . '<br>';
         return true;
     }
 
     public function update($parent): bool {
         echo '<p>Updating RA Tools (com_ra_tools)</p>';
-
-// You can have the backend jump directly to the newly updated component configuration page
-// $parent->getParent()->setRedirectURL('index.php?option=com_ra_tools');
         return true;
     }
 
-    public function preflight($type, $parent): bool {
-        echo '<p>Preflight RA Tools (type = ' . $type . ')</p>';
-        $versions = $this->getVersions();
-        if ($versions) {
-            echo '<p>com_ra_tools is currently at version ' . $versions->component;
-            echo ', database version ' . $versions->db_version . '</p>';
-        }
-        if ($type !== 'uninstall') {
-            if (!empty($this->minimumPHPVersion) && version_compare(PHP_VERSION, $this->minimumPHPVersion, '<')) {
-                Log::add(
-                        Text::sprintf('JLIB_INSTALLER_MINIMUM_PHP', $this->minimumPHPVersion),
-                        Log::WARNING,
-                        'jerror'
-                );
-                return false;
-            }
+    public function updateAreas() {
+        // new field in ra_events
+        $this->checkColumn('ra_areas', 'bespoke', 'A', 'INT DEFAULT "0" AFTER details; ');
+        $sql = 'UPDATE #__ra_areas SET bespoke=0';
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Our footpaths and bridleways span a varied countryside taking in farmland, canals, rivers, fine villages and woodland. Visit our website for more information – www.nottsarearamblers.org.uk' , bespoke=1 WHERE code ='NE'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Shropshire is a diverse county, offering walks in landscapes ranging from the rugged hills of the south to the special landscape of the Meres and Mosses in the north.' , bespoke=1 WHERE code = 'SS'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Supporting the work of the ten groups in the Buckinghamshire, Milton Keynes and West Middlesey Area.' , bespoke=1 WHERE code = 'BU'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'The Area consists of 5 Groups, each aiming to promote walking, arrange locally led walks and protect our rights of way. We also organise campaigning events, rallies and promotional events.' , bespoke=1 WHERE code = 'NP'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'The Herefordshire area helps to look after the paths and green spaces throughout the county. We are a leading voice on walking matters in the county.' , bespoke=1 WHERE code = 'HW'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'The Highlands is one of Europe\'s most unspoilt scenic regions, a rugged landscape of imposing mountains, sheltered fertile glens and scattered offshore islands offering unsurpassed walking for all.' , bespoke=1 WHERE code = 'SC'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'The Wiltshire Ramblers currently total some 1,550 members divided into 6 groups, one of which is our young persons group for 20 to 40 year olds. Our groups work towards the charitable aims of Ramblers in different ways, but one thing they all do is ...' , bespoke=1 WHERE code = 'WE'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'There are eleven Groups in the Lothian and Borders Ramblers Area, each arranges a walks programme suitable for people with different levels of eyperience and fitness.  ' , bespoke=1 WHERE code = 'LB'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'This Area covers most of the former County of Avon.' , bespoke=1 WHERE code = 'AV'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'This Area organises a regular programme of walks for families.' , bespoke=1 WHERE code = 'SO'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Unlike many other Ramblers Areas, Manchester and High Peak itself organises a full led walks programme covering Greater Manchester and beyond, with all walks making use of public transport connections.' , bespoke=1 WHERE code = 'MR'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Visit the Surrey Area website for details of our 17 walking groups covering the county of Surrey and the London boroughs of Croydon, Kingston, Merton, Richmond and Sutton.' , bespoke=1 WHERE code = 'SR'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Walking in Devon you will enjoy both Dartmoor and Eymoor National Parks; (over 630 miles long), The Dartmoor Way, The Two Moors Way, The Tarka Trail and much more' , bespoke=1 WHERE code = 'DN'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'We have 9 Berkshire Area groups: 7 traditional groups covering the county, a 20s & 30s group and a flexi group – something for everybody!' , bespoke=1 WHERE code = 'BK'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'We organise walks to suit all abilities, using car, coach and public transport. <b>When dogs are allowed on our walks they are usually on a lead. Contact the leader if this concerns you.</b>' , bespoke=1 WHERE code = 'MC'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'We support the work of the groups in our Area, including seven geographic and two age-related groups. We work to protect and enhance the Rights of Way in Hertfordshire, Barnet, Enfield and Haringey.' , bespoke=1 WHERE code = 'HF'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'We work with our Groups protecting/enhancing footpaths & countryside; and creating opportunities to enjoy the outdoors through led walks. ' , bespoke=1 WHERE code = 'SW'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Welcome to our beautiful county in The Heart Of England!' , bespoke=1 WHERE code = 'WK'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Welcome to our Cornwall Ramblers page!  We cover a large area with diverse walking, from coastal, to countryside, eyploring industrial mining areas and discovering parish paths and some hidden gems...' , bespoke=1 WHERE code = 'CL'";
+        $this->executeCommand($sql);
+        $sql = "UPDATE #__ra_areas SET details = 'Welcome to the Inner London Area Ramblers. Our area has 10 walking groups, three London-wide, and seven based in two or three boroughs, stretching from Heathrow to Thamesmead.' , bespoke=1 WHERE code = 'IL'";
+        $this->executeCommand($sql);
 
-            if (!empty($this->minimumJoomlaVersion) && version_compare(JVERSION, $this->minimumJoomlaVersion, '<')) {
-                Log::add(
-                        Text::sprintf('JLIB_INSTALLER_MINIMUM_JOOMLA', $this->minimumJoomlaVersion),
-                        Log::WARNING,
-                        'jerror'
-                );
-                return false;
-            }
-        }
-//        $this->checkGroups;
-        return true;
+        $sql = 'DELETE FROM #__ra_groups WHERE details="Ramblers Web Editor Group"';
+        $this->executeCommand($sql);
     }
 
-    public function postflight($type, $parent) {
-        '<p>Postflight RA Tools (com_ra_tools)</p>';
-
-        if ($type == 'uninstall') {
-            return 1;
+    public function updateSites() {
+        $sql = 'SELECT id FROM #__ra_api_sites ';
+        $sql .= 'WHERE url="https://staffordshireramblers.org"';
+        $id = $this->getValue($sql);
+        if (is_null($id)) {
+            $sql = "INSERT INTO `#__ra_api_sites`
+            (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
+('RA Tools', 'https://staffordshireramblers.org', 'c2hhMjU2Ojk3OTo5ODQ4NGMzOTNhMGJmM2U5NWY3NzcyODViNTI2NzFkYzY2MmQwZTZmMzliMmNiMTlkNmUzNzI0MjNkNGUyOThk',
+'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:03:03', 1 );";
+            $this->executeCommand($sql);
+            echo 'Created API site for Staffs<br>';
         }
-        $versions = $this->getVersions();
-        if ($versions) {
-            echo '<p>com_ra_tools is now at version ' . $versions->component;
-            echo ', database version ' . $versions->db_version . '</p>';
-        }
-
-        // Copy php include file for cli programs used by other components
-        $new_script = JPATH_SITE . "/components/com_ra_tools/framework.inc.php";
-        $target = JPATH_SITE . '/cli/framework.inc.php';
-        if (file_exists($new_script)) {
-            echo 'Copying ' . $new_script . ' to ' . $target;
-            copy($new_script, $target);
-            if (file_exists($target)) {
-                echo ' Success<br>';
-            } else {
-                echo ' Failed<br>';
-            }
-        } else {
-            echo $new_script . ' not found<br>';
-        }
-
-        $new_script = JPATH_SITE . "/components/com_ra_tools/walksprinted.php";
-        $target = JPATH_LIBRARIES . '/ramblers/jsonwalks/std/walksprinted.php';
-        if (file_exists($new_script)) {
-            echo 'Copying ' . $new_script . ' to ' . $target;
-            copy($new_script, $target);
-            if (file_exists($target)) {
-                echo ' Success<br>';
-            } else {
-                echo ' Failed<br>';
-            }
-        } else {
-            echo $new_script . ' not found<br>';
-        }
-        $v_403 = '4.0.3';
-        if (version_compare($versions->component, $v_403, '>')) {
-            echo 'New version is less than ' . $v_403 . '<br>';
-        }
-        $this->deleteFile('/components/com_ra_tools/src/View/Programme_area');
-        $this->deleteFile('/components/com_ra_tools/tmpl/programme_area');
-        $this->deleteFile('/components/com_ra_tools/tmpl/walk/default.xml');
-        $this->deleteFile('/components/com_ra_tools/tmpl/walkform/default.xml');
-        $this->deleteFile('/components/com_ra_tools/tmpl/walks/default.xml');
-
-//        if (1) {
-//        $this->checkColumn('ra_walks', 'description', 'A', "TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT ''; ");
-//        $this->checkColumn('ra_mail_shots', 'author_id', 'D');
-//            $this->check403();
-//        }
-//        $sql = "INSERT INTO `dev_ra_mail_access` (`id`, `name`)";
-//        $sql .= "VALUES ('1', 'Subscriber'), ('2', 'Author') ,('3', 'Owner') ";
-        return true;
-    }
-
-    private function updateClusters() {
-        $sql = 'UPDATE `#__ra_areas` SET cluster = "SC" WHERE nation_id=2';
-        $response = $this->executeCommand($sql);
-        if ($response) {
-            echo 'Updated Scotland';
-        } else {
-            echo 'Scotland Failure';
-        }
-
-        $sql = 'UPDATE `#__ra_areas` SET cluster = "WA" WHERE nation_id=3';
-        $response = $this->executeCommand($sql);
-        if ($response) {
-            echo 'Updated Wales';
-        } else {
-            echo 'Wales Failure';
-        }
-
-        $sql = 'UPDATE `#__ra_areas` SET cluster = "ME" WHERE code in ("BF","LI","NP","NR","NE","SS","NS","WO","CH","DE")';
-        $response = $this->executeCommand($sql);
-        if ($response) {
-            echo 'Updated ME';
-        } else {
-            echo 'ME Failure';
-        }
-
-        $sql = 'UPDATE `#__ra_areas` SET cluster = "SE" WHERE code in ("BU","CB","ES","WX","KT","IL","IW","NO","OX","SK","SR","SX")';
-        $response = $this->executeCommand($sql);
-        if ($response) {
-            echo 'Updated SE';
-        } else {
-            echo 'SE Failure';
-        }
-
-        $sql = 'UPDATE `#__ra_areas` SET cluster = "SSW" WHERE code in ("AV","BK","CL","DN","DT","GR","IW","OX","SO","WE")';
-        $response = $this->executeCommand($sql);
-        if ($response) {
-            echo 'Updated SSW';
-        } else {
-            echo 'SSW Failure';
+        $sql = 'SELECT id FROM #__ra_api_sites ';
+        $sql .= 'WHERE url= "https://ramblers.org.uk"';
+        $id = $this->getValue($sql);
+        if (is_null($id)) {
+            $sql = "INSERT INTO `#__ra_api_sites`
+            (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
+('RA Walks', 'https://ramblers.org.uk', '742d93e8f409bf2b5aec6f64cf6f405e',
+'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
+            $this->executeCommand($sql);
+            echo 'Created API site for CO<br>';
         }
     }
 
