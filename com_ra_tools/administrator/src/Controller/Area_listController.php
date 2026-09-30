@@ -125,7 +125,7 @@ class Area_listController extends AdminController {
             Factory::getApplication()->enqueueMessage($message, 'error');
         }
         $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=' . $api_key;
-        echo '___orig: ' . $feedurl . '<br>';
+        // Do not echo $feedurl - it carries the API key
         $display = 0;
         $jsonHelper = new JsonHelper;
         //      echo 'setUrl=' . $jsonHelper->setUrl('organisation', 'groups=NS') . '<br>';
@@ -263,7 +263,7 @@ class Area_listController extends AdminController {
         $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=' . $api_key;
 
 //        $jsonHelper = new JsonHelper;
-//        echo '___orig: ' . $feedurl . '<br>';
+//        // never echo $feedurl - it carries the API key
 //        echo 'setSql=' . $jsonHelper->setUrl('organisation', 'groups=NS') . '<br>';
 //        die;
         $ch = curl_init();

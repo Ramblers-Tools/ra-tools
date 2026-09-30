@@ -51,7 +51,7 @@ class JsonHelper {
     }
 
     public function getCountEvents($code) {
-        // https://walks-manager.ramblers.org.uk/api/volunteers/walksevents?types=walkevents&types=group-event&api-key=742d93e8f409bf2b5aec6f64cf6f405e&groups=CF
+        // https://walks-manager.ramblers.org.uk/api/volunteers/walksevents?types=walkevents&types=group-event&api-key=<key from API sites>&groups=CF
         return $this->getJson('group-event', 'groups=' . $code, 'Y');
     }
 
@@ -286,8 +286,8 @@ class JsonHelper {
             $url .= $type;
         }
         $this->setKey();
-        //       return $this->url . $type . $this->api_key . $criteria;
-        die($this->url . $type . $this->api_key . $criteria);
+        // Never echo or die() on this value - it carries the API key
+        return $url . $this->api_key . $criteria;
     }
 
     private function setKey() {

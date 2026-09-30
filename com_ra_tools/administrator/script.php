@@ -505,7 +505,7 @@ class Com_Ra_toolsInstallerScript {
         if (is_null($id)) {
             $sql = "INSERT INTO `#__ra_api_sites`
             (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-('RA Tools', 'https://staffordshireramblers.org', 'c2hhMjU2Ojk3OTo5ODQ4NGMzOTNhMGJmM2U5NWY3NzcyODViNTI2NzFkYzY2MmQwZTZmMzliMmNiMTlkNmUzNzI0MjNkNGUyOThk',
+('RA Tools', 'https://staffordshireramblers.org', '',
 'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:03:03', 1 );";
             $this->executeCommand($sql);
             echo 'Created API site for Staffs<br>';
@@ -516,7 +516,7 @@ class Com_Ra_toolsInstallerScript {
         if (is_null($id)) {
             $sql = "INSERT INTO `#__ra_api_sites`
             (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-('RA Walks', 'https://ramblers.org.uk', '742d93e8f409bf2b5aec6f64cf6f405e',
+('RA Walks', 'https://ramblers.org.uk', '',
 'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
             $this->executeCommand($sql);
             echo 'Created API site for CO<br>';

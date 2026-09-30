@@ -33,13 +33,16 @@ CREATE TABLE IF NOT EXISTS `#__ra_api_sites` (
 PRIMARY KEY (`id`)
 ) DEFAULT COLLATE=utf8mb4_unicode_ci; 
 # ------------------------------------------------------------------------------
+# Placeholder API sites. Tokens are deliberately blank - each site must enter
+# its own credentials in Components > RA Tools > API sites before the feeds work.
+# Never commit a real token here: this file ships in the installable package.
 INSERT INTO `#__ra_api_sites`
     (`sub_system`, `title`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-    ('RA Tools','Staffordshire Area', 'https://staffordshireramblers.org', 'c2hhMjU2Ojk3OTo5ODQ4NGMzOTNhMGJmM2U5NWY3NzcyODViNTI2NzFkYzY2MmQwZTZmMzliMmNiMTlkNmUzNzI0MjNkNGUyOThk',
+    ('RA Tools','Staffordshire Area', 'https://staffordshireramblers.org', '',
     'rgba(133,132,191,0.1)', 1, '2025-12-25 06:00:00', 1 );
 INSERT INTO `#__ra_api_sites`
     (`sub_system`, `title`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-    ('RA Walks', 'Central Office','https://ramblers.org.uk', '742d93e8f409bf2b5aec6f64cf6f405e',
+    ('RA Walks', 'Central Office','https://ramblers.org.uk', '',
     'rgba(133,132,191,0.1)', 1, '2025-12-25 06:00:00', 1);
 # ------------------------------------------------------------------------------
 -- Table structure for table `#__ra_areas`

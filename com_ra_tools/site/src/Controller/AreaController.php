@@ -119,9 +119,16 @@ class AreaController extends FormController {
 // doesWalkExist ($walkid)
 
     public function getJson($type, $param, $count = 'N') {
+        $toolsHelper = new ToolsHelper;
+        $api_key = $toolsHelper->lookupApiKey();
+        if ($api_key == '') {
+            $message = 'API key not found - please create a record in API sites';
+            Factory::getApplication()->enqueueMessage($message, 'error');
+            return false;
+        }
         $url = 'https://walks-manager.ramblers.org.uk/api/volunteers/walksevents?types=';
         $url .= $type;
-        $url .= '&api-key=742d93e8f409bf2b5aec6f64cf6f405e';
+        $url .= '&api-key=' . $api_key;
         $url .= '&' . $param;
 //        $url .= '&limit=3';
 //        $url .= '&dow=7';
@@ -146,7 +153,7 @@ class AreaController extends FormController {
         if ($httpCode !== 200) {
             print('Error code: ' . $error . "\n");
             print('Http return: ' . $httpCode . "\n");
-            echo 'Access failed : ' . $url, $httpCode;
+            echo 'Access failed, http return: ' . $httpCode;
             return;
         }
 
@@ -280,9 +287,8 @@ class AreaController extends FormController {
         $target = "index.php?option=com_ra_tools&view=area&code=" . substr($code, 0, 2);
         echo $toolsHelper->backButton($target);
 //        $url = 'https://walks-manager.ramblers.org.uk/api/volunteers/walksevents?types=group-walk';
-//        $url .= '&api-key=742d93e8f409bf2b5aec6f64cf6f405e';
+//        $url .= '&api-key=' . $toolsHelper->lookupApiKey();
 //        $url .= '&groups=' . $code;
-//        echo $url;
     }
 
     public function showArea() {

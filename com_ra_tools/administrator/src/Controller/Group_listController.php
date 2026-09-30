@@ -98,7 +98,6 @@ class Group_listController extends AdminController {
         $display = 0;
         $toolsHelper = new ToolsHelper;
 
-//        $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=742d93e8f409bf2b5aec6f64cf6f405e';
         $api_key = $this->toolsHelper->lookupApiKey();
         if ($api_key == '') {
             $message = 'API key not found - please create a record in API sites';
