@@ -4,11 +4,11 @@
     <author>Ramblers Tools</author>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <creationDate>September 2026</creationDate>
+    <creationDate>3 October 2026</creationDate>
     <copyright>Copyright 2026 Ramblers Tools</copyright>
     <license>GNU General Public License version 3 or later</license>
-    <version>1.0.13</version>
-    <description>Creates an unpublished RA profile placeholder for newly-created Joomla users.</description>
+    <version>1.0.14</version>
+    <description>Creates an RA profile placeholder for newly-created Joomla users.</description>
     <scriptfile>script.php</scriptfile>
     <namespace path="src">Ramblers\Plugin\User\Ra_profiles</namespace>
     <files>
