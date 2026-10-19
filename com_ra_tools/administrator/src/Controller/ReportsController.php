@@ -7,6 +7,7 @@
  * 27/06/26 CB change sort order in showLogfile
  * 03/09/26 CB change to showMenus
  * 06/09/26 CB use htmlspecialchars for message output
+ * 19/10/26 CB tidy showMenus
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -1022,11 +1023,10 @@ public function showMenus() {
         $sql .= 'FROM `#__menu` AS m ';
         $sql .= 'INNER JOIN `#__menu` AS p ON p.id = m.parent_id ';
         $sql .= "WHERE m.link like 'index.php?option=com_ra%' ";
-        $sql .= 'ORDER BY m.menutype, m.link, p.title, m.title';
-
+        $sql .= 'ORDER BY p.menutype, m.link, p.title, m.title';
         $rows = $this->toolsHelper->getRows($sql);
         $objTable = new ToolsTable();
-$objTable->add_header('Location,Component,Parent,Title,Link,Note,Published,id');
+        $objTable->add_header('Location,Component,Parent,Title,Link,Note,Published,id');
         foreach ($rows as $row) {
             if ($row->Type == '') {
                 $objTable->add_item('Sidebar');
@@ -1072,22 +1072,6 @@ $objTable->add_header('Location,Component,Parent,Title,Link,Note,Published,id');
             $objTable->generate_line();
         }
         $objTable->generate_table();
-////////////////////////////////////////////////////////////////////////////////
-        $sql = 'SELECT m.id, p.title AS "Parent", m.link, m.title, m.published, m.link, m.parent_id ';
-        $sql .= 'FROM `#__menu` AS m ';
-        $sql .= 'INNER JOIN `#__menu` AS p ON p.id = m.parent_id ';
-        $sql .= 'WHERE p.title = "Menu_Item_Root" AND m.title = "Dashboard"';
-        $this->toolsHelper->showQuery($sql);
-
-        $sql = 'SELECT m.id FROM `#__menu` AS m INNER JOIN `#__menu` AS p ON p.id = m.parent_id WHERE p.title = "Menu_Item_Root" AND m.title = "Dashboard"';
-        $id = $this->toolsHelper->getValue($sql);
-        if ($id > 0) {
-            $sql = 'UPDATE `#__menu` SET title = "RA Dashboard" WHERE id=' . $id;
-            echo "sql = $sql<br>";
-            echo "id = $id<br>";
-            $this->toolsHelper->executeCommand($sql);
-        }
-////////////////////////////////////////////////////////////////////////////////
         $target = "administrator/index.php?option=com_ra_tools&view=reports";
         echo $this->toolsHelper->backButton($target);
     }
