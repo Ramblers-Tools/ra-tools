@@ -2,12 +2,6 @@
 
 /**
  * Various common functions used throughout the project
- *
- * @version     3.7.5
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2020. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
 
  * 03/09/25 CB don't log emails in batch mode, showExtensions
  * 24/09/25 CB isInstalled
@@ -26,6 +20,7 @@
  * 15/07/26 CB improved image hanling for emails: insert code required for embedLocalEmailImages
  * 17/07/26 CB added function buildDashboardReportBlock (for dashboard and reports menus)
  * 10/08/26 CB added getNearestOrganisations, allow new windows in buildDashboardBlock
+ * 12/10/26 CB correct membershipNo in showAccess
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -1821,7 +1816,7 @@ class ToolsHelper {
 
     public function showAccess($id) {
 
-        $sql = 'SELECT u.name, p.home_group, p.preferred_name, p.membershipNumber ';
+        $sql = 'SELECT u.name, p.home_group, p.preferred_name, p.membershipNo ';
         $sql .= 'FROM #__users AS u ';
         $sql .= 'LEFT JOIN #__ra_profiles as p on p.id = u.id ';
         $sql .= 'WHERE u.id=' . $id;
@@ -1831,8 +1826,8 @@ class ToolsHelper {
         echo 'You are logged in as ' . $item->name . ' (' . $id . ')';
         echo ', your home group is ' . $item->home_group;
         echo ', your preferred name is ' . $item->preferred_name;
-        if ($item->membershipNumber > 0) {
-            echo ', your membership Number is ' . $item->membershipNumber;
+        if ($item->membershipNo > 0) {
+            echo ', your membership Number is ' . $item->membershipNo;
         }
         echo ', and you are a member of the following UserGroups<br>';
         $sql = 'SELECT g.title  ';
