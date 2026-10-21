@@ -12,6 +12,7 @@
  * 19/07/26 CB api_sites: sub_system -> varchar(20) (12 truncated existing data on upgrade)
  * 30/08/26 CB consolidate installed component version lookup
  * 22/09/26 CB remove dependcies of plugins (needed by mailman)
+ * 19/10/26 CB remove updateSites, updateGroups, schema checking
  */
 
 \defined('_JEXEC') or die;
@@ -145,43 +146,6 @@ class Com_Ra_toolsInstallerScript {
         }
     }
 
-    private function createTables() {
-// table ra_ event_states
-
-        $details = '(`id` int NOT NULL ,
-            `seq` INT NOT NULL,
-            `title` varchar(20) NOT NULL,
-            PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci; ';
-        $this->checkTable('ra_event_states', $details);
-
-        $sql = 'SELECT COUNT(id) FROM #__ra_event_states';
-        $count = $this->getValue($sql);
-        if ($count == 0) {
-            $sql = "INSERT INTO #__ra_event_states (seq,id,title) VALUES(1,0,'Provisional')";
-            $this->executeCommand($sql);
-            $sql = "INSERT INTO #__ra_event_states (seq,id,title) VALUES(2,1,'Confirmed')";
-            $this->executeCommand($sql);
-            $sql = "INSERT INTO #__ra_event_states (seq,id,title) VALUES(3,-2, 'Cancelled')";
-            $this->executeCommand($sql);
-        }
-
-// ra_event_types
-        $details = '(
-            `id` int(11) UNSIGNED  NOT NULL AUTO_INCREMENT,
-            `description` varchar(20) NOT NULL,
-            `ordering` INT NOT NULL DEFAULT 0,
-            `state` TINYINT(1) NOT NULL DEFAULT 1,
-            PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci;';
-        $this->checkTable('ra_event_types', $details);
-
-        $sql = 'SELECT COUNT(id) FROM #__ra_event_types';
-        echo $sql;
-        $count = $this->getValue($sql);
-        echo 'Number of records ' . $count . '<br>';
-    }
-
     public function deleteView($component = 'com_ra_events', $view = 'Myevents') {
 // first character of View must be upper case
         $application[0] = 'administrator/';
@@ -278,7 +242,7 @@ class Com_Ra_toolsInstallerScript {
     }
 
     public function postflight($type, $parent) {
-        $this->message('Postflight RA Tools (com_ra_tools).');
+//        $this->message('Postflight RA Tools (com_ra_tools).');
 
         if ($type == 'uninstall') {
             return true;
@@ -289,17 +253,7 @@ class Com_Ra_toolsInstallerScript {
             return $this->fail($exception->getMessage());
         }
 
-        $this->message('com_ra_tools is now at ' . ($installedVersion ?? 'not recorded') . '.');
-//        $this->removeFiles();
-        if ($this->reconfigure_message == true) {
-            $this->message('Version was originally ' . $this->current_version
-                    . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
-                    . ' or later is required to skip upgrade processing.');
-            $this->red('Please review and update the configuration settings for com_ra_tools.');
-        }
-        echo '<b>Useful links</b><br>';
-        echo $this->buildButton('index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>';
-        echo $this->buildButton('index.php?option=com_config&view=component&component=com_ra_tools', 'Configure');
+//        $this->message('com_ra_tools is now at ' . ($installedVersion ?? 'not recorded') . '.');
         return true;
     }
 
@@ -307,23 +261,6 @@ class Com_Ra_toolsInstallerScript {
         $this->message('Preflight RA Tools (type=' . $type . ').');
         if ($type == 'uninstall') {
             return true;
-        }
-
-        if (!empty($this->minimumPHPVersion) && version_compare(PHP_VERSION, $this->minimumPHPVersion, '<')) {
-            Log::add(
-                    Text::sprintf('JLIB_INSTALLER_MINIMUM_PHP', $this->minimumPHPVersion),
-                    Log::WARNING,
-                    'jerror'
-            );
-            return false;
-        }
-        if (!empty($this->minimumJoomlaVersion) && version_compare(JVERSION, $this->minimumJoomlaVersion, '<')) {
-            Log::add(
-                    Text::sprintf('JLIB_INSTALLER_MINIMUM_JOOMLA', $this->minimumJoomlaVersion),
-                    Log::WARNING,
-                    'jerror'
-            );
-            return false;
         }
 
         if (ComponentHelper::isEnabled('com_ra_tools', true)) {
@@ -334,7 +271,7 @@ class Com_Ra_toolsInstallerScript {
             }
 
             if ($this->current_version === null) {
-                return $this->fail('Installer could not find readable version information for com_ra_tools.');
+                return $this->message('Installer could not find readable version information for com_ra_tools.');
             }
 
             $this->message('com_ra_tools already present, version=' . $this->current_version . '.');
@@ -343,7 +280,7 @@ class Com_Ra_toolsInstallerScript {
             return true;
         }
         if ($this->current_version === null) {
-            return $this->fail('Installer could not find the existing com_ra_tools installation.');
+            return $this->message('Installer could not find the existing com_ra_tools installation.');
         }
 
         $this->reconfigure_message = false;
@@ -355,73 +292,10 @@ class Com_Ra_toolsInstallerScript {
             $this->message('Version was originally ' . $this->current_version
                     . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
                     . ' or later is required to skip upgrade processing.');
-            if (version_compare($this->current_version, '3.5.2', 'le')) {
-                $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT; ');
-                $this->checkColumn('ra_clusters', 'website', 'A', 'VARCHAR(100) NOT NULL AFTER area_list; ');
-            }
-            if (version_compare($this->current_version, '3.4.2', 'le')) {
-                $this->checkColumn('ra_emails', 'ref', 'A', 'INT DEFAULT "0" AFTER `record_type`;');
-                $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER date_sent; ');
-                $this->checkColumn('ra_emails', 'sender_email', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER date_sent; ');
-                $this->checkColumn('ra_emails', 'addressee_name', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER sender_email; ');
-                $this->checkColumn('ra_emails', 'addressee_email', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER addressee_name; ');
-            }
-            if (version_compare($this->current_version, '3.4.1', 'le')) {
-                $this->updateAreas();
-            }
-            if (version_compare($this->current_version, '3.4.0', 'le')) {
-                $this->checkColumn('ra_api_sites', 'title', 'A', 'VARCHAR(100) NULL AFTER sub_system; ');
-            }
-            if (version_compare($this->current_version, '3.3.13', 'le')) {
-                $this->checkColumn('ra_groups', 'bespoke', 'A', 'VARCHAR(1) NOT NULL DEFAULT "0" AFTER name; ');
-                $this->checkColumn('ra_groups', 'latitude', 'U', 'DECIMAL(14,12) NOT NULL;');
-                $this->checkColumn('ra_groups', 'longitude', 'U', 'DECIMAL(14,12) NOT NULL;');
-            }
-            if (version_compare($this->current_version, '3.3.11', 'le')) {
-                $this->deleteView('com_ra_events', 'Apisites');
-                $this->deleteView('com_ra_events', 'Apisite');
-            }
-            if (version_compare($this->current_version, '3.3.10', 'le')) {
-                $this->checkColumn('ra_logfile', 'sub_system', 'U', 'VARCHAR(12) NOT NULL;');
-                $this->checkColumn('ra_logfile', 'sub_syatem', 'D', '');
-            }
-            if (version_compare($this->current_version, '3.3.7', 'le')) {
-                $this->updateSites();
-                $this->reconfigure_message = true;
-            }
-
-
-            if (version_compare($this->current_version, '3.3.1', 'le')) {
-                $this->reconfigure_message = true;
-                $this->checkColumn('ra_api_sites', 'sub_system', 'A', 'VARCHAR(10) NOT NULL AFTER id; ');
-                $this->checkColumn('ra_emails', 'ref', 'A', 'VARCHAR(2) NOT NULL AFTER date_sent; ');
-                $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL AFTER date_sent; ');
-                $this->checkColumn('ra_emails', 'sender_email', 'A', 'VARCHAR(100) NOT NULL AFTER sender_name; ');
-                $this->checkColumn('ra_emails', 'addressee_name', 'A', 'VARCHAR(100) NOT NULL AFTER sender_email; ');
-                $this->checkColumn('ra_emails', 'addressee_email', 'A', 'TEXT AFTER addressee_name; ');
-                //       $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT AFTER addressee_name; ');
-                if (version_compare($this->current_version, '2.1.2', 'ge')) {
-                    $details = '`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-                        `sub_system` VARCHAR(12) NOT NULL ,
-                        `url` VARCHAR(100) NOT NULL ,
-                        `token` VARCHAR(255) NOT NULL ,
-                        `colour` VARCHAR(22) NOT NULL ,
-                        `state` TINYINT(1) NULL  DEFAULT 1,
-                        `ordering` INT NULL DEFAULT 0,
-                        `checked_out` INT(11) UNSIGNED,
-                        `checked_out_time` DATETIME NULL DEFAULT NULL ,
-                        `created` DATETIME NULL DEFAULT NULL ,
-                        `created_by` INT(11)  NULL DEFAULT 0,
-                        `modified` DATETIME NULL  DEFAULT NULL ,
-                        `modified_by` INT(11) NULL  DEFAULT 0,
-                        PRIMARY KEY (`id`)
-                        ) DEFAULT COLLATE=utf8mb4_unicode_ci; ';
-                    $this->checkTable('ra_api_sites', $details);
-                }
-            }
-            if (version_compare($this->current_version, '3.7.4', 'le')) {
-                $this->checkColumn('ra_api_sites', 'sub_system', 'U', 'VARCHAR(20) NOT NULL;');
-            }
+ //           if (version_compare($this->current_version, '3.5.2', 'le')) {
+ //               $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT; ');
+ //               $this->checkColumn('ra_clusters', 'website', 'A', 'VARCHAR(100) NOT NULL AFTER area_list; ');
+//            }
         }
 
         return true;
@@ -496,31 +370,6 @@ class Com_Ra_toolsInstallerScript {
 
         $sql = 'DELETE FROM #__ra_groups WHERE details="Ramblers Web Editor Group"';
         $this->executeCommand($sql);
-    }
-
-    public function updateSites() {
-        $sql = 'SELECT id FROM #__ra_api_sites ';
-        $sql .= 'WHERE url="https://staffordshireramblers.org"';
-        $id = $this->getValue($sql);
-        if (is_null($id)) {
-            $sql = "INSERT INTO `#__ra_api_sites`
-            (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-('RA Tools', 'https://staffordshireramblers.org', 'c2hhMjU2Ojk3OTo5ODQ4NGMzOTNhMGJmM2U5NWY3NzcyODViNTI2NzFkYzY2MmQwZTZmMzliMmNiMTlkNmUzNzI0MjNkNGUyOThk',
-'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:03:03', 1 );";
-            $this->executeCommand($sql);
-            echo 'Created API site for Staffs<br>';
-        }
-        $sql = 'SELECT id FROM #__ra_api_sites ';
-        $sql .= 'WHERE url= "https://ramblers.org.uk"';
-        $id = $this->getValue($sql);
-        if (is_null($id)) {
-            $sql = "INSERT INTO `#__ra_api_sites`
-            (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-('RA Walks', 'https://ramblers.org.uk', '742d93e8f409bf2b5aec6f64cf6f405e',
-'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
-            $this->executeCommand($sql);
-            echo 'Created API site for CO<br>';
-        }
     }
 
 }
