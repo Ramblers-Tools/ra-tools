@@ -43,6 +43,7 @@ class ToolsHelper {
 
     public $db;
     public $error;
+    public $messages = [];
     public $user;
 
     /**
@@ -1681,7 +1682,12 @@ class ToolsHelper {
         return $path;
     }
 
+    public function getMessages() {
+        return $this->messages;
+    }
+
     function sendEmail($to, $reply_to, $subject, $message, $attachments = '', $bcc = '') {
+        $this->messages = [];
         $body = $this->buildEmailPreamble();
         $body .= $message;
         // Some older callers still append the closing tags themselves; only add them when missing.
@@ -1691,8 +1697,12 @@ class ToolsHelper {
 
         if (ComponentHelper::isEnabled('com_ra_delivery', true)) {
             $smtpHelper = new SmtpHelper;
-            Factory::getApplication()->enqueueMessage('Sending using API ', 'info');
-            return $smtpHelper->sendEmail($to, $reply_to, $subject, $body, $attachments, $bcc);
+            $result = $smtpHelper->sendEmail($to, $reply_to, $subject, $body, $attachments, $bcc);
+            $this->messages = $smtpHelper->getMessages();
+            foreach ($this->messages as $smtpMessage) {
+                Factory::getApplication()->enqueueMessage($smtpMessage, $result === false ? 'error' : 'info');
+            }
+            return $result;
         }
         // Some older callers still append the closing tags themselves; only add them when missing.
         if (!preg_match('/<\/body>\s*<\/html>\s*$/i', $body)) {
