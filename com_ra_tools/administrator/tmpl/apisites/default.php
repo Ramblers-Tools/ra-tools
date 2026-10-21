@@ -1,14 +1,10 @@
 <?php
 /**
- * @version    3.5.3
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 30/06/25 CB show background colours
  * 27/08/25 CB correct refresh
  * 22/09/25 CB show colour in colour, show title
  * 09/03/26 CB only refresh events for active sites
+ * 24/09/26 CB add LoadUsers
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -20,7 +16,6 @@ use \Joomla\CMS\Router\Route;
 use \Joomla\CMS\Layout\LayoutHelper;
 use \Joomla\CMS\Language\Text;
 use Joomla\CMS\Session\Session;
-use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 HTMLHelper::_('bootstrap.tooltip');
 HTMLHelper::_('behavior.multiselect');
@@ -33,13 +28,11 @@ $userId = $this->user->id;
 $listOrder = $this->state->get('list.ordering');
 $listDirn = $this->state->get('list.direction');
 $canOrder = $this->user->authorise('core.edit.state', 'com_ra_tools');
-$toolsHelper = new ToolsHelper;
-if (!empty($saveOrder)) {
-    $saveOrderingUrl = 'index.php?option=com_ra_tools&task=apisites.saveOrderAjax&tmpl=component&' . Session::getFormToken() . '=1';
-    HTMLHelper::_('draggablelist.draggable');
-}
+$isSuperuser = $this->toolsHelper->isSuperuser();
+
 $target_info = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=3&id=';
 $target_refresh = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=2&id=';
+$target_refresh_members = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshMembers&id=';
 $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisites.testDeliveryActivity&id=';
 ?>
 
@@ -117,7 +110,7 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                     <?php if (isset($item->checked_out) && $item->checked_out && ($canEdit || $canChange)) : ?>
                                         <?php echo HTMLHelper::_('jgrid.checkedout', $i, $item->uEditor, $item->checked_out_time, 'apisites.', $canCheckin); ?>
                                     <?php endif; ?>
-                                    <?php if ($canEdit) : ?>
+                                    <?php if ($isSuperuser) : ?>
                                         <a href="<?php echo Route::_('index.php?option=com_ra_tools&task=apisite.edit&id=' . (int) $item->id); ?>">
                                             <?php echo $this->escape($item->url); ?>
                                         </a>
@@ -138,15 +131,20 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                 echo '</a>';
                                 echo '</td>';
                                 if ($item->state ==1 AND ($item->sub_system == 'RA Events')) {
-                                    echo '<td>' . $toolsHelper->imageButton('I', $target_info . $item->id) . '</td>';
+                                    echo '<td>' . $this->toolsHelper->imageButton('I', $target_info . $item->id) . '</td>';
                                     echo '<td>';
-                                    echo $toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'red');
+                                    echo $this->toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'button-p0583');
                                     echo '</td>';
                                 } elseif ($item->state == 1 AND ($item->sub_system == 'RA Delivery')) {
                                     echo '<td></td>';
                                     echo '<td>';
-                                    echo $toolsHelper->buildButton($target_delivery_test . $item->id, 'Test', false, 'red');
-                                    echo '</td>';
+                                    echo $this->toolsHelper->buildButton($target_delivery_test . $item->id, 'Test', false, 'button-p0583');
+                                    echo '</td>'; 
+                                 } elseif ($item->state == 1 AND ($item->sub_system == 'RA Members')) {
+                                    echo '<td></td>';
+                                    echo '<td>';
+                                    echo $this->toolsHelper->buildButton($target_refresh_members . $item->id, 'Load', false, 'button-p0583');
+                                    echo '</td>';  
                                 } else {
                                     echo '<td></td>';
                                     echo '<td></td>';

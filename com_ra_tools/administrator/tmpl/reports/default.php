@@ -12,7 +12,6 @@
  * 06/02/23 CB mailman report
  * 23/06/23 CB remove mailman reports again
  * 06/09/23 CB showLogfile
- * 18/08/23 CB areasLatitude
  * 22/01/24 CB contactsByCategory
  * 21/04/25 CB Show Events from WalksManager, User by Registration date
  * 24/04/25 CB showLogfileByDate
@@ -22,6 +21,7 @@
  * 15/07/25 CB show emails
  * 21/07/25 CB refer to Home Dashboard in breadcrumbs
  * 14/04/26 CB restructure formatting
+ * 18/09/26 CB delete areasLatitude
  */
 defined('_JEXEC') or die;
 
@@ -48,18 +48,21 @@ $breadcrumbs .= '>' . $toolsHelper->buildLink('administrator/index.php?option=co
 echo $breadcrumbs;
 echo '<h2>System reports</h2>';
 $reports = [
-    'List emails' => 'administrator/index.php?option=com_ra_tools&view=emails',
+    'Check database for integrity' => 'administrator/index.php?option=com_ra_tools&task=reports.checkDatabase',    
     'Top article hit counters' => 'administrator/index.php?option=com_ra_tools&task=reports.showHitCounters',
-    'Groups by bespoke description' => 'administrator/index.php?option=com_ra_tools&task=reports.showBespoke',
     'Contact By Category' => 'administrator/index.php?option=com_ra_tools&task=reports.contactsByCategory',
-//    'Extract contacts' => 'administrator/index.php?option=com_ra_tools&task=reports.extractContacts',
-    'Reset Users' => 'administrator/index.php?option=com_ra_tools&task=reports.resetUsers',
-    'Users with duplicate name' => 'administrator/index.php?option=com_ra_tools&task=reports.duplicateName',
     'Count users by Registration date' => 'administrator/index.php?option=com_ra_tools&task=reports.showRegistrations',
-    'Joomla User by Group' => 'administrator/index.php?option=com_ra_tools&task=reports.showJoomlaUsersByGroup',
+    'Show Joomla User by Group' => 'administrator/index.php?option=com_ra_tools&task=reports.showJoomlaUsersByGroup',
+    'Show Blocked Users' => 'administrator/index.php?option=com_ra_tools&task=reports.blockedUsers',
+//    'Extract contacts' => 'administrator/index.php?option=com_ra_tools&task=reports.extractContacts',
+ 
+    'Users with duplicate name' => 'administrator/index.php?option=com_ra_tools&task=reports.duplicateName',
+    'Users requiring a password reset' => 'administrator/index.php?option=com_ra_tools&task=reports.resetUsers',  
+    
+    'List emails' => 'administrator/index.php?option=com_ra_tools&view=emails',
     'Extensions and versions' => 'administrator/index.php?option=com_ra_tools&task=reports.showExtensions',
     'Schema' => 'administrator/index.php?option=com_ra_tools&task=reports.showSchema',
-    'Areas by latitude' => 'administrator/index.php?option=com_ra_tools&task=reports.areasLatitude',
+    'Groups by bespoke description' => 'administrator/index.php?option=com_ra_tools&task=reports.showBespoke',
 ];
 
 if (ComponentHelper::isEnabled('com_ra_mailman', true) OR (ComponentHelper::isEnabled('com_ra_walks', true))) {

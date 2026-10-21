@@ -42,7 +42,7 @@ if (is_null($this->user)) {
     echo "<b>More reports are available if you log in</b><br>";
 } else {
     $objTable->add_item("Logfile");
-    $objTable->add_item($objHelper->buildLink("index.php?option=com_ra_wf&task=reports.showLogfile&offset=1", "Go", False, "link-button button-p0555"));
+    $objTable->add_item($objHelper->buildLink("index.php?option=com_ra_tools&task=reports.showLogfile&offset=1", "Go", False, "link-button button-p0555"));
     $objTable->generate_line();
 }
 

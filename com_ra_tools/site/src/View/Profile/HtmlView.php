@@ -21,29 +21,32 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use \Joomla\CMS\User\CurrentUserInterface;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
+use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 class HtmlView extends BaseHtmlView implements CurrentUserInterface {
 
-    protected $user;
-    protected $form;
     protected $item;
+    protected $form;
+    protected $params;
+    protected $toolsHelper;
+    protected $user;
 
     public function display($tpl = null) {
         $layout = Factory::getApplication()->input->getCmd('layout', '');
-        //       die("Layout $layout<br>");
         $this->user = $this->getCurrentUser();
-        //       die('user ' . $this->user->id);
-        //       if ($layout == 'register') {
+        $this->params = ComponentHelper::getParams('com_ra_tools');
+        $this->params = $this->get('Params');
         if ($this->user->id == 0) {
-            //return Error::raiseWarning(404, "Please login to gain access to this function");
-//            throw new \Exception('Please login to gain access to this function', 404);
-            echo '<h4>Please login to gain access to this function</h4>';
+            Factory::getApplication()->enqueueMessage('Please login to gain access to this function', 'error');
             return false;
         }
         //       }
-        //       $this->item = $this->get('Item');
-//        $this->form = $this->get('Form');
-//        $this->canDo = ContentHelper::getActions('com_ra_tools');
+        $this->item = $this->get('Item');
+        if (!$this->item) {
+            throw new \RuntimeException('Your profile could not be found.', 404);
+        }
+        $model = $this->getModel();
+        $this->toolsHelper = new ToolsHelper;
         return parent::display($tpl);
     }
 

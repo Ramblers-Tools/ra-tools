@@ -3,20 +3,24 @@
     <name>pkg_ra_tools</name>
     <packagename>ra_tools</packagename>
     <author>Ramblers Tools</author>
-    <creationDate>2024</creationDate>
+    <creationDate>19/10/26</creationDate>
     <copyright>2024-2026 Ramblers Tools</copyright>
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>4.0.11</version>
+    <version>4.0.16</version>
     <description>Installs the RA Tools component, module and plugins for Ramblers groups</description>
+    <scriptfile>script.php</scriptfile>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
     <files folder="packages">
         <file type="component" id="com_ra_tools">com_ra_tools.zip</file>
         <file type="module" id="mod_ra_tools" client="site">mod_ra_tools.zip</file>
         <file type="module" id="mod_ra_facebook" client="site">mod_ra_facebook.zip</file>
+        <file type="plugin" id="plg_ajax_ra_selectgroup" group="ajax">plg_ajax_ra_selectgroup.zip</file>
         <file type="plugin" id="plg_webservices_ra_tools" group="webservices">plg_webservices_ra_tools.zip</file>
         <file type="plugin" id="plg_finder_ra_toolswalks" group="finder">plg_finder_ra_toolswalks.zip</file>
+        <file type="plugin" id="plg_system_ra_tools" group="system">plg_system_ra_tools.zip</file>
+        <file type="plugin" id="plg_user_ra_profiles" group="user">plg_user_ra_profiles.zip</file>
     </files>
     <updateservers>
         <server type="extension" name="RA Tools Update Server">https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/updates/pkg_ra_tools.xml</server>

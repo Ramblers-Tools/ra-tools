@@ -24,6 +24,7 @@ use Joomla\CMS\Helper\ContentHelper;
 use \Joomla\CMS\Form\Form;
 use \Joomla\CMS\HTML\Helpers\Sidebar;
 use \Joomla\CMS\User\CurrentUserInterface;
+use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 /**
  * View class for a list of Apisites.
@@ -35,6 +36,7 @@ class HtmlView extends BaseHtmlView {
     protected $items;
     protected $pagination;
     protected $state;
+    protected $toolsHelper;
     protected $user;
 
     /**
@@ -53,6 +55,8 @@ class HtmlView extends BaseHtmlView {
         $this->filterForm = $this->get('FilterForm');
         $this->activeFilters = $this->get('ActiveFilters');
         $this->user = $this->getCurrentUser();
+        $this->toolsHelper = new ToolsHelper;
+        
         // Check for errors.
         if (count($errors = $this->get('Errors'))) {
             throw new \Exception(implode("\n", $errors));

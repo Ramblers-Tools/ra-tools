@@ -1,11 +1,6 @@
 <?php
 
 /**
- * @version    3.7.4
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 17/06/25 CB created
  * 19/06/25 CB replaced with version in com_ra_tools
  * 30/06/25 CB dump JSON data id no mode
@@ -16,6 +11,8 @@
  * 07/06/25 CB show email sender, not email_id
  * 08/06/26 CB Show all button after apiTest 
  * 13/07/26 CB use SmtpHelper, not ActivityHelper
+ * 23/08/26 CB refreshMembers added
+ * 05/08/26 CB enqueue any error messages from SmtpHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -33,6 +30,7 @@ use Joomla\Utilities\ArrayHelper;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 use Ramblers\Component\Ra_delivery\Site\Helper\SmtpHelper;
 use Ramblers\Component\Ra_events\Site\Helpers\EventsHelper;
+use Ramblers\Component\Ra_members\Site\Helper\LoadHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
 
@@ -197,7 +195,7 @@ class ApisitesController extends AdminController {
                     echo $message . '<br>';
                 }
                 $back = 'administrator/index.php?option=com_ra_tools&view=apisites';
-                $back .= '&id=' . $api_site_id;
+                $back .= '&id=' . $id;
                 echo $this->toolsHelper->backButton($back);
                 return;
             } elseif ($mode == 3) {
@@ -216,11 +214,33 @@ class ApisitesController extends AdminController {
         }
     }
 
-    public function testDeliveryActivity() {
-        $id = Factory::getApplication()->input->getInt('id', 0);
+    public function refreshMembers(){
+        $id = $this->app->input->getInt('id', 0);
 
         if ($id === 0) {
-            Factory::getApplication()->enqueueMessage('Site id is zero', 'error');
+            $this->app->enqueueMessage('Site id is zero', 'error');
+            echo $this->toolsHelper->backButton($this->back);
+            return;
+        }
+
+        $helper = new LoadHelper;
+        $result = $helper->loadMembers($id);
+        if ($result === false) {
+            $this->app->enqueueMessage('Failed to load members for site ' . $id, 'error');
+        }
+        foreach ($helper->messages as $message) {
+            Factory::getApplication()->enqueueMessage($message, 'info');
+        }
+
+        echo $this->toolsHelper->backButton($this->back);
+        return;
+    }
+
+    public function testDeliveryActivity() {
+        $id = $this->app->input->getInt('id', 0);
+
+        if ($id === 0) {
+            $this->app->enqueueMessage('Site id is zero', 'error');
             echo $this->toolsHelper->backButton($this->back);
             return;
         }
@@ -232,6 +252,7 @@ class ApisitesController extends AdminController {
         echo '<p>API site id: <b>' . (int) $id . '</b></p>';
 
         foreach ($helper->getMessages() as $message) {
+            $this->app->enqueueMessage($message, 'error');
             echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '<br>';
         }
 

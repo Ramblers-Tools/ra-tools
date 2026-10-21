@@ -84,40 +84,6 @@ class ClustersController extends AdminController
 
 	
 
-	/**
-	 * Method to save the submitted ordering values for records via AJAX.
-	 *
-	 * @return  void
-	 *
-	 * @since   3.4.8
-	 *
-	 * @throws  Exception
-	 */
-	public function saveOrderAjax()
-	{
-		// Get the input
-		$pks   = $this->input->post->get('cid', array(), 'array');
-		$order = $this->input->post->get('order', array(), 'array');
-
-		// Sanitize the input
-		ArrayHelper::toInteger($pks);
-		ArrayHelper::toInteger($order);
-
-		// Get the model
-		$model = $this->getModel();
-
-		// Save the ordering
-		$return = $model->saveorder($pks, $order);
-
-		if ($return)
-		{
-			echo "1";
-		}
-
-		// Close the application
-		Factory::getApplication()->close();
-	}
-
     public function updateClusters() { // localhost/administrator/index.php?option=com_ra_tools&task=clusters.updateClusters
         $toolsHelper = new ToolsHelper;
         $sql = 'SELECT * FROM #__ra_clusters';
@@ -134,7 +100,10 @@ class ClustersController extends AdminController
 
         $sql = 'SELECT code FROM #__ra_areas WHERE cluster IS NULL ORDER BY code';
         $rows = $toolsHelper->getRows($sql);
-        if (count($rows) > 0) {
+        if (count($rows) == 0) {
+			$count = $toolsHelper->getvalue('SELECT COUNT(*) FROM #__ra_areas');
+			echo 'All ' . $count . ' areas have a cluster code<br>';
+		} else {
             echo "Areas without cluster code<br>";
             foreach ($rows as $row) {
                 echo $row->code . ',';

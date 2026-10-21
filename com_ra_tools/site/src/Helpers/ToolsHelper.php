@@ -2,12 +2,6 @@
 
 /**
  * Various common functions used throughout the project
- *
- * @version     3.7.5
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2020. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
 
  * 03/09/25 CB don't log emails in batch mode, showExtensions
  * 24/09/25 CB isInstalled
@@ -26,6 +20,7 @@
  * 15/07/26 CB improved image hanling for emails: insert code required for embedLocalEmailImages
  * 17/07/26 CB added function buildDashboardReportBlock (for dashboard and reports menus)
  * 10/08/26 CB added getNearestOrganisations, allow new windows in buildDashboardBlock
+ * 12/10/26 CB correct membershipNo in showAccess
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -37,6 +32,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ContentHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Object\CMSObject;
+use Joomla\CMS\Router\Route;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
@@ -47,6 +43,7 @@ class ToolsHelper {
 
     public $db;
     public $error;
+    public $messages = [];
     public $user;
 
     /**
@@ -422,19 +419,26 @@ class ToolsHelper {
     /**
      * Gets the edit permission for an user
      *
+     * @param   string  $component  The component asset name
+     *
      * @param   mixed  $item  The item
      *
      * @return  bool
      */
     public static function canUserEdit($component, $item) {
-        $permission = false;
-        $user = Factory::getApplication()->getSession()->get('user');
-        var_dump($user);
-        if ($user->authorise('core.edit', $component) || (isset($item->created_by) && $user->$component)) {
-            $permission = true;
+        $user = Factory::getApplication()->getIdentity();
+
+        if (empty($item->id)) {
+            return $user->authorise('core.create', $component);
         }
-        die;
-        return $permission;
+
+        if ($user->authorise('core.edit', $component)) {
+            return true;
+        }
+
+        return isset($item->created_by)
+            && (int) $item->created_by === (int) $user->id
+            && $user->authorise('core.edit.own', $component);
     }
 
     static function convert_to_ASCII($name) {
@@ -813,6 +817,7 @@ class ToolsHelper {
         $sql .= ',' . $this->db->quote($record_type);
         $sql .= ',' . $this->db->quote(substr($ref, 0, 10));
         $sql .= ',' . $this->db->quote($message) . ')';
+        echo "Helper::createLog: $sql<br>";
         $this->executeCommand($sql);
         /*
           $db = $this->getDbo();
@@ -1677,7 +1682,12 @@ class ToolsHelper {
         return $path;
     }
 
+    public function getMessages() {
+        return $this->messages;
+    }
+
     function sendEmail($to, $reply_to, $subject, $message, $attachments = '', $bcc = '') {
+        $this->messages = [];
         $body = $this->buildEmailPreamble();
         $body .= $message;
         // Some older callers still append the closing tags themselves; only add them when missing.
@@ -1687,8 +1697,12 @@ class ToolsHelper {
 
         if (ComponentHelper::isEnabled('com_ra_delivery', true)) {
             $smtpHelper = new SmtpHelper;
-            Factory::getApplication()->enqueueMessage('Sending using API ', 'info');
-            return $smtpHelper->sendEmail($to, $reply_to, $subject, $body, $attachments, $bcc);
+            $result = $smtpHelper->sendEmail($to, $reply_to, $subject, $body, $attachments, $bcc);
+            $this->messages = $smtpHelper->getMessages();
+            foreach ($this->messages as $smtpMessage) {
+                Factory::getApplication()->enqueueMessage($smtpMessage, $result === false ? 'error' : 'info');
+            }
+            return $result;
         }
         // Some older callers still append the closing tags themselves; only add them when missing.
         if (!preg_match('/<\/body>\s*<\/html>\s*$/i', $body)) {
@@ -1812,7 +1826,7 @@ class ToolsHelper {
 
     public function showAccess($id) {
 
-        $sql = 'SELECT u.name, p.home_group, p.preferred_name, p.membershipNumber ';
+        $sql = 'SELECT u.name, p.home_group, p.preferred_name, p.membershipNo ';
         $sql .= 'FROM #__users AS u ';
         $sql .= 'LEFT JOIN #__ra_profiles as p on p.id = u.id ';
         $sql .= 'WHERE u.id=' . $id;
@@ -1822,8 +1836,8 @@ class ToolsHelper {
         echo 'You are logged in as ' . $item->name . ' (' . $id . ')';
         echo ', your home group is ' . $item->home_group;
         echo ', your preferred name is ' . $item->preferred_name;
-        if ($item->membershipNumber > 0) {
-            echo ', your membership Number is ' . $item->membershipNumber;
+        if ($item->membershipNo > 0) {
+            echo ', your membership Number is ' . $item->membershipNo;
         }
         echo ', and you are a member of the following UserGroups<br>';
         $sql = 'SELECT g.title  ';
@@ -2076,7 +2090,11 @@ class ToolsHelper {
             echo $missing;
         } else {
             $this->toolsTable->add_header("Date,Group,Event,Type,Max places,Notify,Count bookings,Total places,Emails");
-            echo '<h2>Future Events organised by you</h2>';
+            if ($future == 'Y') {
+                echo '<h2>Future Events organised by you</h2>';
+            } else {
+                echo '<h2>Past Events organised by you</h2>';
+            }
             $sql = 'SELECT COUNT(id) as num ';
             $sql .= 'FROM #__ra_emails AS e ';
             $sql .= 'WHERE sub_system="RA Events" ';
@@ -2086,7 +2104,8 @@ class ToolsHelper {
                 $count = $this->getValue($sql . $row->id);
                 $this->toolsTable->add_item($row->event_date);
                 $this->toolsTable->add_item($row->group_code);
-                $this->toolsTable->add_item($row->title);
+                $event_link = Route::_('index.php?option=com_ra_events&view=event&id=' . $row->id);
+                $this->toolsTable->add_item('<a href="' . $event_link . '">' . $row->title . '</a>');
                 $this->toolsTable->add_item($row->description);
                 $this->toolsTable->add_item($row->max_bookings);
                 if ($row->notify_organiser == 1) {

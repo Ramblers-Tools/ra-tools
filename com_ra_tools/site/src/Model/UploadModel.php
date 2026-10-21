@@ -33,42 +33,47 @@ class UploadModel extends FormModel {
     private $item = null;
 
     /**
-     * Method to auto-populate the model state.
+     * Check if data can be saved
      *
-     * Note. Calling getState in this method will result in recursion.
+     * @return bool
+     */
+    public function getCanSave() {
+        $table = $this->getTable();
+
+        return $table !== false;
+    }
+    
+     /**
+     * Method to get the data form.
      *
-     * @return  void
+     * The base form is loaded from XML
+     *
+     * @param   array   $data     An optional array of data for the form to interogate.
+     * @param   boolean $loadData True if the form is to load its own data (default case), false if not.
+     *
+     * @return  Form    A Form object on success, false on failure
      *
      * @since   1.0.4
-     *
-     * @throws  Exception
      */
-    protected function populateState() {
-        $app = Factory::getApplication('com_ra_tools');
+    public function getForm($data = array(), $loadData = true) {
+        // Get the form.
+        $form = $this->loadForm('com_ra_tools.upload', 'upload', array(
+            'control' => 'jform',
+            'load_data' => $loadData
+                )
+        );
 
-        // Load state from the request userState on edit or from the passed variable on default
-        if (Factory::getApplication()->input->get('layout') == 'edit') {
-            $id = Factory::getApplication()->getUserState('com_ra_tools.edit.upload.id');
-        } else {
-            $id = Factory::getApplication()->input->get('id');
-            Factory::getApplication()->setUserState('com_ra_tools.edit.upload.id', $id);
+        if (empty($form)) {
+            return false;
         }
-
-        $this->setState('upload.id', $id);
-
-        // Load the parameters.
-        $params = $app->getParams();
-        $params_array = $params->toArray();
-
-        if (isset($params_array['item_id'])) {
-            $this->setState('upload.id', $params_array['item_id']);
-        }
-
-        $this->setState('params', $params);
+        // Validation is done on the server (Model / validate) so as to give proper error message
+//        $upload_mimes = Factory::getApplication()->getUserState('com_ra_tools.upload_mimes', 'text/plain');
+//        $form->setFieldAttribute('csv_file', 'accept', $upload_mimes);
+        return $form;
     }
 
     /**
-     * Method to get an ojbect.
+     * Method to get an object.
      *
      * @param   integer $id The id of the object to get.
      *
@@ -123,35 +128,6 @@ class UploadModel extends FormModel {
     }
 
     /**
-     * Method to get the data form.
-     *
-     * The base form is loaded from XML
-     *
-     * @param   array   $data     An optional array of data for the form to interogate.
-     * @param   boolean $loadData True if the form is to load its own data (default case), false if not.
-     *
-     * @return  Form    A Form object on success, false on failure
-     *
-     * @since   1.0.4
-     */
-    public function getForm($data = array(), $loadData = true) {
-        // Get the form.
-        $form = $this->loadForm('com_ra_tools.upload', 'upload', array(
-            'control' => 'jform',
-            'load_data' => $loadData
-                )
-        );
-
-        if (empty($form)) {
-            return false;
-        }
-        // Validation is done on the server (Model / validate) so as to give proper error message
-//        $upload_mimes = Factory::getApplication()->getUserState('com_ra_tools.upload_mimes', 'text/plain');
-//        $form->setFieldAttribute('csv_file', 'accept', $upload_mimes);
-        return $form;
-    }
-
-    /**
      * Method to get the data that should be injected in the form.
      *
      * @return  array  The default data is an empty array.
@@ -171,6 +147,41 @@ class UploadModel extends FormModel {
         }
 
         return array();
+    }
+
+        /**
+     * Method to auto-populate the model state.
+     *
+     * Note. Calling getState in this method will result in recursion.
+     *
+     * @return  void
+     *
+     * @since   1.0.4
+     *
+     * @throws  Exception
+     */
+    protected function populateState() {
+        $app = Factory::getApplication('com_ra_tools');
+
+        // Load state from the request userState on edit or from the passed variable on default
+        if (Factory::getApplication()->input->get('layout') == 'edit') {
+            $id = Factory::getApplication()->getUserState('com_ra_tools.edit.upload.id');
+        } else {
+            $id = Factory::getApplication()->input->get('id');
+            Factory::getApplication()->setUserState('com_ra_tools.edit.upload.id', $id);
+        }
+
+        $this->setState('upload.id', $id);
+
+        // Load the parameters.
+        $params = $app->getParams();
+        $params_array = $params->toArray();
+
+        if (isset($params_array['item_id'])) {
+            $this->setState('upload.id', $params_array['item_id']);
+        }
+
+        $this->setState('params', $params);
     }
 
     /**
@@ -276,17 +287,6 @@ class UploadModel extends FormModel {
 
 
         return $data;
-    }
-
-    /**
-     * Check if data can be saved
-     *
-     * @return bool
-     */
-    public function getCanSave() {
-        $table = $this->getTable();
-
-        return $table !== false;
     }
 
 }
