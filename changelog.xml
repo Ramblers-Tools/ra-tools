@@ -3,6 +3,34 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.0.17</version>
+        <date>2026-10-21</date>
+        <note>
+            <item><![CDATA[Restore the core.admin permission check on the RA Treasurers and RA Setup dashboard blocks, so configuration links and database versions are no longer shown to users without admin rights]]></item>
+            <item><![CDATA[Remove debug output that appeared when saving a profile]]></item>
+            <item><![CDATA[Remove an unreachable branch from the profile save authorisation check]]></item>
+            <item><![CDATA[Bring the webservices and finder plugin version numbers back in line with the package]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
+        <version>4.0.16</version>
+        <date>2026-10-21</date>
+        <note>
+            <item><![CDATA[Reorganise the plugins and add a three column admin dashboard]]></item>
+            <item><![CDATA[Include the ajax select group and system plugins in the package, which were built but never installed]]></item>
+            <item><![CDATA[Ship the package install script, which was declared in the manifest but missing from the build]]></item>
+            <item><![CDATA[Fix the membership number lookup on the Show Access report]]></item>
+            <item><![CDATA[Add ToolsHelper::getMessages()]]></item>
+            <item><![CDATA[Corrections to group code selection, shared user registration code and the user report]]></item>
+            <item><![CDATA[Prototype service for cPanel access; apisites now invokes LoadMembers for ra-members]]></item>
+            <item><![CDATA[Rewrite CONTRIBUTING.md as a step-by-step beta and release guide]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.0.13</version>
         <date>2026-09-11</date>
         <note>

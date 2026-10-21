@@ -207,12 +207,13 @@ if (ComponentHelper::isEnabled('com_ra_treasurer', true)) {
         ['label' => 'Reports', 'url' => 'index.php?option=com_ra_treasurer&view=reports'],
     ];
 
-//  if ($setupCanDo->get('core.admin')) {
+    if ($setupCanDo->get('core.admin')) {
         $versions = $toolsHelper->getVersions('com_ra_treasurer');
         $setupItems[] = ['label' => 'Configure com_ra_treasurer (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_treasurer'];
         $setupItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-//  }
-        $blocks[] = [
+    }
+
+    $blocks[] = [
         'title' => 'RA Treasurers',
         'items' => $setupItems
     ];
@@ -256,12 +257,13 @@ if (ComponentHelper::isEnabled('com_ra_setup', true)) {
         ['label' => 'Reports', 'url' => 'index.php?option=com_ra_setup&view=reports'],
     ];
 
-//  if ($setupCanDo->get('core.admin')) {
+    if ($setupCanDo->get('core.admin')) {
         $versions = $toolsHelper->getVersions('com_ra_setup');
         $setupItems[] = ['label' => 'Configure com_ra_setup (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_setup'];
         $setupItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-//  }
-        $blocks[] = [
+    }
+
+    $blocks[] = [
         'title' => 'RA Setup',
         'items' => $setupItems
     ];

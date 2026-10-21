@@ -266,16 +266,13 @@ class ProfileformModel extends FormModel implements CurrentUserInterface {
         $id = (!empty($data['id'])) ? $data['id'] : (int) $this->getState('profile.id');
         $state = (!empty($data['state'])) ? 1 : 0;
         $user = $this->getCurrentUser();
-Factory::getApplication()->enqueueMessage('edit=' . $id . ', user=' . $user->id, 'info');
         if ($id) {
             // Check the user can edit this item
             $authorised = $user->authorise('core.edit', 'com_ra_tools') || $user->authorise('core.edit.own', 'com_ra_tools');
         } else {
             if ($user->id == 0) {
                 $authorised = true;  // self registering
-            } elseif ($user->id == $id) {
-                $authorised = true;  // editing own profile
-           } else {
+            } else {
                 // Check the user can create new items in this section
                 $authorised = $user->authorise('core.create', 'com_ra_tools');
             }
@@ -290,7 +287,6 @@ Factory::getApplication()->enqueueMessage('edit=' . $id . ', user=' . $user->id,
         $table = $this->getTable();
 
         if (!empty($id)) {
-            echo '<br>Model loading $id<br>';
             $table->load($id);
         }
         if (!$table->check($data) == true) {
