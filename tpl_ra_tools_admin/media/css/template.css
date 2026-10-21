@@ -1,0 +1,328 @@
+/**
+ * Ramblers Tools administrator template — branding overlay.
+ * Loaded as a dependency on top of Atum's own compiled CSS (see joomla.asset.json);
+ * this file only restyles tokens/surfaces, it does not reimplement layout or responsive behaviour.
+ */
+
+:root {
+  --ra-forest: #22352e;
+  --ra-forest-soft: #2f4b40;
+  --ra-mint: #9bc8ab;
+  --ra-mint-pale: #eaf3ed;
+  --ra-orange: #f0814f;
+  --ra-cream: #f6f2e9;
+  --ra-paper: #fffefa;
+  --ra-line: #dbe3de;
+  --ra-muted: #6d7a74;
+
+  /* Re-point Atum's own design tokens at the Ramblers palette so core-rendered
+     surfaces (buttons, alerts, focus rings) stay visually consistent. */
+  --template-bg-light: var(--ra-cream);
+  --template-text-dark: var(--ra-forest);
+  --template-text-light: var(--ra-paper);
+  --link-color: var(--ra-forest-soft);
+  --template-special-color: var(--ra-orange);
+}
+
+:root[data-color-scheme="dark"] {
+  --link-color: var(--ra-mint);
+  --template-special-color: var(--ra-orange);
+}
+
+/* Header */
+#header.header {
+  background: var(--ra-forest);
+  color: var(--ra-cream);
+}
+
+/* Atum sizes the header/logo for its own compact mark; the Ramblers lockup is a wider
+   wordmark and needs more room to stay legible. */
+.header-inside {
+  min-height: 72px;
+}
+
+#header.header .header-title .logo {
+  background: var(--ra-forest);
+  height: 100%;
+}
+
+#content.content {
+  padding-top: 24px;
+}
+
+#header.header .header-title .logo img {
+  width: 190px;
+  height: 42px;
+}
+
+#header.header .header-title .logo img.logo-collapsed {
+  width: 28px;
+  height: 28px;
+}
+
+.header-meta {
+  margin-left: auto;
+  gap: 10px;
+  padding-right: 12px;
+}
+
+/* Bootstrap's default .text-muted grey is low-contrast against the forest header */
+.header .text-muted,
+.header-item .text-muted {
+  color: rgba(246, 242, 233, 0.75) !important;
+}
+
+.header a,
+.header .header-item {
+  color: var(--ra-cream);
+}
+
+.ra-env-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(246, 242, 233, 0.24);
+  border-radius: 999px;
+  background: rgba(155, 200, 171, 0.14);
+  color: var(--ra-cream);
+  font-size: 13px;
+}
+
+.ra-env-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4d9566;
+}
+
+.ra-help-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(246, 242, 233, 0.24);
+  border-radius: 999px;
+  color: var(--ra-cream);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.ra-help-link:hover,
+.ra-help-link:focus-visible {
+  background: rgba(155, 200, 171, 0.14);
+}
+
+/* Sidebar navigation */
+#sidebar-wrapper.sidebar-menu,
+#sidebarmenu {
+  background: #263e35;
+}
+
+#sidebarmenu .sidebar-toggle {
+  background: var(--ra-mint);
+  color: var(--ra-forest);
+}
+
+/* Login shell — mirrors team-demo/login.html structure with real Joomla module/component includes */
+.ra-login-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 500px 1fr;
+  background: var(--ra-cream);
+}
+
+.ra-login-brand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 44px 50px;
+  color: var(--ra-cream);
+  background: var(--ra-forest);
+}
+
+.ra-login-brand-mark {
+  margin-bottom: 32px;
+}
+
+.ra-login-brand-mark img {
+  display: block;
+  width: 200px;
+}
+
+.ra-env-badge {
+  align-self: flex-start;
+}
+
+.ra-login-copy {
+  margin-top: 24px;
+}
+
+.ra-login-copy .ra-login-eyebrow {
+  margin: 0 0 12px;
+  color: var(--ra-orange);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.ra-login-copy h1 {
+  max-width: 360px;
+  margin: 0 0 16px;
+  font-size: 37px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--ra-cream);
+}
+
+.ra-login-copy p {
+  max-width: 350px;
+  color: #c9d8d0;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.ra-support-box {
+  margin-top: 24px;
+  padding: 18px 20px;
+  border: 1px solid rgba(155, 200, 171, 0.24);
+  border-radius: 12px;
+  background: rgba(20, 36, 30, 0.3);
+}
+
+.ra-support-box strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #fff;
+}
+
+.ra-support-box span {
+  display: block;
+  color: #c9d8d0;
+  font-size: 13px;
+}
+
+.ra-support-box .ra-help-link {
+  margin-top: 10px;
+  color: var(--ra-cream);
+  border-color: rgba(155, 200, 171, 0.24);
+}
+
+.ra-login-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 60px;
+  background: radial-gradient(circle at 82% 14%, rgba(155, 200, 171, 0.26), transparent 24rem), var(--ra-cream);
+}
+
+/* The real 'sidebar' module position (Joomla's default help-links module) must keep
+   rendering per the login-page requirements, but Atum's own CSS assumes it's a flex sibling
+   in a wide two-column row; here it sits inside the dark brand panel as a plain block,
+   styled to match the .ra-support-box treatment rather than Atum's own sidebar panel look. */
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper {
+  flex: none;
+  align-self: flex-start;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  box-shadow: none;
+  margin-top: 24px;
+  padding: 16px 20px;
+  border: 1px solid rgba(155, 200, 171, 0.24);
+  border-radius: 12px;
+  background: rgba(20, 36, 30, 0.3);
+  color: var(--ra-cream);
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper .module-wrapper {
+  width: 100%;
+  max-width: none;
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper .card {
+  height: auto;
+  background: none;
+  border: 0;
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper .card-header {
+  padding: 0 0 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  background: none;
+  border: 0;
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper .module-body p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #c9d8d0;
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper a {
+  color: var(--ra-mint);
+  font-size: 13px;
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ra-login-brand #sidebar-wrapper.sidebar-wrapper li {
+  line-height: 1.6;
+}
+
+.ra-login-card {
+  width: 100%;
+  max-width: 430px;
+  padding: 32px 36px 30px;
+  background: var(--ra-paper);
+  border: 1px solid rgba(34, 53, 46, 0.13);
+  border-radius: 15px;
+  box-shadow: 0 13px 36px rgba(34, 53, 46, 0.12);
+}
+
+.ra-login-card .main-brand img {
+  display: block;
+  width: 210px;
+  margin: 0 auto 20px;
+}
+
+@media (max-width: 1050px) {
+  .ra-login-shell {
+    grid-template-columns: 390px 1fr;
+  }
+
+  .ra-login-brand {
+    padding: 36px;
+  }
+
+  .ra-login-stage {
+    padding: 40px;
+  }
+}
+
+@media (max-width: 760px) {
+  .ra-login-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

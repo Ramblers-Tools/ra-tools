@@ -3,6 +3,17 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.0.18</version>
+        <date>2026-10-21</date>
+        <note>
+            <item><![CDATA[Bundle the RA Tools administrator template, which until now had to be downloaded and installed separately]]></item>
+            <item><![CDATA[The administrator template is switched to RA Tools Admin automatically on install and update]]></item>
+            <item><![CDATA[Uninstalling the package hands the administrator template back to Atum first, so it can be removed cleanly]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.0.17</version>
         <date>2026-10-21</date>
         <note>

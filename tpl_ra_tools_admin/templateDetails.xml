@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="template" client="administrator" method="upgrade">
+	<name>ra_tools_admin</name>
+	<version>1.0.0</version>
+	<creationDate>21/10/26</creationDate>
+	<author>Ramblers Tools</author>
+	<authorEmail>support@ramblers.tools</authorEmail>
+	<authorUrl>https://ramblers.tools</authorUrl>
+	<copyright>(C) 2026 Ramblers Tools. Structural markup derived from the Joomla Atum administrator template, (C) Open Source Matters, Inc., GNU GPL v2 or later.</copyright>
+	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+	<description>TPL_RA_TOOLS_ADMIN_XML_DESCRIPTION</description>
+	<inheritable>1</inheritable>
+	<files>
+		<filename>component.php</filename>
+		<filename>cpanel.php</filename>
+		<filename>error.php</filename>
+		<filename>error_full.php</filename>
+		<filename>error_login.php</filename>
+		<filename>index.php</filename>
+		<filename>joomla.asset.json</filename>
+		<filename>login.php</filename>
+		<filename>templateDetails.xml</filename>
+		<filename>LICENSE.txt</filename>
+		<folder>html</folder>
+		<folder>inc</folder>
+	</files>
+	<media destination="templates/administrator/ra_tools_admin" folder="media">
+		<folder>css</folder>
+		<folder>js</folder>
+		<folder>images</folder>
+	</media>
+	<positions>
+		<!-- used directly in the template -->
+		<position>bottom</position>
+		<position>debug</position>
+		<position>menu</position>
+		<position>sidebar</position>
+		<position>status</position>
+		<position>title</position>
+		<position>top</position>
+		<position>toolbar</position>
+		<!-- used directly in a component and included here so the position will appear in the list of available positions -->
+		<position>cpanel</position>
+		<position>icon</position>
+		<position>login</position>
+		<position>customtop</position>
+	</positions>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/tpl_ra_tools_admin.ini</language>
+		<language tag="en-GB">en-GB/tpl_ra_tools_admin.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="branding" label="TPL_RA_TOOLS_ADMIN_BRANDING_LABEL">
+				<field
+					name="logoBrandLarge"
+					type="media"
+					schemes="http,https,ftp,ftps,data,file"
+					validate="url"
+					relative="true"
+					label="TPL_RA_TOOLS_ADMIN_LOGO_LARGE_LABEL"
+					description="TPL_RA_TOOLS_ADMIN_LOGO_LARGE_DESC"
+				/>
+				<field
+					name="logoBrandLargeAlt"
+					type="text"
+					label="TPL_RA_TOOLS_ADMIN_LOGO_ALT_LABEL"
+				/>
+				<field
+					name="logoBrandSmall"
+					type="media"
+					schemes="http,https,ftp,ftps,data,file"
+					validate="url"
+					relative="true"
+					label="TPL_RA_TOOLS_ADMIN_LOGO_SMALL_LABEL"
+				/>
+				<field
+					name="logoBrandSmallAlt"
+					type="text"
+					label="TPL_RA_TOOLS_ADMIN_LOGO_ALT_LABEL"
+				/>
+				<field
+					name="loginLogo"
+					type="media"
+					schemes="http,https,ftp,ftps,data,file"
+					validate="url"
+					relative="true"
+					label="TPL_RA_TOOLS_ADMIN_LOGIN_LOGO_LABEL"
+				/>
+				<field
+					name="loginLogoAlt"
+					type="text"
+					label="TPL_RA_TOOLS_ADMIN_LOGO_ALT_LABEL"
+				/>
+			</fieldset>
+			<fieldset name="environment" label="TPL_RA_TOOLS_ADMIN_ENVIRONMENT_LABEL">
+				<field
+					name="environmentLabel"
+					type="text"
+					label="TPL_RA_TOOLS_ADMIN_ENVIRONMENT_NAME_LABEL"
+					description="TPL_RA_TOOLS_ADMIN_ENVIRONMENT_NAME_DESC"
+				/>
+				<field
+					name="helpUrl"
+					type="url"
+					label="TPL_RA_TOOLS_ADMIN_HELP_URL_LABEL"
+					description="TPL_RA_TOOLS_ADMIN_HELP_URL_DESC"
+				/>
+				<field
+					name="supportText"
+					type="textarea"
+					rows="3"
+					label="TPL_RA_TOOLS_ADMIN_SUPPORT_TEXT_LABEL"
+					description="TPL_RA_TOOLS_ADMIN_SUPPORT_TEXT_DESC"
+				/>
+			</fieldset>
+			<!-- No colorScheme field: light mode is enforced site-wide (see index.php),
+			     and mod_user's own template only renders the light/dark switcher when
+			     this param is truthy — omitting it entirely keeps that switcher hidden
+			     without a dead/non-functional dropdown in the template options. -->
+		</fields>
+	</config>
+</extension>

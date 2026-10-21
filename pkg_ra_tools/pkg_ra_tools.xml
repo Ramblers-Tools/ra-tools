@@ -8,7 +8,7 @@
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>4.0.17</version>
+    <version>4.0.18</version>
     <description>Installs the RA Tools component, module and plugins for Ramblers groups</description>
     <scriptfile>script.php</scriptfile>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
@@ -21,6 +21,7 @@
         <file type="plugin" id="plg_finder_ra_toolswalks" group="finder">plg_finder_ra_toolswalks.zip</file>
         <file type="plugin" id="plg_system_ra_tools" group="system">plg_system_ra_tools.zip</file>
         <file type="plugin" id="plg_user_ra_profiles" group="user">plg_user_ra_profiles.zip</file>
+        <file type="template" id="ra_tools_admin" client="administrator">tpl_ra_tools_admin.zip</file>
     </files>
     <updateservers>
         <server type="extension" name="RA Tools Update Server">https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/updates/pkg_ra_tools.xml</server>

@@ -23,6 +23,7 @@ A Joomla 5/6 extension package for Ramblers local groups and areas:
 |plg_user_ra_profile | User plugin | Provides a function that creates or updates a record in the ra_profiles table when a User record is created by Joomla, whether by manual back end input or programmatically using the internal Joomla API. |
 | `plg_webservices_ra_tools` | Plugin (webservices) | REST API endpoints |
 | `plg_finder_ra_toolswalks` | Smart Search indexer for ra_walks | (Should be in ra-walks)|
+| `ra_tools_admin` | Administrator template | Ramblers-branded Joomla backend, and the menu preset that groups the RA extensions under one RA Tools heading. Installed and made the active admin template automatically. |
 
 ## Installing
 

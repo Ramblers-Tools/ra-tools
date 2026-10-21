@@ -65,6 +65,10 @@ jobs:
           cd plg_webservices_ra_tools
           zip -r ../dist/packages/plg_webservices_ra_tools.zip .
           cd ..
+          # tpl_ra_tools_admin — administrator template
+          cd tpl_ra_tools_admin
+          zip -r ../dist/packages/tpl_ra_tools_admin.zip .
+          cd ..
 
       - name: Build package zip
         run: |
@@ -85,6 +89,7 @@ jobs:
           cp dist/packages/plg_system_ra_tools.zip      dist/pkg/packages/
           cp dist/packages/plg_user_ra_profiles.zip     dist/pkg/packages/
           cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
+          cp dist/packages/tpl_ra_tools_admin.zip       dist/pkg/packages/
 
           # Zip the whole thing
           cd dist/pkg
