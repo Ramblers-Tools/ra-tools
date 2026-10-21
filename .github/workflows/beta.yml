@@ -31,29 +31,39 @@ jobs:
           zip -r ../dist/packages/com_ra_tools.zip . --exclude '*/plugins/*'
           cd ..
 
-          # plg_finder_ra_toolswalks — lives inside the component source tree
-          cd com_ra_tools/plugins/finder/ra_toolswalks
-          zip -r ../../../../dist/packages/plg_finder_ra_toolswalks.zip .
-          cd ../../../..
+          # mod_ra_facebook
+          cd mod_ra_facebook
+          zip -r ../dist/packages/mod_ra_facebook.zip .
+          cd ..
 
           # mod_ra_tools
           cd mod_ra_tools
           zip -r ../dist/packages/mod_ra_tools.zip .
           cd ..
 
-          # mod_ra_facebook
-          cd mod_ra_facebook
-          zip -r ../dist/packages/mod_ra_facebook.zip .
+          #plg_ajax_ra_selectgroup
+          cd plg_ajax_ra_selectgroup
+          zip -r ../dist/packages/plg_ajax_ra_selectgroup.zip .
           cd ..
 
-          # plg_webservices_ra_tools
-          cd plg_ra_tools
-          zip -r ../dist/packages/plg_webservices_ra_tools.zip .
-          cd ..
+          # plg_finder_ra_toolswalks — lives inside the component source tree
+          cd com_ra_tools/plugins/finder/ra_toolswalks
+          zip -r ../../../../dist/packages/plg_finder_ra_toolswalks.zip .
+          cd ../../../..
+
+          # plg_system_ra_tools
+          cd plg_system_ra_tools
+          zip -r ../dist/packages/plg_system_ra_tools.zip .
+          cd .. 
 
           # plg_user_ra_profiles
           cd plg_user_ra_profiles
           zip -r ../dist/packages/plg_user_ra_profiles.zip .
+          cd .. 
+
+          # plg_webservices_ra_tools
+          cd plg_ra_tools
+          zip -r ../dist/packages/plg_webservices_ra_tools.zip .
           cd ..
 
       - name: Build package zip
@@ -69,9 +79,11 @@ jobs:
           cp dist/packages/com_ra_tools.zip             dist/pkg/packages/
           cp dist/packages/mod_ra_tools.zip             dist/pkg/packages/
           cp dist/packages/mod_ra_facebook.zip          dist/pkg/packages/
-          cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
+          cp dist/packages/plg_ajax_ra_selectgroup.zip  dist/pkg/packages/
           cp dist/packages/plg_finder_ra_toolswalks.zip dist/pkg/packages/
-          cp dist/packages/plg_user_ra_profiles.zip       dist/pkg/packages/
+          cp dist/packages/plg_system_ra_tools.zip      dist/pkg/packages/
+          cp dist/packages/plg_user_ra_profiles.zip     dist/pkg/packages/
+          cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
 
           # Zip the whole thing
           cd dist/pkg
