@@ -62,7 +62,7 @@ jobs:
           cd .. 
 
           # plg_webservices_ra_tools
-          cd plg_ra_tools
+          cd plg_webservices_ra_tools
           zip -r ../dist/packages/plg_webservices_ra_tools.zip .
           cd ..
 
@@ -71,8 +71,9 @@ jobs:
           VERSION=${{ steps.version.outputs.VERSION }}
           mkdir -p dist/pkg
 
-          # Copy package manifest into staging dir
+          # Copy package manifest and its install script into staging dir
           cp pkg_ra_tools/pkg_ra_tools.xml dist/pkg/pkg_ra_tools.xml
+          cp pkg_ra_tools/script.php       dist/pkg/script.php
 
           # Copy extension zips into packages/ subfolder
           mkdir -p dist/pkg/packages

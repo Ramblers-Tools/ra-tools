@@ -59,8 +59,18 @@ jobs:
           zip -r ../dist/packages/mod_ra_facebook.zip .
           cd ..
 
+          # plg_ajax_ra_selectgroup
+          cd plg_ajax_ra_selectgroup
+          zip -r ../dist/packages/plg_ajax_ra_selectgroup.zip .
+          cd ..
+
+          # plg_system_ra_tools
+          cd plg_system_ra_tools
+          zip -r ../dist/packages/plg_system_ra_tools.zip .
+          cd ..
+
           # plg_webservices_ra_tools
-          cd plg_ra_tools
+          cd plg_webservices_ra_tools
           zip -r ../dist/packages/plg_webservices_ra_tools.zip .
           cd ..
 
@@ -75,14 +85,17 @@ jobs:
           mkdir -p dist/pkg
 
           cp pkg_ra_tools/pkg_ra_tools.xml dist/pkg/pkg_ra_tools.xml
+          cp pkg_ra_tools/script.php       dist/pkg/script.php
 
           mkdir -p dist/pkg/packages
           cp dist/packages/com_ra_tools.zip             dist/pkg/packages/
           cp dist/packages/mod_ra_tools.zip             dist/pkg/packages/
           cp dist/packages/mod_ra_facebook.zip          dist/pkg/packages/
-          cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
+          cp dist/packages/plg_ajax_ra_selectgroup.zip  dist/pkg/packages/
           cp dist/packages/plg_finder_ra_toolswalks.zip dist/pkg/packages/
-          cp dist/packages/plg_user_ra_profiles.zip       dist/pkg/packages/
+          cp dist/packages/plg_system_ra_tools.zip      dist/pkg/packages/
+          cp dist/packages/plg_user_ra_profiles.zip     dist/pkg/packages/
+          cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
 
           cd dist/pkg
           zip -r ../pkg_ra_tools-${VERSION}.zip .
