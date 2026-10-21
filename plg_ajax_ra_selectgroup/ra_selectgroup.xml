@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="ajax" method="upgrade">
+  <name>ra_selectgroup</name>
+	<author>Ramblers Tools</author>
+	<authorEmail>charlie@ramblers.tools</authorEmail>
+	<authorUrl>https://docs.stokeandnewcastleramblers.org.uk</authorUrl>
+	<creationDate>3 October 2026</creationDate>
+	<copyright>Copyright (C) 2026 Charlie Bigley. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later;</license>
+  <version>1.1.0</version>
+  <description>Returns groups for selected area code</description>
+  <files>
+    <filename plugin="ra_selectgroup">ra_selectgroup.php</filename>
+  </files>
+</extension>
