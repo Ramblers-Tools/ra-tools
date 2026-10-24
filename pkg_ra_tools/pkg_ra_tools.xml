@@ -3,12 +3,12 @@
     <name>pkg_ra_tools</name>
     <packagename>ra_tools</packagename>
     <author>Ramblers Tools</author>
-    <creationDate>19/10/26</creationDate>
+    <creationDate>24/10/26</creationDate>
     <copyright>2024-2026 Ramblers Tools</copyright>
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>4.0.16</version>
+    <version>4.0.17</version>
     <description>Installs the RA Tools component, module and plugins for Ramblers groups</description>
     <scriptfile>script.php</scriptfile>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
