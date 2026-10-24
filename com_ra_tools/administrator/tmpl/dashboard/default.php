@@ -118,7 +118,7 @@ if (ComponentHelper::isEnabled('com_ra_members', true)) {
         $membersItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_members&view=dataload'];
         $membersItems[] = ['label' => 'Import Reports', 'url' => 'index.php?option=com_ra_mailman&view=import_reports'];
         $membersItems[] = ['label' => 'Membership Reports', 'url' => 'index.php?option=com_ra_members&view=reports'];
-        // $membersItems[] = ['label' => 'Process Renewals', 'url' => 'index.php?option=com_ra_mailman&task=system.checkRenewals'];
+        $membersItems[] = ['label' => 'Update Access permissions', 'url' => 'index.php?option=com_ra_members&view=access_permissions'];
     }
 
     if ($membersCanDo->get('core.admin')) {
