@@ -13,7 +13,7 @@ use Ramblers\Component\Ra_tools\Site\Helpers\PersonHelper;
 // For the user/ra_profiles plugin the element underscore is significant.
 class Plguserra_profilesInstallerScript {
 
-    private const VERSION = '1.0.13';
+    private const VERSION = '1.0.14';
 
     private function message(string $message): void {
         Factory::getApplication()->enqueueMessage($message, 'message');

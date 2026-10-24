@@ -114,6 +114,7 @@ if (ComponentHelper::isEnabled('com_ra_members', true)) {
     ];
 
     if ($membersCanDo->get('core.create')) {
+        $membersItems[] = ['label' => 'Membership Reports', 'url' => 'index.php?option=com_ra_members&view=reports'];
 //        $membersItems[] = ['label' => 'Recipients', 'url' => 'index.php?option=com_ra_mailman&view=recipients'];
         $membersItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_members&view=dataload'];
         $membersItems[] = ['label' => 'Import Reports', 'url' => 'index.php?option=com_ra_mailman&view=import_reports'];
@@ -132,24 +133,6 @@ if (ComponentHelper::isEnabled('com_ra_members', true)) {
         'items' => $membersItems
     ];
 }
-// ========== ORGANISATION BLOCK ==========
-$orgItems = [
-    ['label' => 'List of Clusters', 'url' => 'index.php?option=com_ra_tools&view=clusters'],
-    ['label' => 'List of Areas', 'url' => 'index.php?option=com_ra_tools&view=area_list'],
-    ['label' => 'List of Groups', 'url' => 'index.php?option=com_ra_tools&view=group_list'],
-];
-
-if ($toolsHelper->isSuperuser()) {
-    $target = $jsonHelper->setUrl('organisation', '');
-    $orgItems[] = ['label' => 'Show Organisation feed', 'url' => $target, 'target' => '_blank'];
-    $orgItems[] = ['label' => 'Refresh details of Areas', 'url' => 'index.php?option=com_ra_tools&task=area_list.refreshAreas'];
-    $orgItems[] = ['label' => 'Refresh details of Groups', 'url' => 'index.php?option=com_ra_tools&task=group_list.refreshGroups'];
-}
-
-$blocks[] = [
-    'title' => 'Organisation',
-    'items' => $orgItems
-];
 
 // ========== EVENTS BLOCK ==========
 if (ComponentHelper::isEnabled('com_ra_events', true)) {
@@ -181,7 +164,7 @@ if (ComponentHelper::isEnabled('com_ra_events', true)) {
         }
 
         $blocks[] = [
-            'title' => 'Events',
+            'title' => 'Events & Bookings',
             'items' => $eventsItems
         ];
     } else {
@@ -215,22 +198,22 @@ if (ComponentHelper::isEnabled('com_ra_events', true)) {
         ];
     }
 }
-// ========== RA Setup BLOCK ==========
-if (ComponentHelper::isEnabled('com_ra_setup', true)) {
-    $setupCanDo = ContentHelper::getActions('com_ra_setup');
+// ========== RA Treasurers BLOCK ==========
+if (ComponentHelper::isEnabled('com_ra_treasurer', true)) {
+    $setupCanDo = ContentHelper::getActions('com_ra_treasurer');
 
     $setupItems = [
-        ['label' => 'Wizard', 'url' => 'index.php?option=com_ra_setup&view=wizard'],
-        ['label' => 'Reports', 'url' => 'index.php?option=com_ra_setup&view=reports'],
+        ['label' => 'Payments', 'url' => 'index.php?option=com_ra_treasurer&view=payments'],
+        ['label' => 'Reports', 'url' => 'index.php?option=com_ra_treasurer&view=reports'],
     ];
 
 //  if ($setupCanDo->get('core.admin')) {
-        $versions = $toolsHelper->getVersions('com_ra_setup');
-        $setupItems[] = ['label' => 'Configure com_ra_setup (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_setup'];
+        $versions = $toolsHelper->getVersions('com_ra_treasurer');
+        $setupItems[] = ['label' => 'Configure com_ra_treasurer (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_treasurer'];
         $setupItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
 //  }
         $blocks[] = [
-        'title' => 'RA Setup',
+        'title' => 'RA Treasurers',
         'items' => $setupItems
     ];
 }
@@ -264,7 +247,89 @@ if (ComponentHelper::isEnabled('com_ra_delivery', true)) {
         'items' => $deliveryItems
     ];
 }
+// ========== RA Setup BLOCK ==========
+if (ComponentHelper::isEnabled('com_ra_setup', true)) {
+    $setupCanDo = ContentHelper::getActions('com_ra_setup');
 
+    $setupItems = [
+        ['label' => 'Wizard', 'url' => 'index.php?option=com_ra_setup&view=wizard'],
+        ['label' => 'Reports', 'url' => 'index.php?option=com_ra_setup&view=reports'],
+    ];
+
+//  if ($setupCanDo->get('core.admin')) {
+        $versions = $toolsHelper->getVersions('com_ra_setup');
+        $setupItems[] = ['label' => 'Configure com_ra_setup (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_setup'];
+        $setupItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
+//  }
+        $blocks[] = [
+        'title' => 'RA Setup',
+        'items' => $setupItems
+    ];
+}
+// ========== ORGANISATION BLOCK ==========
+$orgItems = [
+    ['label' => 'List of Clusters', 'url' => 'index.php?option=com_ra_tools&view=clusters'],
+    ['label' => 'List of Areas', 'url' => 'index.php?option=com_ra_tools&view=area_list'],
+    ['label' => 'List of Groups', 'url' => 'index.php?option=com_ra_tools&view=group_list'],
+];
+
+if ($toolsHelper->isSuperuser()) {
+    $target = $jsonHelper->setUrl('organisation', '');
+    $orgItems[] = ['label' => 'Show Organisation feed', 'url' => $target, 'target' => '_blank'];
+    $orgItems[] = ['label' => 'Refresh details of Areas', 'url' => 'index.php?option=com_ra_tools&task=area_list.refreshAreas'];
+    $orgItems[] = ['label' => 'Refresh details of Groups', 'url' => 'index.php?option=com_ra_tools&task=group_list.refreshGroups'];
+}
+
+$blocks[] = [
+    'title' => 'Organisation',
+    'items' => $orgItems
+];
+// ========== RA DEVELOPMENT BLOCK ==========
+if (ComponentHelper::isEnabled('com_ra_develop', true)) {
+    $developCanDo = ContentHelper::getActions('com_ra_develop');
+
+    $developItems = [
+        ['label' => 'Summary of extensions', 'url' => 'index.php?option=com_ra_develop&task=extensions.listExtensions'],
+        ['label' => 'Builds', 'url' => 'index.php?option=com_ra_develop&view=builds'],
+        ['label' => 'Products', 'url' => 'index.php?option=com_ra_develop&view=products'],
+        ['label' => 'Extension Types', 'url' => 'index.php?option=com_ra_develop&view=extension_types'],
+        ['label' => 'Extensions', 'url' => 'index.php?option=com_ra_develop&view=extensions'],
+        ['label' => 'Product by Organisations', 'url' => 'index.php?option=com_ra_develop&view=productusage'],
+    ];
+
+    if ($developCanDo->get('core.admin')) {
+        $versions = $toolsHelper->getVersions('com_ra_develop');
+        $developItems[] = ['label' => 'Configure com_ra_develop (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_develop'];
+        $developItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
+    }
+
+    $blocks[] = [
+        'title' => 'RA Development',
+        'items' => $developItems
+    ];
+}
+
+
+// ========== SELF GUIDED WALKS BLOCK ==========
+if (ComponentHelper::isEnabled('com_ra_sg', true)) {
+    $sgCanDo = ContentHelper::getActions('com_ra_sg');
+
+    $sgItems = [
+        ['label' => 'Self Guided walks', 'url' => 'index.php?option=com_ra_tools&view=sg_list'],
+        ['label' => 'Categories', 'url' => 'index.php?option=com_categories&extension=com_ra_tools'],
+    ];
+
+    if ($sgCanDo->get('core.admin')) {
+        $versions = $toolsHelper->getVersions('com_ra_sg');
+        $sgItems[] = ['label' => 'Configure com_ra_sg (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_sg'];
+        $sgItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
+    }
+
+    $blocks[] = [
+        'title' => 'Self Guided Walks',
+        'items' => $sgItems
+    ];
+}
 // ========== WALKS BLOCK ==========
 if (ComponentHelper::isEnabled('com_ra_walks', true)) {
     $walksCanDo = ContentHelper::getActions('com_ra_walks');
@@ -317,83 +382,7 @@ if (ComponentHelper::isEnabled('com_ra_wf', true)) {
         'items' => $wfItems
     ];
 }
-// ========== RA DEVELOPMENT BLOCK ==========
-if (ComponentHelper::isEnabled('com_ra_develop', true)) {
-    $developCanDo = ContentHelper::getActions('com_ra_develop');
 
-    $developItems = [
-        ['label' => 'Summary of extensions', 'url' => 'index.php?option=com_ra_develop&task=extensions.listExtensions'],
-        ['label' => 'Builds', 'url' => 'index.php?option=com_ra_develop&view=builds'],
-        ['label' => 'Products', 'url' => 'index.php?option=com_ra_develop&view=products'],
-        ['label' => 'Extension Types', 'url' => 'index.php?option=com_ra_develop&view=extension_types'],
-        ['label' => 'Extensions', 'url' => 'index.php?option=com_ra_develop&view=extensions'],
-        ['label' => 'Product by Organisations', 'url' => 'index.php?option=com_ra_develop&view=productusage'],
-    ];
-
-    if ($developCanDo->get('core.admin')) {
-        $versions = $toolsHelper->getVersions('com_ra_develop');
-        $developItems[] = ['label' => 'Configure com_ra_develop (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_develop'];
-        $developItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-    }
-
-    $blocks[] = [
-        'title' => 'RA Development',
-        'items' => $developItems
-    ];
-}
-
-
-// ========== SELF GUIDED WALKS BLOCK ==========
-if (ComponentHelper::isEnabled('com_ra_sg', true)) {
-    $sgCanDo = ContentHelper::getActions('com_ra_sg');
-
-    $sgItems = [
-        ['label' => 'Self Guided walks', 'url' => 'index.php?option=com_ra_tools&view=sg_list'],
-        ['label' => 'Categories', 'url' => 'index.php?option=com_categories&extension=com_ra_tools'],
-    ];
-
-    if ($sgCanDo->get('core.admin')) {
-        $versions = $toolsHelper->getVersions('com_ra_sg');
-        $sgItems[] = ['label' => 'Configure com_ra_sg (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_sg'];
-        $sgItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-    }
-
-    $blocks[] = [
-        'title' => 'Self Guided Walks',
-        'items' => $sgItems
-    ];
-}
-// ========== PATH MAINTENANCE BLOCK ==========
-if (ComponentHelper::isEnabled('com_ra_paths', true)) {
-    $pathsCanDo = ContentHelper::getActions('com_ra_paths');
-
-    $pathsItems = [
-        ['label' => 'Fault Reports', 'url' => 'index.php?option=com_ra_paths&view=faults'],
-        ['label' => 'Followups', 'url' => 'index.php?option=com_ra_paths&view=followups'],
-    ];
-
-    if ($pathsCanDo->get('core.create')) {
-        $pathsItems[] = ['label' => 'Categories', 'url' => 'index.php?option=com_ra_paths&view=categories'];
-        $pathsItems[] = ['label' => 'Statuses', 'url' => 'index.php?option=com_ra_paths&view=statuses'];
-        $pathsItems[] = ['label' => 'Parishes', 'url' => 'index.php?option=com_ra_paths&view=parishes'];
-        $pathsItems[] = ['label' => 'Boroughs', 'url' => 'index.php?option=com_ra_paths&view=boroughs'];
-        $pathsItems[] = ['label' => 'Regions', 'url' => 'index.php?option=com_ra_paths&view=regions'];
-        $pathsItems[] = ['label' => 'Sectors', 'url' => 'index.php?option=com_ra_paths&view=sectors'];
-    }
-
-    $pathsItems[] = ['label' => 'Enhancements', 'url' => 'index.php?option=com_ra_paths&view=enhancements'];
-
-    if ($pathsCanDo->get('core.admin')) {
-        $versions = $toolsHelper->getVersions('com_ra_paths');
-        $pathsItems[] = ['label' => 'Configure com_ra_paths (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_paths'];
-        $pathsItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-    }
-
-    $blocks[] = [
-        'title' => 'Path Maintenance',
-        'items' => $pathsItems
-    ];
-}
 ?>
 
 <!-- Grid-based Dashboard Layout -->
