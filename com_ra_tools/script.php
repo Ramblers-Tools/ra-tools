@@ -220,7 +220,7 @@ class Com_Ra_toolsInstallerScript {
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         $query = $db->getQuery(true);
         $db->setQuery($sql);
-        return $db->loadResult();
+        return $db->loadResult(); 
     }
 
     public function install($parent): bool {
@@ -242,23 +242,31 @@ class Com_Ra_toolsInstallerScript {
     }
 
     public function postflight($type, $parent) {
-//        $this->message('Postflight RA Tools (com_ra_tools).');
-
         if ($type == 'uninstall') {
             return true;
         }
+
         try {
             $installedVersion = $this->getInstalledComponentVersion();
         } catch (\RuntimeException $exception) {
             return $this->fail($exception->getMessage());
         }
 
-//        $this->message('com_ra_tools is now at ' . ($installedVersion ?? 'not recorded') . '.');
+        $this->message('com_ra_tools is now at ' . ($installedVersion ?? 'not recorded') . '.');
+        if ($this->reconfigure_message == true) {
+            $this->message('Version was originally ' . $this->current_version
+                    . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
+                    . ' or later is required to skip upgrade processing.');
+            $this->red('Please review and update the configuration settings for com_ra_tools.');
+        }
+        $this->message('<b>Useful links</b><br>'
+                . $this->buildButton('administrator/index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard') . '<br>'
+                . $this->buildButton('administrator/index.php?option=com_config&view=component&component=com_ra_tools', 'Configure'));
         return true;
     }
 
     public function preflight($type, $parent): bool {
-        $this->message('Preflight RA Tools (type=' . $type . ').');
+        $this->message('Preflight RA Tools component (type=' . $type . ').');
         if ($type == 'uninstall') {
             return true;
         }
@@ -271,16 +279,18 @@ class Com_Ra_toolsInstallerScript {
             }
 
             if ($this->current_version === null) {
-                return $this->message('Installer could not find readable version information for com_ra_tools.');
+                $this->message('Installer could not find readable version information for com_ra_tools.');
             }
 
             $this->message('com_ra_tools already present, version=' . $this->current_version . '.');
         }
+
         if ($type == 'install') {
             return true;
         }
+
         if ($this->current_version === null) {
-            return $this->message('Installer could not find the existing com_ra_tools installation.');
+            $this->message('Installer could not find the existing com_ra_tools installation.');
         }
 
         $this->reconfigure_message = false;
@@ -292,10 +302,72 @@ class Com_Ra_toolsInstallerScript {
             $this->message('Version was originally ' . $this->current_version
                     . '; version ' . self::VERSION_REQUIRING_NO_PROCESSING
                     . ' or later is required to skip upgrade processing.');
- //           if (version_compare($this->current_version, '3.5.2', 'le')) {
- //               $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT; ');
- //               $this->checkColumn('ra_clusters', 'website', 'A', 'VARCHAR(100) NOT NULL AFTER area_list; ');
-//            }
+
+            if (version_compare($this->current_version, '3.5.2', 'le')) {
+                $this->checkColumn('ra_emails', 'addressee_email', 'U', 'TEXT; ');
+                $this->checkColumn('ra_clusters', 'website', 'A', 'VARCHAR(100) NOT NULL AFTER area_list; ');
+            }
+            if (version_compare($this->current_version, '3.4.2', 'le')) {
+                $this->checkColumn('ra_emails', 'ref', 'A', 'INT DEFAULT "0" AFTER `record_type`;');
+                $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'sender_email', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'addressee_name', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER sender_email; ');
+                $this->checkColumn('ra_emails', 'addressee_email', 'A', 'VARCHAR(100) NOT NULL DEFAULT "0" AFTER addressee_name; ');
+            }
+            if (version_compare($this->current_version, '3.4.1', 'le')) {
+                $this->updateAreas();
+            }
+            if (version_compare($this->current_version, '3.4.0', 'le')) {
+                $this->checkColumn('ra_api_sites', 'title', 'A', 'VARCHAR(100) NULL AFTER sub_system; ');
+            }
+            if (version_compare($this->current_version, '3.3.13', 'le')) {
+                $this->checkColumn('ra_groups', 'bespoke', 'A', 'VARCHAR(1) NOT NULL DEFAULT "0" AFTER name; ');
+                $this->checkColumn('ra_groups', 'latitude', 'U', 'DECIMAL(14,12) NOT NULL;');
+                $this->checkColumn('ra_groups', 'longitude', 'U', 'DECIMAL(14,12) NOT NULL;');
+            }
+            if (version_compare($this->current_version, '3.3.11', 'le')) {
+                $this->deleteView('com_ra_events', 'Apisites');
+                $this->deleteView('com_ra_events', 'Apisite');
+            }
+            if (version_compare($this->current_version, '3.3.10', 'le')) {
+                $this->checkColumn('ra_logfile', 'sub_system', 'U', 'VARCHAR(12) NOT NULL;');
+                $this->checkColumn('ra_logfile', 'sub_syatem', 'D', '');
+            }
+            if (version_compare($this->current_version, '3.3.7', 'le')) {
+                $this->updateSites();
+                $this->reconfigure_message = true;
+            }
+
+            if (version_compare($this->current_version, '3.3.1', 'le')) {
+                $this->reconfigure_message = true;
+                $this->checkColumn('ra_api_sites', 'sub_system', 'A', 'VARCHAR(10) NOT NULL AFTER id; ');
+                $this->checkColumn('ra_emails', 'ref', 'A', 'VARCHAR(2) NOT NULL AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'sender_name', 'A', 'VARCHAR(100) NOT NULL AFTER date_sent; ');
+                $this->checkColumn('ra_emails', 'sender_email', 'A', 'VARCHAR(100) NOT NULL AFTER sender_name; ');
+                $this->checkColumn('ra_emails', 'addressee_name', 'A', 'VARCHAR(100) NOT NULL AFTER sender_email; ');
+                $this->checkColumn('ra_emails', 'addressee_email', 'A', 'TEXT AFTER addressee_name; ');
+                if (version_compare($this->current_version, '2.1.2', 'ge')) {
+                    $details = '`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+                        `sub_system` VARCHAR(12) NOT NULL ,
+                        `url` VARCHAR(100) NOT NULL ,
+                        `token` VARCHAR(255) NOT NULL ,
+                        `colour` VARCHAR(22) NOT NULL ,
+                        `state` TINYINT(1) NULL  DEFAULT 1,
+                        `ordering` INT NULL DEFAULT 0,
+                        `checked_out` INT(11) UNSIGNED,
+                        `checked_out_time` DATETIME NULL DEFAULT NULL ,
+                        `created` DATETIME NULL DEFAULT NULL ,
+                        `created_by` INT(11)  NULL DEFAULT 0,
+                        `modified` DATETIME NULL  DEFAULT NULL ,
+                        `modified_by` INT(11) NULL  DEFAULT 0,
+                        PRIMARY KEY (`id`)
+                        ) DEFAULT COLLATE=utf8mb4_unicode_ci; ';
+                    $this->checkTable('ra_api_sites', $details);
+                }
+            }
+            if (version_compare($this->current_version, '3.7.4', 'le')) {
+                $this->checkColumn('ra_api_sites', 'sub_system', 'U', 'VARCHAR(20) NOT NULL;');
+            }
         }
 
         return true;
@@ -318,7 +390,7 @@ class Com_Ra_toolsInstallerScript {
     }
 
     public function update($parent): bool {
-        echo '<p>Updating RA Tools (com_ra_tools)</p>';
+        $this->message('Updating RA Tools (com_ra_tools)');
         return true;
     }
 

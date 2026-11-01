@@ -221,7 +221,7 @@ class PersonHelper {
         return $person;
     }
 
-    public function purgeUser(int $userId){
+    public function purgeUser(int $userId) {
         if ($userId > 0) {
             $sql = 'DELETE FROM #__ra_profiles WHERE id=' . $userId;
             $this->toolsHelper->executeCommand($sql);
@@ -330,7 +330,6 @@ class PersonHelper {
         return true;
     }
 
-
     public function saveProfileData(int $userId, array $data): void {
         if ($userId < 1) {
             throw new \InvalidArgumentException('A valid Joomla user ID is required to save a profile.');
@@ -351,9 +350,6 @@ class PersonHelper {
             );
         }
 
-        // A user-save plugin normally creates this row.  For imports and
-        // older installations, repair the missing row through the same
-        // idempotent placeholder path before completing it.
         if (empty($profileIds)) {
             $this->ensurePlaceholderProfile($userId);
             $this->db->setQuery($query);
@@ -375,7 +371,7 @@ class PersonHelper {
         }
     }
 
-        public function setRequireReset(int $userId, bool $required): bool {
+    public function setRequireReset(int $userId, bool $required): bool {
         return $this->updateUserFlag($userId, 'requireReset', $required ? 1 : 0);
     }
 
