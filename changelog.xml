@@ -3,6 +3,17 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.0.19</version>
+        <date>2026-11-01</date>
+        <note>
+            <item><![CDATA[Add an Update Access permissions link to the RA Members block on the dashboard]]></item>
+            <item><![CDATA[Add a shared task-buttons script for administrator forms]]></item>
+            <item><![CDATA[Remove a duplicated Membership Reports link from the RA Members block on the dashboard]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.0.18</version>
         <date>2026-10-21</date>
         <note>
