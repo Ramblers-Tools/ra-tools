@@ -9,6 +9,7 @@
  *
  * 14/08/26 CB Created
  * 07/09/26 CB improve reporting if unable to create a user
+ * 02/11/26 CB implement translations when sending registration letter
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -692,7 +693,20 @@ class PersonHelper {
 
     public function sendNewUserEmail(string $name, string $email, string $password): void {
         $app = Factory::getApplication();
-        $mailer = new MailTemplate('plg_user_joomla.mail', $app->getLanguage()->getTag());
+        $language = $app->getLanguage();
+        $languageTag = $language->getTag();
+
+        // The user plugin's mail constants live in the administrator language
+        // directory. Load them explicitly for site-side profile registration.
+        $language->load('plg_user_joomla', JPATH_ADMINISTRATOR, $languageTag, true)
+            || $language->load(
+                'plg_user_joomla',
+                JPATH_PLUGINS . '/user/joomla',
+                $languageTag,
+                true
+            );
+
+        $mailer = new MailTemplate('plg_user_joomla.mail', $languageTag);
         $mailer->addTemplateData([
             'name' => $name,
             'sitename' => $app->get('sitename'),
