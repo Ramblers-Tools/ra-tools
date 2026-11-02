@@ -12,6 +12,7 @@
  * 18/08/26 CB add Setup / Reports; sub_systems to Products
  * 19/08/26 CB RA Develop - change reference to ProductUsage
  * 24/08/26 CB RA members: invoke dataload from com_ra_members
+ * 02/11/26 CB tools / access permissions: add link to update access permissions
  */
 // No direct access
 \defined('_JEXEC') or die;
@@ -41,6 +42,7 @@ $sysToolsItems = [];
 if ($toolsHelper->isSuperuser()) { // (SUPERUSER ONLY)
     $sysToolsItems[] = ['label' => 'Standard Articles', 'url' => 'index.php?option=com_ra_tools&view=standardarticles'];
     $sysToolsItems[] = ['label' => 'API sites', 'url' => 'index.php?option=com_ra_tools&view=apisites'];
+    $sysToolsItems[] = ['label' => 'Update Access permissions', 'url' => 'index.php?option=com_ra_tools&view=access_permissions'];
     $sysToolsItems[] = ['label' => 'Access Configuration Wizard', 'url' => 'index.php?option=com_ra_tools&task=system.AccessWizard'];
     if ((ComponentHelper::isEnabled('com_ra_events', true)) 
         || (ComponentHelper::isEnabled('com_ra_mailman', true))) {
@@ -118,8 +120,6 @@ if (ComponentHelper::isEnabled('com_ra_members', true)) {
 //        $membersItems[] = ['label' => 'Recipients', 'url' => 'index.php?option=com_ra_mailman&view=recipients'];
         $membersItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_members&view=dataload'];
         $membersItems[] = ['label' => 'Import Reports', 'url' => 'index.php?option=com_ra_mailman&view=import_reports'];
-        $membersItems[] = ['label' => 'Membership Reports', 'url' => 'index.php?option=com_ra_members&view=reports'];
-        $membersItems[] = ['label' => 'Update Access permissions', 'url' => 'index.php?option=com_ra_members&view=access_permissions'];
     }
 
     if ($membersCanDo->get('core.admin')) {
@@ -207,12 +207,13 @@ if (ComponentHelper::isEnabled('com_ra_treasurer', true)) {
         ['label' => 'Reports', 'url' => 'index.php?option=com_ra_treasurer&view=reports'],
     ];
 
-//  if ($setupCanDo->get('core.admin')) {
+    if ($setupCanDo->get('core.admin')) {
         $versions = $toolsHelper->getVersions('com_ra_treasurer');
         $setupItems[] = ['label' => 'Configure com_ra_treasurer (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_treasurer'];
         $setupItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-//  }
-        $blocks[] = [
+    }
+
+    $blocks[] = [
         'title' => 'RA Treasurers',
         'items' => $setupItems
     ];
@@ -256,12 +257,13 @@ if (ComponentHelper::isEnabled('com_ra_setup', true)) {
         ['label' => 'Reports', 'url' => 'index.php?option=com_ra_setup&view=reports'],
     ];
 
-//  if ($setupCanDo->get('core.admin')) {
+    if ($setupCanDo->get('core.admin')) {
         $versions = $toolsHelper->getVersions('com_ra_setup');
         $setupItems[] = ['label' => 'Configure com_ra_setup (v' . $versions->component . ')', 'url' => 'index.php?option=com_config&view=component&component=com_ra_setup'];
         $setupItems[] = ['label' => 'DB version: ' . $versions->db_version, 'url' => '#', 'disabled' => true];
-//  }
-        $blocks[] = [
+    }
+
+    $blocks[] = [
         'title' => 'RA Setup',
         'items' => $setupItems
     ];
