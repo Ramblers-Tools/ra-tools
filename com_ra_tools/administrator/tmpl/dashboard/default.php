@@ -12,6 +12,7 @@
  * 18/08/26 CB add Setup / Reports; sub_systems to Products
  * 19/08/26 CB RA Develop - change reference to ProductUsage
  * 24/08/26 CB RA members: invoke dataload from com_ra_members
+ * 02/11/26 CB tools / access permissions: add link to update access permissions
  */
 // No direct access
 \defined('_JEXEC') or die;
@@ -41,6 +42,7 @@ $sysToolsItems = [];
 if ($toolsHelper->isSuperuser()) { // (SUPERUSER ONLY)
     $sysToolsItems[] = ['label' => 'Standard Articles', 'url' => 'index.php?option=com_ra_tools&view=standardarticles'];
     $sysToolsItems[] = ['label' => 'API sites', 'url' => 'index.php?option=com_ra_tools&view=apisites'];
+    $sysToolsItems[] = ['label' => 'Update Access permissions', 'url' => 'index.php?option=com_ra_tools&view=access_permissions'];
     $sysToolsItems[] = ['label' => 'Access Configuration Wizard', 'url' => 'index.php?option=com_ra_tools&task=system.AccessWizard'];
     if ((ComponentHelper::isEnabled('com_ra_events', true)) 
         || (ComponentHelper::isEnabled('com_ra_mailman', true))) {
@@ -118,7 +120,6 @@ if (ComponentHelper::isEnabled('com_ra_members', true)) {
 //        $membersItems[] = ['label' => 'Recipients', 'url' => 'index.php?option=com_ra_mailman&view=recipients'];
         $membersItems[] = ['label' => 'Import list of members', 'url' => 'index.php?option=com_ra_members&view=dataload'];
         $membersItems[] = ['label' => 'Import Reports', 'url' => 'index.php?option=com_ra_mailman&view=import_reports'];
-        $membersItems[] = ['label' => 'Update Access permissions', 'url' => 'index.php?option=com_ra_members&view=access_permissions'];
     }
 
     if ($membersCanDo->get('core.admin')) {
