@@ -21,6 +21,7 @@
  * 17/07/26 CB added function buildDashboardReportBlock (for dashboard and reports menus)
  * 10/08/26 CB added getNearestOrganisations, allow new windows in buildDashboardBlock
  * 12/10/26 CB correct membershipNo in showAccess
+ * 29/10/26 CB added buildTaskButton and checkUsergroup
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -147,6 +148,182 @@ class ToolsHelper {
         $header .= '</head>';
         $header .= '<body>';
         return $header;
+    }
+
+    /*
+replace
+    $target = 'index.php?option=com_ra_members'
+        . '&task=access_permission.revoke'
+        . '&user_id=' . $userId
+        . '&component=com_ra_mailman';
+
+    echo $objHelper->buildButton($target,'Revoke',false, 'sunset' );
+with
+    echo $objHelper->buildTaskButton(
+        'com_ra_members',
+        'access_permission.revoke',
+        'Revoke',
+        [
+            'user_id' => $userId,
+            'component' => 'com_ra_mailman'
+        ],
+        'sunset'
+    );
+or
+    echo $objHelper->buildTaskButton(
+        'com_ra_members',
+        'access_permission.grant',
+        'Grant',
+        [
+            'user_id' => $item->id,
+            'component' => 'com_ra_mailman'
+        ],
+        'forest'
+    );
+
+In the target
+
+    public function revoke(): void
+    {
+        if (strtoupper($this->app->input->getMethod()) !== 'POST') {   
+            throw new \RuntimeException('POST request required',403);      
+        }
+
+        $this->checkToken('post');
+        $userId = $this->app->input->post->getInt('user_id', 0);
+        $component = $this->app->input->post->getCmd('component', '' );
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('Invalid user ID');
+        }
+
+        // Check the current user's permission to revoke access.
+
+        // Validate $component against your permitted components.
+
+
+        // Perform the revoke operation.
+
+        $this->setRedirect(
+            Route::_('index.php?option=com_ra_members'
+                . '&view=access_permissions', false)
+        );
+    }
+
+    */
+
+/**
+ * Generate a POST form button to invoke a Joomla controller task.
+ *
+ * Use only outside an existing HTML form.
+ *
+ * @param string $option  Joomla component, e.g. com_ra_members
+ * @param string $task    Controller task, e.g. access_permission.revoke
+ * @param string $text    Button caption
+ * @param array  $params  Additional POST parameters
+ * @param string $colour  Ramblers colour name
+ *
+ * @return string HTML form and button
+ */
+    public function buildTaskButton(
+        string $option,
+        string $task,
+        string $text,
+        array $params = [],
+        string $colour = 'granite'
+    ): string {
+
+        if (!preg_match('/^com_[a-z0-9_]+$/i', $option)) {
+            throw new \InvalidArgumentException('Invalid component');
+        }
+
+        if (!preg_match('/^[a-z0-9_]+\.[a-z0-9_]+$/i', $task)) {
+            throw new \InvalidArgumentException('Invalid task');
+        }
+
+        $escape = static function ($value): string {
+            return htmlspecialchars(
+                (string) $value,
+                ENT_QUOTES,
+                'UTF-8'
+            );
+        };
+
+        // Retain the existing Ramblers colour convention.
+        $allowedColours = [
+            'granite', 'sunset', 'forest', 'mintcake',
+            'mustard', 'orange', 'red', 'darkgreen',
+            'lightgreen', 'maroon', 'mud', 'grey', 'teal'
+        ];
+
+        if (!in_array($colour, $allowedColours, true)) {
+            $colour = 'granite';
+        }
+
+        $class = $this->lookupColourCode($colour, 'B');
+
+        // Route within the current Joomla application.
+        $action = Route::_('index.php?option=' . $option);
+
+        $html = '<form action="' . $escape($action) . '"'
+            . ' method="post" class="d-inline">';
+
+        $html .= '<input type="hidden" name="task"'
+            . ' value="' . $escape($task) . '">';
+
+        foreach ($params as $name => $value) {
+
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', (string) $name)) {
+                throw new \InvalidArgumentException('Invalid parameter name');
+            }
+
+            if (in_array($name, ['task', 'option'], true)) {
+                throw new \InvalidArgumentException('Reserved parameter');
+            }
+
+            if (!is_scalar($value) && $value !== null) {
+                throw new \InvalidArgumentException('Invalid parameter value');
+            }
+
+            $html .= '<input type="hidden" name="'
+                . $escape($name)
+                . '" value="' . $escape($value) . '">';
+        }
+
+        // Joomla CSRF token.
+        $html .= HTMLHelper::_('form.token');
+
+        $html .= '<button type="submit" class="'
+            . $escape($class) . '">'
+            . $escape($text)
+            . '</button>';
+
+        $html .= '</form>';
+
+        return $html;
+    }
+
+    private function checkUsergroup(string $component): bool {
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $sql = 'SELECT id FROM #__usergroups WHERE title = '. $db->q($component)  ;
+        $groupId = $this->toolsHelper->getValue($sql);
+
+        if ($groupId > 0) {
+            $this->message('Usergroup ' . $component . ' exists (id=' . $groupId . ').');
+            return true;
+        }
+
+        $table = Table::getInstance('Usergroup', 'JTable', []);
+
+        if (!$table || !$table->save([
+            'title' => $component,
+            'parent_id' => 1,
+        ])) {
+            $error = $table ? (string) $table->getError() : 'Unable to initialise Usergroup table';
+            return $this->fail('Failed to create usergroup ' . $component . ': ' . $error);
+        }
+
+        $this->message('Created usergroup ' . $component . ' (id=' . (int) $table->id . ').');
+        return true;
     }
 
     private function collapseDuplicatedAbsoluteUrls($html) {
