@@ -3,6 +3,18 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.1.0</version>
+        <date>2026-11-09</date>
+        <note>
+            <item><![CDATA[New Access permissions screen in RA Tools (Super Users only) for managing which users belong to the component access groups]]></item>
+            <item><![CDATA[The Update Access permissions dashboard link moves from the RA Members block to System Tools and opens the new RA Tools screen]]></item>
+            <item><![CDATA[The registration email sent when a profile creates a new user is now translated correctly on the site side]]></item>
+            <item><![CDATA[New sunset and forest action button styles in ramblers.css]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.0.19</version>
         <date>2026-11-01</date>
         <note>
