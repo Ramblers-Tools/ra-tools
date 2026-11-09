@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form addfieldprefix="Ramblers\Component\Ra_tools\Site\Field">
+    <fieldset>
+        <field name="id" type="hidden" readonly="true" default="0" description="JGLOBAL_FIELD_ID_DESC" />
+        <field name="user" 
+            type="user" 
+            label="User" 
+            description="Select the Joomla user whose access is being managed." />
+        <field name="access_to" type="radio" label="Grant access to RA Tools" default="0">
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+        <field name="access_me" type="radio" label="Grant access to RA Members" default="0">
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+        <field name="access_ma" type="radio" label="Grant access to RA MailMan" default="0">
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+        <field name="access_tr" type="radio" label="Grant access to RA Treasurer" default="0">
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+        <field name="access_ev" type="radio" label="Grant access to RA Events" default="0">
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>        
+    </fieldset>
+</form>

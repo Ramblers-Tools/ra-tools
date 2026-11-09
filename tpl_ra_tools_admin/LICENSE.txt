@@ -1,0 +1,30 @@
+Ramblers Tools Administrator Template (ra_tools_admin)
+Copyright (C) 2026 Ramblers Tools
+
+This template's structural PHP (index.php, login.php, component.php, cpanel.php,
+error.php, error_full.php, error_login.php, html/layouts/status.php) is derived
+from the Joomla "Atum" administrator template:
+
+  Copyright (C) 2012-2019 Open Source Matters, Inc. <https://www.joomla.org>
+  Licensed under the GNU General Public License version 2 or later.
+
+This template additionally depends at runtime on Atum's own compiled CSS and
+JavaScript assets (registered by the Atum extension, itself unmodified and
+required to remain installed) for layout, responsive and interaction behaviour.
+
+media/css/vendor/fontawesome-free/fontawesome.min.css is an unmodified copy of
+the Font Awesome Free CSS bundled with Joomla's Atum template, provided here so
+Joomla's per-template media-override resolution picks up the complete icon font
+(the shared core copy at media/vendor/fontawesome-free/ ships without any
+@font-face declarations). No webfont binaries are duplicated by this package;
+this CSS file's relative font URLs resolve to the shared core webfont files.
+
+  Font Awesome Free, (C) Fonticons, Inc. <https://fontawesome.com>
+  Icons: CC BY 4.0 License. Fonts: SIL OFL 1.1 License. Code: MIT License.
+
+All Ramblers Tools branding, CSS overrides, and configuration additions in this
+package are Copyright (C) 2026 Ramblers Tools, licensed under the same terms:
+the GNU General Public License version 2, or (at your option) any later version.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.

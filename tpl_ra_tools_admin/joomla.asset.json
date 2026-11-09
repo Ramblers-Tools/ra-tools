@@ -1,0 +1,100 @@
+{
+  "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
+  "name": "ra_tools_admin",
+  "version": "1.0.0",
+  "description": "Web assets for the Ramblers Tools administrator template. Structural CSS/JS (layout, responsive behaviour, sidebar collapse, dark-mode watching) are loaded directly from the installed Atum template's own compiled files by URL — not copied — because a template's web-asset registry entries are only loaded while that template is active, so cross-template asset-name dependencies cannot be used here. This template requires Atum to remain installed.",
+  "license": "GPL-2.0-or-later",
+  "assets": [
+    {
+      "name": "template.ra_tools_admin.ltr",
+      "description": "Atum's own compiled structural CSS (LTR), referenced directly by URL.",
+      "type": "style",
+      "uri": "../../atum/css/template.min.css",
+      "dependencies": [
+        "fontawesome"
+      ]
+    },
+    {
+      "name": "template.ra_tools_admin.rtl",
+      "description": "Atum's own compiled structural CSS (RTL), referenced directly by URL.",
+      "type": "style",
+      "uri": "../../atum/css/template-rtl.min.css",
+      "dependencies": [
+        "fontawesome"
+      ]
+    },
+    {
+      "name": "template.ra_tools_admin.brand",
+      "description": "Ramblers Tools branding overlay, loaded after the structural CSS above.",
+      "type": "style",
+      "uri": "template.css"
+    },
+    {
+      "name": "template.ra_tools_admin.dashboard-preview",
+      "description": "PROTOTYPE ONLY: visual restyle of com_ra_tools's dashboard, loaded only on that view, targeting its existing .dashboard-grid/.dashboard-block markup. No com_ra_tools files are modified. For evaluating the new look before committing to a real component-side change.",
+      "type": "style",
+      "uri": "dashboard-preview.css"
+    },
+    {
+      "name": "template.ra_tools_admin.dashboard-preview",
+      "description": "PROTOTYPE ONLY: swaps dashboard block-header text for product logos, matched by title. Logos are template-local copies for this test only.",
+      "type": "script",
+      "uri": "dashboard-preview.js",
+      "dependencies": [
+        "core"
+      ],
+      "attributes": {
+        "defer": true
+      }
+    },
+    {
+      "name": "template.active.language",
+      "description": "An asset to allow language specific css to use as a dependency to the active template",
+      "type": "style",
+      "uri": "",
+      "class": "LangActiveAssetItem",
+      "client": "administrator",
+      "dependencies": [
+        "template.active"
+      ]
+    },
+    {
+      "name": "template.user",
+      "description": "A file where a user can add their own css.",
+      "type": "style",
+      "uri": "user.css",
+      "weight": 500,
+      "dependencies": [
+        "template.active",
+        "template.active.language"
+      ]
+    },
+    {
+      "name": "template.ra_tools_admin",
+      "description": "Atum's own compiled template.js (sidebar collapse, dark-mode watching, responsive behaviour), referenced directly by URL.",
+      "type": "script",
+      "uri": "../../atum/js/template.min.js",
+      "dependencies": [
+        "core"
+      ],
+      "attributes": {
+        "type": "module"
+      }
+    },
+    {
+      "name": "template.active",
+      "description": "A dummy asset to allow extensions to use it as a dependency to the active template",
+      "type": "script",
+      "uri": "",
+      "dependencies": [
+        "template.ra_tools_admin"
+      ]
+    },
+    {
+      "name": "searchtools",
+      "description": "Core intentionally ships no default CSS for this asset (uri: \"\") and expects the active template to supply one — reused directly from Atum's compiled file by URL.",
+      "type": "style",
+      "uri": "../../atum/css/system/searchtools/searchtools.min.css"
+    }
+  ]
+}

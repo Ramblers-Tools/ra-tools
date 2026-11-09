@@ -1,0 +1,160 @@
+/**
+ * PROTOTYPE ONLY — visual restyle of com_ra_tools's dashboard.
+ *
+ * Targets the dashboard's existing markup hooks (.dashboard-grid, .dashboard-block,
+ * .block-header, .block-content) as shipped by com_ra_tools/media/com_ra_tools/css/dashboard.css.
+ * No com_ra_tools files are read or modified — this only overrides how the same markup
+ * is painted, for testing/deciding on the look before any component-side work happens.
+ * !important is used deliberately here to guarantee this prototype wins regardless of
+ * asset load order; a real implementation in com_ra_tools would not need it.
+ */
+
+.dashboard-grid {
+  gap: 20px !important;
+  margin-top: 4px !important;
+}
+
+/* PROTOTYPE ONLY: dashboard-preview.js rebuilds .dashboard-grid into three flex
+   columns (independent-height, masonry-style) instead of relying on CSS Grid's
+   row-syncing, which stretched shorter tiles to match a taller neighbour in the
+   same row and left large gaps beneath them. */
+.dashboard-grid.ra-dashboard-columns {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: flex-start !important;
+  gap: 20px !important;
+}
+
+.ra-dashboard-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.dashboard-block {
+  border: 1px solid rgba(34, 53, 46, 0.15) !important;
+  border-radius: 11px !important;
+  padding: 0 !important;
+  background: var(--ra-paper, #fffefa) !important;
+  box-shadow: 0 4px 13px rgba(34, 53, 46, 0.07) !important;
+  overflow: hidden;
+}
+
+.dashboard-block:hover {
+  box-shadow: 0 4px 13px rgba(34, 53, 46, 0.07) !important;
+}
+
+.block-header {
+  margin-bottom: 0;
+  padding: 12px 19px;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border-bottom: 3px solid var(--ra-mint, #9bc8ab);
+  background: linear-gradient(90deg, rgba(155, 200, 171, 0.15), transparent 56%);
+}
+
+.block-header h3 {
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--ra-forest, #22352e);
+  letter-spacing: -0.01em;
+}
+
+/* PROTOTYPE ONLY: applied by dashboard-preview.js when it swaps a block's title
+   text for the matching product logo. */
+.block-header h3.ra-dashboard-logo-header {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  width: 100%;
+}
+
+.block-header h3.ra-dashboard-logo-header-with-text {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+}
+
+.block-header h3.ra-dashboard-logo-header-with-text img {
+  height: 32px !important;
+}
+
+/* Approximates the Ramblers wordmark style (bold, uppercase, tracked
+   letter-spacing) — we don't have their actual brand font file, so this uses
+   our own font stack at a similar weight/case rather than an exact match. */
+.ra-dashboard-org-label {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #404141;
+}
+
+.block-header h3.ra-dashboard-logo-header img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 60px;
+}
+
+.block-content {
+  padding: 8px 19px 15px;
+}
+
+.dashboard-block li {
+  padding: 0;
+  border-bottom: 1px solid var(--ra-line, #dbe3de);
+}
+
+.dashboard-block li:last-child {
+  border-bottom: none;
+}
+
+.dashboard-block a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  color: #315f4e;
+  font-size: 14px;
+  font-weight: 620;
+  text-decoration: none;
+}
+
+.dashboard-block a::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ra-orange, #f0814f);
+}
+
+.dashboard-block a:hover {
+  color: var(--ra-forest, #22352e);
+  text-decoration: underline;
+}
+
+.dashboard-block a:visited {
+  color: #315f4e;
+}
+
+.dashboard-block .item-text {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--ra-muted, #6d7a74);
+  font-size: 13px;
+  font-style: normal;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
