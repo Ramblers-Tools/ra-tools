@@ -5,6 +5,7 @@
  * @copyright   Copyright (C) 2026. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * API controller for clusters
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Api\Controller;
@@ -17,7 +18,7 @@ class ClustersController extends BaseController
 {
     public function getList()
     {
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true)
             ->select('a.*, p.preferred_name, u.email')
             ->from($db->quoteName('#__ra_clusters', 'a'))

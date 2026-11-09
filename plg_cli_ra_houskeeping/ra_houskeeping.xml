@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="console" method="upgrade">
+    <name>plg_cli_ra_houskeeping</name>
+    <author>Ramblers Tools</author>
+    <authorEmail>support@ramblers.tools</authorEmail>
+    <authorUrl>https://ramblers.tools</authorUrl>
+    <creationDate>09 Nov 2026</creationDate>
+    <copyright>Copyright (C) 2026 Ramblers Tools</copyright>
+    <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
+    <version>1.0.0</version>
+    <description>Provides the ra_tools:housekeeping console command.</description>
+    <namespace path="src">Ramblers\Plugin\Console\Ra_houskeeping</namespace>
+    <files>
+        <folder plugin="ra_houskeeping">services</folder>
+        <folder>src</folder>
+    </files>
+</extension>

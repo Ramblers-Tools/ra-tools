@@ -11,6 +11,7 @@
  * 18/03/24 CB show id in the table (should show in ascending order of ID -sort the items?)
  * 17/08/25 CB use api_site
  * 14/09/25 CB set up maximum time of 5 minutes
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 // No direct access
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
@@ -19,7 +20,7 @@ use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
 defined('_JEXEC') or die;
 echo '<h2>' . $this->params->get('page_title') . '</h2>';
 
-$app = JFactory::getApplication();
+$app = \Joomla\CMS\Factory::getApplication();
 $menu_params = $app->getMenu()->getActive()->getParams();
 $page_intro = $this->menu_params->get('page_intro');
 $category_id = $menu_params->get('category_id', '');

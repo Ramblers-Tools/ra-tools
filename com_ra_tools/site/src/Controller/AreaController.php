@@ -1,11 +1,6 @@
 <?php
 
 /**
- * @version    3.5.1
- * @package    com_ra_tools
- * @author     Charlie Bigley <webmaster@bigley.me.uk>
- * @copyright  2024 Charlie Bigley
- * @license    GNU General Public License version 3 or later; see LICENSE.txt
  * 26/05/23 CB created
  * 27/05/23 CB show headings for CSV, clean phone number, show shape, meeting
  * 29/05/23 CB add exportGwen
@@ -15,6 +10,7 @@
  * 20/04/25 CB change name to $toolsHelper, links from showGroup
  * 11/09/25 CB correct link to show walks
  * 18/09/25 CB show location
+ * 09/11/26 CB remove redundant functions (all are still in ra-walks)
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Controller;
@@ -84,207 +80,6 @@ class AreaController extends FormController {
         echo $toolsHelper->backButton($target);
     }
 
-    private function debug($code) {
-        $toolsHelper = new ToolsHelper;
-        $sql = "SELECT COUNT(id) FROM #__ra_walks  ";
-        $sql .= "WHERE group_code = '" . $row->code . "'";
-//            echo $sql;
-        $count_walks = $toolsHelper->getValue($sql);
-        echo $sql . ' ' . $count_walks . '<br>';
-    }
-
-    private function doesWalkExist($walkid) {
-        $db = Factory::getContainer()->get(DatabaseInterface::class);
-
-        $query = $db->getQuery(true);
-
-// Select everything from the table that matches the walk id.
-        $query->select(' a.*')
-                ->from('`#__ra_walks` AS a')
-                ->where('a.walk_id = ' . (int) $walkid)
-        ;
-
-        $db->setQuery((string) $query);
-
-        $results = $db->loadObjectList();
-
-// See if we got anything back - ie does the walk exist
-        if (count($results) == 0) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-// doesWalkExist ($walkid)
-
-    public function getJson($type, $param, $count = 'N') {
-        $url = 'https://walks-manager.ramblers.org.uk/api/volunteers/walksevents?types=';
-        $url .= $type;
-        $url .= '&api-key=742d93e8f409bf2b5aec6f64cf6f405e';
-        $url .= '&' . $param;
-//        $url .= '&limit=3';
-//        $url .= '&dow=7';
-//        $url = 'https://www.ramblers.org.uk/api/lbs/walks?groups=NS01&dow=1&limit=3';
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, false); // do not include header in output
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // do not follow redirects
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // do not output result
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);  // allow xx seconds for timeout
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);  // allow xx seconds for timeout
-//			curl_setopt($ch, CURLOPT_REFERER, JURI::base()); // say who wants the feed
-
-        curl_setopt($ch, CURLOPT_REFERER, "com_ra_wf"); // say who wants the feed
-
-        $data = curl_exec($ch);
-        $error = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200) {
-            print('Error code: ' . $error . "\n");
-            print('Http return: ' . $httpCode . "\n");
-            echo 'Access failed : ' . $url, $httpCode;
-            return;
-        }
-
-        $temp = json_decode($data);
-        if ($count == 'Y') {
-            return $temp->summary;
-        } else {
-            return $temp->data;
-        }
-    }
-
-    /**
-     *   Process the walks data
-     */
-    private function processwalks($walkslist) {
-        $this->walksfound = count($walkslist);
-//        die("Walks in feed = $this->walksfound \n");
-
-        foreach ($walkslist as $walk) {
-            $this->writeWalk($walk);
-        }
-    }
-
-// processwalks ( $walkslist)
-
-    /**
-     *   Write a walk to the database
-     */
-    private function writeWalk($walk) {
-
-//        print ("Walk " . $walk->id);
-        if ((int) $walk->id == 0) {
-            print ( "Walk $this->counter has blank id field \n");
-        } else {
-            $this->show_message = 1;
-            $this->validate($walk);
-            $db = Factory::getContainer()->get(DatabaseInterface::class);
-            $query = $db->getQuery(true);
-
-            $date = substr($walk->start_date_time, 0, 10);
-            $start_time = substr($walk->start_date_time, 11, 5);
-            $end_time = substr($walk->end_date_time, 11, 5);
-            $description = $walk->description;
-            $difficulty = substr($walk->difficulty->description, 0, 10);
-//            $title = substr($walk->title, 0, 120);
-//            $title = substr(iconv(($walk->title, mb_detect_order(), true), "UTF-8", $walk->title), 0, 120);
-            if (URI::base() == 'http://localhost/') {
-                $title = substr(iconv("ASCII", "UTF-8//TRANSLIT//IGNORE", $walk->title), 0, 120);
-            } else {
-                $title = substr($walk->title, 0, 120);
-            }
-
-            if (is_null($walk->start_location)) {
-                $start_details = '';
-                $start_grid_ref = '';
-                $start_latitude = 0;
-                $start_longitude = 0;
-                $start_postcode = '';
-            } else {
-                $start_details = $walk->start_location->description;
-                $start_grid_ref = $walk->start_location->grid_reference_10;
-                $start_latitude = (float) $walk->start_location->latitude;
-                $start_longitude = (float) $walk->start_location->longitude;
-                $start_postcode = $walk->start_location->postcode;
-            }
-            if ((is_null($walk->walk_leader)) or (is_array($walk->walk_leader))) {
-                $phone = '';
-                $leader_name = '';
-            } else {
-                $phone = substr(preg_replace('/\D/', '', $walk->walk_leader->telephone), 0, 15);
-                $leader_name = $walk->walk_leader->name;
-            }
-
-            if ($walk->shape == 'linear') {
-                $shape = 'L';
-            } else {
-                $shape = 'C';
-            }
-
-            $query->set("walk_id = " . $db->quote($walk->id))
-                    ->set("walk_date = " . $db->quote($date))
-                    ->set("group_code = " . $db->quote($walk->group_code))
-                    ->set("contact_display_name = " . $db->quote($leader_name))
-// must increase size of database field
-//                ->set('contact_email = ' . $db->quote($walk->walk_leader->email_form))
-                    ->set('contact_tel1 = ' . $db->quote($phone))
-                    ->set("title = " . $db->quote(substr($title, 0, 120)))
-                    ->set("description = " . $db->quote($description))
-                    ->set("start_time = " . $db->quote($start_time))
-                    ->set("start_gridref = " . $db->quote($start_grid_ref))
-                    ->set("start_latitude = " . $db->quote($start_latitude))
-                    ->set("start_longitude = " . $db->quote($start_longitude))
-                    ->set("start_postcode = " . $db->quote($start_postcode))
-                    ->set("start_details = " . $db->quote($start_details))
-                    ->set("distance_km = " . $db->quote((float) $walk->distance_km))
-                    ->set("distance_miles = " . $db->quote((float) $walk->distance_miles))
-                    ->set("difficulty = " . $db->quote($difficulty))
-//                ->set("pace = " . $db->quote($walk->pace))
-                    ->set("ascent_feet = " . $db->quote($walk->ascent_feet))
-                    ->set("ascent_metres = " . $db->quote($walk->ascent_metres))
-                    ->set("circular_or_linear = " . $db->quote($shape))
-                    ->set("finish_time = " . $db->quote($end_time))
-            ;
-
-            if ($this->doesWalkExist($walk->id)) {
-                $query->update('#__ra_walks')
-                        ->where('walk_id=' . $walk->id);
-                $result = $db->setQuery($query)->execute();
-                $this->walksupdated++;
-//                echo "walk $walk->id for $walk->group_code updated<br>";
-            } else {
-                $query->insert('#__ra_walks');  // utf8mb4_unicode_ci
-                $result = $db->setQuery($query)->execute();
-                $this->walkscreated++;
-            }
-        }
-    }
-
-    public function refreshWalks() {
-        // Invoked from option=com_ra_tools&view=area
-        $jsonHelper = new JsonHelper;
-        $toolsHelper = new ToolsHelper;
-//        $toolsHelper->executeCommand('DELETE FROM #__ra_walks');
-        $code = Factory::getApplication()->input->getCmd('code', 'NS03');
-        $name = $toolsHelper->lookupGroup($code);
-        echo "Walks for $code $name<br>";
-        $walklist = $jsonHelper->getJson('group-walk', 'groups=' . $code);
-//        $this->processwalks($walklist);
-        echo "Walks created = $this->walkscreated<br>";
-        echo "Walks updated = $this->walksupdated <br>";
-        $target = "index.php?option=com_ra_tools&view=area&code=" . substr($code, 0, 2);
-        echo $toolsHelper->backButton($target);
-//        $url = 'https://walks-manager.ramblers.org.uk/api/volunteers/walksevents?types=group-walk';
-//        $url .= '&api-key=742d93e8f409bf2b5aec6f64cf6f405e';
-//        $url .= '&groups=' . $code;
-//        echo $url;
-    }
-
     public function showArea() {
         $code = Factory::getApplication()->input->getCmd('code', 'NS');
         $toolsHelper = new ToolsHelper;
@@ -344,57 +139,6 @@ class AreaController extends FormController {
             echo $jsonHelper->showWalksButton($item->code);
         }
         echo '<br>';
-    }
-
-    private function validate($walk) {
-        $message = '<b>' . $walk->id . ', ' . substr($walk->start_date_time, 2, 8) . ':' . substr($walk->start_date_time, 11, 5) . ', ' . $walk->title . '</b><br>';
-        if (is_null($walk->start_location)) {
-            if ($this->show_message == 1) {
-                echo $message;
-                $this->show_message = 0;
-            }
-            echo '...Walk has no start location<br>';
-        } else {
-            if ($walk->start_location->postcode == '') {
-                if ($this->show_message == 1) {
-                    echo $message;
-                    $this->show_message = 0;
-                }
-                echo "<b>Walk $walk->id has no value for postcode</b><br>";
-            }
-            if ($walk->start_location->w3w == '') {
-                if ($this->show_message == 1) {
-                    echo $message;
-                    $this->show_message = 0;
-                }
-                echo "...Walk has no value for w3w<br>";
-            }
-        }
-        if (is_null($walk->walk_leader)) {
-            if ($this->show_message == 1) {
-                echo $message;
-                $this->show_message = 0;
-            }
-            echo '...Walk has no Leader or Phone number<br>';
-        } elseif (is_array($walk->walk_leader)) {
-            if ($this->show_message == 1) {
-                echo $message;
-                $this->show_message = 0;
-            }
-            echo '...WalkLeader is invalid<br>';
-        } else {
-            $no_space = str_replace(' ', '', $walk->walk_leader->telephone);
-            $no_space = str_replace('or', '', $no_space);
-            $test = preg_replace('/\D/', '', $no_space);
-            if ($no_space != $test) {
-                if ($this->show_message == 1) {
-                    echo $message;
-                    $this->show_message = 0;
-                }
-//                var_dump($walk->walk_leader->telephone);
-                echo '...Walk has invalid phone number ' . $no_space . ' (' . $walk->walk_leader->telephone . ')<br>';
-            }
-        }
     }
 
 }

@@ -194,67 +194,27 @@ class SchemaHelper {
     public function showTable($table, $limit = '10', $start = '0') {
         $config = Factory::getConfig();
         $database = $config->get('db');
-        $dbPrefix = $config->get('dbprefix');
+        $prefix = $this->db->getPrefix();
+
+        if (!str_starts_with($table, $prefix)) {
+            throw new \InvalidArgumentException('Invalid table name');
+        }
+
+        $suffix = substr($table, strlen($prefix));
+
+        if (!preg_match('/\A[A-Za-z0-9_]+\z/', $suffix)) {
+            throw new \InvalidArgumentException('Invalid table name');
+        }
 //        ToolBarHelper::title($this->prefix . "$limit records from $database $table");
         $found_id = false;
-        $sql = 'SELECT * FROM ' . '#__' . substr($table, strlen($dbPrefix));
+        $sql = 'SELECT * FROM ' . '#__' . substr($table, strlen($suffix));
         if ($start > 0) {
             $sql .= ' WHERE id > ' . $start;
         }
         $sql .= ' LIMIT ' . $limit;
-//        echo '#__' . substr($table, strlen($dbPrefix)) . ': ' . strlen($dbPrefix) . " $dbPrefix $table<br> $sql<br>";
+//        echo '#__' . substr($table, strlen($suffix)) . ': ' . strlen($suffix) . " $prefix $table<br> $sql<br>";
         $this->objHelper->showQuery($sql);
 
-        return;
-
-        $columns = $this->objHelper->getRows($sql);
-        if ($columns === false) {
-            echo "Error for:<br>$sql<br>";
-            echo $this->objHelper->error;
-            return false;
-        }
-        if ($this->objHelper->rows == 0) {
-            echo "No data found for:<br>$sql<br>";
-            echo $this->objHelper->error;
-            return false;
-        }
-        $ipointer = 0;
-        foreach ($columns as $column) {
-            $fields[$ipointer] = $column->COLUMN_NAME;
-            $ipointer++;
-        }
-        $sql = 'SELECT ';
-        $ipointer = 0;
-
-        foreach ($fields as $field) {
-            if ($field == 'id') {
-                $found_id = true;
-            }
-            if ($field == 'password') {
-
-            } else {
-                if ($ipointer > 0) {
-                    $sql .= ', ';
-                }
-                $sql .= $field;
-                $ipointer++;
-            }
-        }
-        $sql .= ' FROM ' . $dbPrefix;
-        if (substr($table, 0, 1) == '#') {
-            $sql .= substr($table, 3);
-        } else {
-            $sql .= $table;
-        }
-        if ($found_id) {
-            $sql .= ' ORDER BY id DESC';
-        }
-        echo $sql;
-        if ($this->objHelper->showSql($sql)) {
-            echo "<h5>End of records for " . $table . "</h5>";
-        } else {
-            echo 'Error: ' . $this->objHelper->error . '<br>';
-        }
     }
 
     public function showTableSchema($table) {

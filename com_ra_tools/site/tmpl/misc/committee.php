@@ -18,6 +18,7 @@
  * 16/01/24 CB only show if in category committee
  * 29/03/24 CB show even if Role is blank
  * 08/06/25 CB don't attempt to update contact if UserId is not found
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 // No direct access
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
@@ -27,7 +28,7 @@ defined('_JEXEC') or die;
 $objHelper = new ToolsHelper;
 echo '<h2>' . $this->params->get('page_title') . '</h2>';
 
-$app = JFactory::getApplication();
+$app = \Joomla\CMS\Factory::getApplication();
 $menu_params = $app->getMenu()->getActive()->getParams(); #
 $sort = $menu_params->get('sort', 0);
 $intro = $menu_params->get('page_intro', '');
@@ -73,7 +74,7 @@ $sql .= 'AND cat.extension="com_contact" ';
 $sql .= 'AND cat.title="committee" ';
 $sql .= 'ORDER BY ' . $order;
 if (JDEBUG) {
-    JFactory::getApplication()->enqueueMessage('sql=' . $sql, 'message');
+    \Joomla\CMS\Factory::getApplication()->enqueueMessage('sql=' . $sql, 'message');
 }
 
 $rows = $objHelper->getRows($sql);
@@ -100,7 +101,7 @@ foreach ($rows as $row) {
         if ($row->email_to == '') {
             $objTable->add_item('');
         } else {
-            $objTable->add_item(JHtml::_('email.cloak', $row->email_to, 1, 'Send email', 0));
+            $objTable->add_item(\Joomla\CMS\HTML\HTMLHelper::_('email.cloak', $row->email_to, 1, 'Send email', 0));
         }
     } else {
         if (($row->email_to == '') AND ($row->UserId > 0)) {

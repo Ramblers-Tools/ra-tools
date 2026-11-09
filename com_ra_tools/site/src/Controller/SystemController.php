@@ -23,6 +23,7 @@
  * 10/03/26 CB reinstate display of addressee_name for eventOganiser
  * 19/03/26 CB don't reject EventAttendees if no booking_id
  * 13/07/26 CV notes added
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Controller;
@@ -349,7 +350,7 @@ class SystemController extends FormController {
         $config = Factory::getConfig();
 //        var_dump($config);
         echo $config->get('sitename');
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
         $query->select('a.*');
         $query->select('p.preferred_name AS contact_name');

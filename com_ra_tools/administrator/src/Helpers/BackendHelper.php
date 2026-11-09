@@ -6,6 +6,7 @@
  *
  * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Helpers;
@@ -31,7 +32,7 @@ class BackendHelper {
      * @return	string		$query			Append the search to this query
      */
     public static function buildSearchQuery($searchWord, $searchColumns, $query) {
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
 
         $where = array();
 
@@ -51,7 +52,7 @@ class BackendHelper {
             // throw an error or ...
             return false;
         }
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
         $query->select('title');
         $query->from('#__mywalks');

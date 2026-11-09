@@ -14,6 +14,7 @@
  * 16/10/23 CB Clusters, Chair email
  * 08/11/24 CB filter by nation and cluster
  * 14/08/26 CB delete references to Chair
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Model;
@@ -51,7 +52,7 @@ class Area_listModel extends ListModel {
         $nation_id = Factory::getApplication()->input->getCmd('nation', '0');
         $cluster = strtoupper(Factory::getApplication()->input->getCmd('cluster', ''));
 
-        $db = $this->getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         $query->select('a.id, a.code, a.name,a.website,a.co_url, a.nation_id, a.cluster');

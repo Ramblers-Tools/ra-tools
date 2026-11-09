@@ -8,6 +8,7 @@
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 01/05/25 CB created from generated code
  * 03/09/25 CB filter by sub system
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -112,7 +113,7 @@ class LogfilesModel extends ListModel {
      */
     protected function getListQuery() {
         // Create a new query object.
-        $db = $this->getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         // Select the required fields from the table.

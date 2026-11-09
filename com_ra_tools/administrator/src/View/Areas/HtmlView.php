@@ -1,12 +1,8 @@
 <?php
 
 /**
- * @version    CVS: 3.0.0
- * @package    com_ra_tools
- * @author     Charlie Bigley <webmaster@bigley.me.uk>
- * @copyright  2024 Charlie Bigley
- * @license    GNU General Public License version 3 or later; see LICENSE.txt
  * 21/04/25 CB replace Ra_toolsHelper with ContentHelper
+ * 09/11/26 CB prepare for Joomla 6 by removing references to SidebarHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Areas;
@@ -21,7 +17,6 @@ use \Joomla\CMS\Toolbar\ToolbarHelper;
 use \Joomla\CMS\Language\Text;
 use \Joomla\Component\Content\Administrator\Extension\ContentComponent;
 use \Joomla\CMS\Form\Form;
-use \Joomla\CMS\HTML\Helpers\Sidebar;
 
 /**
  * View class for a list of Areas.
@@ -58,7 +53,6 @@ class HtmlView extends BaseHtmlView {
 
         $this->addToolbar();
 
-        $this->sidebar = Sidebar::render();
         parent::display($tpl);
     }
 
@@ -123,10 +117,6 @@ class HtmlView extends BaseHtmlView {
                         ->listCheck(true);
             }
         }
-
-
-        // Set sidebar action
-        Sidebar::setAction('index.php?option=com_ra_tools&view=areas');
     }
 
     /**

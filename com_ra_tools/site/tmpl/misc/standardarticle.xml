@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    09/11/26 CB created
+-->
+<metadata>
+	<layout title="Display a given Standard Article" option="View">
+		<message>
+			<![CDATA[Displays a given Standard Article]]>  
+		</message>
+	</layout>
+	<config>
+		<fields name="params">
+                    <fieldset name="basic">
+                        <field name="note1" 
+                               type="note" 
+                               label="This allows you to show the content of a Standard Article."/>
+                        <field name="id" 
+                               label="Article" 
+                               type="sql"
+                            query="SELECT c.id, c.title FROM `j5_content` AS c
+                            INNER JOIN j5_categories as cat ON cat. id = c.catid
+                            WHERE cat.extension = 'com_content' 
+                            and cat.title = 'Standard Articles'
+                            ORDER BY `id`"
+                            key_field="id" 
+                            value_field="title"
+                         />
+                        <field name="page_intro"
+                            type="editor"
+            		    label="Page Introduction"
+                            description="Text to be shown before the article"
+                            filter="raw"
+                            rows="8"
+                            cols="80"
+			   default=""
+                        />                                                    
+                            <field name="note2" type="note" label="For information about this component please visit: https://docs.stokeandnewcastleramblers.org.uk and read the Webmasters Guide"/>
+			</fieldset>
+		</fields>
+	</config>
+</metadata>
+
+
+

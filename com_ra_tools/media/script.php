@@ -1,6 +1,6 @@
 <?php
 
-/*
+/**
  * Installation script
  * 01/08/23 CB Create from MailMan script
  * 07/08/23 copy checkColumn and checkTable from version 3
@@ -11,7 +11,7 @@
  * 13/11/23 CB don't use ToolsHelper->executeCommand
  * 20/11/23 CB start deletion of obsolete praogramme_area view
  * 20/11/23 CB actually tried to delete obsolete View
- * 04/12/23 CB replace getDbo()
+ * 04/12/23 CB update database access
  * 04/01/23 CB copy framework.inc.php
  * 04/09/24 CB remove messages about Programme_area
  * 10/09/24 CB new getVersions, new deleteFiles (from version 5.0.3)
@@ -22,6 +22,7 @@
  *             add field sub_system to ra_logfile
  * 13/04/25 CB link to Dashboard
  * 29/04/25 CB getDbVersion
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 
 \defined('_JEXEC') or die;
@@ -115,7 +116,7 @@ class Com_Ra_toolsInstallerScript {
     }
 
     private function checkColumnExists($table, $column) {
-        $config = JFactory::getConfig();
+        $config = \Joomla\CMS\Factory::getConfig();
         $database = $config->get('db');
         $this->dbPrefix = $config->get('dbprefix');
 
@@ -131,7 +132,7 @@ class Com_Ra_toolsInstallerScript {
 
     function checkTable($table, $details, $details2 = '') {
 
-        $config = JFactory::getConfig();
+        $config = \Joomla\CMS\Factory::getConfig();
         $database = $config->get('db');
         $this->dbPrefix = $config->get('dbprefix');
 

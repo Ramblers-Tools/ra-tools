@@ -36,7 +36,6 @@ class EmailsController extends AdminController {
 
     public function __construct() {
         parent::__construct();
-//        $this->db = Factory::getDbo();
         $this->toolsHelper = new ToolsHelper;
 
         $wa = Factory::getApplication()->getDocument()->getWebAssetManager();

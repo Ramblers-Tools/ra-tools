@@ -13,6 +13,7 @@
  * 19/08/26 CB RA Develop - change reference to ProductUsage
  * 24/08/26 CB RA members: invoke dataload from com_ra_members
  * 02/11/26 CB tools / access permissions: add link to update access permissions
+ * 09/11/26 CB escape output when displaying it
  */
 // No direct access
 \defined('_JEXEC') or die;
@@ -60,9 +61,6 @@ if ($toolsHelper->isSuperuser()) { // (SUPERUSER ONLY)
 }
 $sysToolsItems[] =  ['label' => 'Show your access permissions', 'url' => 'index.php?option=com_ra_tools&task=system.showAccess'];
 $sysToolsItems[] = ['label' => 'System Reports', 'url' => 'index.php?option=com_ra_tools&view=reports'];
-
-
-
 
 if ($canDo->get('core.admin')) {
     $versions = $toolsHelper->getVersions('com_ra_tools');
@@ -392,17 +390,17 @@ if (ComponentHelper::isEnabled('com_ra_wf', true)) {
     <?php foreach ($blocks as $block): ?>
         <div class="dashboard-block">
             <div class="block-header">
-                <h3><?php echo $block['title']; ?></h3>
+                <h3><?php echo $this->escape($block['title']); ?></h3>
             </div>
             <div class="block-content">
                 <ul>
                     <?php foreach ($block['items'] as $item): ?>
                         <li>
                             <?php if (isset($item['disabled']) && $item['disabled']): ?>
-                                <span class="item-text"><?php echo $item['label']; ?></span>
+                                <span class="item-text"><?php echo $this->escape($item['label']); ?></span>
                             <?php else: ?>
-                                <a href="<?php echo $item['url']; ?>" target="<?php echo $item['target'] ?? '_self'; ?>">
-                                    <?php echo $item['label']; ?>
+                                <a href="<?php echo $this->escape($item['url']); ?>" target="<?php echo $this->escape($item['target'] ?? '_self'); ?>">
+                                    <?php echo $this->escape($item['label']); ?>
                                 </a>
                             <?php endif; ?>
                         </li>

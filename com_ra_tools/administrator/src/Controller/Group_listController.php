@@ -1,12 +1,6 @@
 <?php
 
 /**
- * @version     3.3.14
- * @package     com_ra_tools
- * @author      charlie
- *
- * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 23/05/23 CB use db->quote for Areas/Groups
  * 06/06/23 CB correct back button for refresh groups
  * 14/06/23 CB re-write refreshGroups
@@ -19,6 +13,7 @@
  * 18/08/25 CB get API key from ra_api_sites
  * 04/09/25 CB check before updating group details, set bespoke
  * 08/09/25 CB update area_id
+ * 09/11/c6 CB get API key using JsonHelper, remove display
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -40,13 +35,16 @@ use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
  */
 class Group_listController extends AdminController {
 
+    protected $app;
+    protected $jsonHelper;
     protected $toolsHelper;
 
     public function __construct() {
         parent::__construct();
+        $this->jsonHelper = new JsonHelper;
         $this->toolsHelper = new ToolsHelper;
-        //      $this->app = Factory::getApplication();
-        $wa = Factory::getApplication()->getDocument()->getWebAssetManager();
+        $this->app = Factory::getApplication();
+        $wa = $this->app->getDocument()->getWebAssetManager();
         $wa->registerAndUseStyle('ramblers', 'com_ra_tools/ramblers.css');
     }
 
@@ -98,11 +96,10 @@ class Group_listController extends AdminController {
         $display = 0;
         $toolsHelper = new ToolsHelper;
 
-//        $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=742d93e8f409bf2b5aec6f64cf6f405e';
-        $api_key = $this->toolsHelper->lookupApiKey();
+        $api_key = $this->jsonHelper->lookupApiKey();
         if ($api_key == '') {
             $message = 'API key not found - please create a record in API sites';
-            Factory::getApplication()->enqueueMessage($message, 'error');
+            $this->app->enqueueMessage($message, 'error');
         }
         $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=' . $api_key;
 
@@ -130,7 +127,7 @@ class Group_listController extends AdminController {
         }
         $group_list = json_decode($data);
         //       var_dump($group_list);
-        // $group_list = $JsonHelper->getJson('group-event', 'groups=' . $group_code););
+        // $group_list = $this->jsonHelper->getJson('group-event', 'groups=' . $group_code););
 
 
         $sql = "SELECT id,area_id,code,name,details,bespoke,website,co_url,latitude, longitude "
@@ -266,7 +263,7 @@ class Group_listController extends AdminController {
             $target = 'administrator/index.php?option=com_ra_tools&view=dashboard';
             echo $toolsHelper->backButton($target);
         } else {
-            Factory::getApplication()->enqueueMessage($message, 'notice');
+            $this->app->enqueueMessage($message, 'notice');
             $this->setRedirect(Route::_('index.php?option=com_ra_tools&view=group_list', false));
         }
     }

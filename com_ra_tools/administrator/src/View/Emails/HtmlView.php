@@ -1,13 +1,9 @@
 <?php
 
 /**
- * @version    3.2.3
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 16/07/25 CB regenerated
  * 20/07/25 CB Publish / Unpublish / Delete
+ * 09/11/26 CB prepare for Joomla 6 by removing references to SidebarHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Emails;
@@ -21,7 +17,6 @@ use \Joomla\CMS\Toolbar\ToolbarHelper;
 use \Joomla\CMS\Language\Text;
 use \Joomla\Component\Content\Administrator\Extension\ContentComponent;
 use \Joomla\CMS\Form\Form;
-use \Joomla\CMS\HTML\Helpers\Sidebar;
 use \Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 /**
@@ -62,7 +57,6 @@ class HtmlView extends BaseHtmlView {
         $breadcrumbs .= '>' . $this->toolsHelper->buildLink('administrator/index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard');
         $breadcrumbs .= '>' . $this->toolsHelper->buildLink('administrator/index.php?option=com_ra_tools&view=reports', 'System Reports');
         echo $breadcrumbs;
-        $this->sidebar = Sidebar::render();
         parent::display($tpl);
     }
 
@@ -116,9 +110,6 @@ class HtmlView extends BaseHtmlView {
                     ->listCheck(false);
         }
         ToolbarHelper::cancel('emails.cancel', 'Return to Dashboard');
-
-        // Set sidebar action
-        Sidebar::setAction('index.php?option=com_ra_tools&view=emails');
     }
 
     /**

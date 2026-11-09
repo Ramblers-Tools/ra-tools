@@ -1,17 +1,5 @@
 <?php
 /**
- * @version     3.3.14
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2020. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
- * 01/12/22 CB created from com ramblers
- * 07/12/22 CB analyse Joomla users by their allocated security group
- * 12/12/22 CB showPaths
- * 19/12/22 CB add WF reports from site reports
- * 06/02/23 CB mailman report
- * 23/06/23 CB remove mailman reports again
- * 06/09/23 CB showLogfile
  * 22/01/24 CB contactsByCategory
  * 21/04/25 CB Show Events from WalksManager, User by Registration date
  * 24/04/25 CB showLogfileByDate
@@ -22,6 +10,7 @@
  * 21/07/25 CB refer to Home Dashboard in breadcrumbs
  * 14/04/26 CB restructure formatting
  * 18/09/26 CB delete areasLatitude
+ * 09/11/26 CB Updates for Joomla 6 compatibility, remove duplicated heading
  */
 defined('_JEXEC') or die;
 
@@ -46,19 +35,16 @@ $this->wa->registerAndUseStyle('dashboard', 'com_ra_tools/dashboard.css');
 $breadcrumbs = $toolsHelper->buildLink('administrator/index.php', 'Home Dashboard');
 $breadcrumbs .= '>' . $toolsHelper->buildLink('administrator/index.php?option=com_ra_tools&view=dashboard', 'RA Dashboard');
 echo $breadcrumbs;
-echo '<h2>System reports</h2>';
 $reports = [
-    'Check database for integrity' => 'administrator/index.php?option=com_ra_tools&task=reports.checkDatabase',    
+    'Check database for integrity' => 'administrator/index.php?option=com_ra_tools&task=reports.checkDatabase',
     'Top article hit counters' => 'administrator/index.php?option=com_ra_tools&task=reports.showHitCounters',
     'Contact By Category' => 'administrator/index.php?option=com_ra_tools&task=reports.contactsByCategory',
     'Count users by Registration date' => 'administrator/index.php?option=com_ra_tools&task=reports.showRegistrations',
     'Show Joomla User by Group' => 'administrator/index.php?option=com_ra_tools&task=reports.showJoomlaUsersByGroup',
     'Show Blocked Users' => 'administrator/index.php?option=com_ra_tools&task=reports.blockedUsers',
 //    'Extract contacts' => 'administrator/index.php?option=com_ra_tools&task=reports.extractContacts',
- 
     'Users with duplicate name' => 'administrator/index.php?option=com_ra_tools&task=reports.duplicateName',
-    'Users requiring a password reset' => 'administrator/index.php?option=com_ra_tools&task=reports.resetUsers',  
-    
+    'Users requiring a password reset' => 'administrator/index.php?option=com_ra_tools&task=reports.resetUsers',
     'List emails' => 'administrator/index.php?option=com_ra_tools&view=emails',
     'Extensions and versions' => 'administrator/index.php?option=com_ra_tools&task=reports.showExtensions',
     'Schema' => 'administrator/index.php?option=com_ra_tools&task=reports.showSchema',
@@ -108,7 +94,7 @@ $reports['Show Ramblers menus'] = 'administrator/index.php?option=com_ra_tools&t
         echo $toolsHelper->backButton($target);
         ?>
         <input type="hidden" name="task" value="" />
-        <?php echo JHtml::_('form.token'); ?>
+        <?php echo \Joomla\CMS\HTML\HTMLHelper::_('form.token'); ?>
     </div>
 </form>
 <?php

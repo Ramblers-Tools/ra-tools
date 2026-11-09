@@ -7,6 +7,7 @@
  * @copyright  2025 Charlie Bigley
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 26/02/26 CB added queryEndpoints method
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -55,7 +56,7 @@ class ApisiteController extends FormController {
             return;
         }
 
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true)
             ->select(['id', 'url', 'token', 'title', 'sub_system'])
             ->from($db->quoteName('#__ra_api_sites'))

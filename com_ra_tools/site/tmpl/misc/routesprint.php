@@ -10,6 +10,7 @@
  * 25/03/25 CB change number of columns to 2
  * 08/04/25 CB sort names, omit folders
  * 28/04/26 CB omit hidden files and temp file
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -18,7 +19,7 @@ use Joomla\CMS\Factory;
 use \Joomla\Uri\Uri;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
 
-//$app = JFactory::getApplication();
+//$app = \Joomla\CMS\Factory::getApplication();
 //var_dump($this->menu_params);
 //echo "<br>";
 //$title = $this->params->get('page_title', '');

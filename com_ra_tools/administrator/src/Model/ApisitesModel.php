@@ -7,6 +7,7 @@
  * @copyright  2025 Charlie Bigley
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 22/09/25 CB sort by title
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -119,7 +120,7 @@ class ApisitesModel extends ListModel {
      */
     protected function getListQuery() {
         // Create a new query object.
-        $db = $this->getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         // Select the required fields from the table.

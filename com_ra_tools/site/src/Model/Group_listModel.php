@@ -11,6 +11,7 @@
  * 08/11/24 CB filter by nation
  * 28/04/25 CB leftJoin on areas
  * 08/09/25 CB select a.*
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Model;
@@ -41,7 +42,7 @@ class Group_listModel extends ListModel {
     }
 
     protected function getListQuery() {
-        $db = $this->getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         $query->select('a.*');

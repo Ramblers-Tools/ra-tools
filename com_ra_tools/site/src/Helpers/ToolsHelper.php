@@ -17,11 +17,14 @@
  *             This is to allow the calling code to distinguish between a query that returns no rows (or a SQL NULL value) and a query that fails with an error.
  * 22/06/26 CB in showAccess, show home group (and membershipNumber), include group in list of events
  * 06/07/26 CB invoke ra-delivery/SmtpHelper to send email using API if component is installed and enabled
- * 15/07/26 CB improved image hanling for emails: insert code required for embedLocalEmailImages
+ * 15/07/26 CB improved image handling for emails: insert code required for embedLocalEmailImages
  * 17/07/26 CB added function buildDashboardReportBlock (for dashboard and reports menus)
  * 10/08/26 CB added getNearestOrganisations, allow new windows in buildDashboardBlock
  * 12/10/26 CB correct membershipNo in showAccess
  * 29/10/26 CB added buildTaskButton and checkUsergroup
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
+ * 09/11/26 CB Updates for Joomla 6 compatibility
+ * 09/11/26 CB moved lookupApikey to JsonHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -65,7 +68,7 @@ class ToolsHelper {
     function __construct() {
         $this->app = Factory::getApplication();
         $this->user = $this->app->getIdentity();
-        $this->db = Factory::getDbo();
+        $this->db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $this->rows = 0;
         $this->toolsTable = new ToolsTable();
     }
@@ -151,85 +154,87 @@ class ToolsHelper {
     }
 
     /*
-replace
-    $target = 'index.php?option=com_ra_members'
-        . '&task=access_permission.revoke'
-        . '&user_id=' . $userId
-        . '&component=com_ra_mailman';
+      replace
+      $target = 'index.php?option=com_ra_members'
+      . '&task=access_permission.revoke'
+      . '&user_id=' . $userId
+      . '&component=com_ra_mailman';
 
-    echo $objHelper->buildButton($target,'Revoke',false, 'sunset' );
-with
-    echo $objHelper->buildTaskButton(
-        'com_ra_members',
-        'access_permission.revoke',
-        'Revoke',
-        [
-            'user_id' => $userId,
-            'component' => 'com_ra_mailman'
-        ],
-        'sunset'
-    );
-or
-    echo $objHelper->buildTaskButton(
-        'com_ra_members',
-        'access_permission.grant',
-        'Grant',
-        [
-            'user_id' => $item->id,
-            'component' => 'com_ra_mailman'
-        ],
-        'forest'
-    );
+      echo $objHelper->buildButton($target,'Revoke',false, 'sunset' );
+      with
+      echo $objHelper->buildTaskButton(
+      'com_ra_members',
+      'access_permission.revoke',
+      'Revoke',
+      [
+      'user_id' => $userId,
+      'component' => 'com_ra_mailman'
+      ],
+      'sunset'
+      );
+      or
+      echo $objHelper->buildTaskButton(
+      'com_ra_members',
+      'access_permission.grant',
+      'Grant',
+      [
+      'user_id' => $item->id,
+      'component' => 'com_ra_mailman'
+      ],
+      'forest'
+      );
 
-In the target
+      In the target
 
-    public function revoke(): void
-    {
-        if (strtoupper($this->app->input->getMethod()) !== 'POST') {   
-            throw new \RuntimeException('POST request required',403);      
-        }
+      public function revoke(): void
+      {
+      if (strtoupper($this->app->input->getMethod()) !== 'POST') {
+      throw new \RuntimeException('POST request required',403);
+      }
 
-        $this->checkToken('post');
-        $userId = $this->app->input->post->getInt('user_id', 0);
-        $component = $this->app->input->post->getCmd('component', '' );
-        if ($userId <= 0) {
-            throw new \InvalidArgumentException('Invalid user ID');
-        }
+      $this->checkToken('post');
+      $userId = $this->app->input->post->getInt('user_id', 0);
+      $component = $this->app->input->post->getCmd('component', '' );
+      if ($userId <= 0) {
+      throw new \InvalidArgumentException('Invalid user ID');
+      }
 
-        // Check the current user's permission to revoke access.
+      // Check the current user's permission to revoke access.
 
-        // Validate $component against your permitted components.
+      // Validate $component against your permitted components.
 
 
-        // Perform the revoke operation.
+      // Perform the revoke operation.
 
-        $this->setRedirect(
-            Route::_('index.php?option=com_ra_members'
-                . '&view=access_permissions', false)
-        );
-    }
+      $this->setRedirect(
+      Route::_('index.php?option=com_ra_members'
+      . '&view=access_permissions', false)
+      );
+      }
 
-    */
+     */
 
-/**
- * Generate a POST form button to invoke a Joomla controller task.
- *
- * Use only outside an existing HTML form.
- *
- * @param string $option  Joomla component, e.g. com_ra_members
- * @param string $task    Controller task, e.g. access_permission.revoke
- * @param string $text    Button caption
- * @param array  $params  Additional POST parameters
- * @param string $colour  Ramblers colour name
- *
- * @return string HTML form and button
- */
+    /**
+     * Generate a POST form button to invoke a Joomla controller task.
+     *
+     * Use outside an existing HTML form, or pass $formId to submit an existing form.
+     *
+     * @param string $option  Joomla component, e.g. com_ra_members
+     * @param string $task    Controller task, e.g. access_permission.revoke
+     * @param string $text    Button caption
+     * @param array  $params  Additional POST parameters
+     * @param string $colour  Ramblers colour name
+     * @param string|null $formId Existing form to submit from, for use inside a Joomla list form
+     *
+     * @return string HTML form and button
+     */
     public function buildTaskButton(
-        string $option,
-        string $task,
-        string $text,
-        array $params = [],
-        string $colour = 'granite'
+            string $option,
+            string $task,
+            string $text,
+            array $params = [],
+            string $colour = 'granite',
+            ?string $formId = null
     ): string {
 
         if (!preg_match('/^com_[a-z0-9_]+$/i', $option)) {
@@ -242,9 +247,9 @@ In the target
 
         $escape = static function ($value): string {
             return htmlspecialchars(
-                (string) $value,
-                ENT_QUOTES,
-                'UTF-8'
+            (string) $value,
+            ENT_QUOTES,
+            'UTF-8'
             );
         };
 
@@ -259,16 +264,55 @@ In the target
             $colour = 'granite';
         }
 
-        $class = $this->lookupColourCode($colour, 'B');
+        $class = 'btn btn-sm ' . $this->lookupColourCode($colour, 'B');
+
+        if ($formId !== null) {
+            if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/', $formId)) {
+                throw new \InvalidArgumentException('Invalid form ID');
+            }
+
+            foreach ($params as $name => $value) {
+                if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', (string) $name)) {
+                    throw new \InvalidArgumentException('Invalid parameter name');
+                }
+
+                if (in_array($name, ['task', 'option'], true)) {
+                    throw new \InvalidArgumentException('Reserved parameter');
+                }
+
+                if (!is_scalar($value) && $value !== null) {
+                    throw new \InvalidArgumentException('Invalid parameter value');
+                }
+            }
+
+            $taskAttribute = $escape($task);
+            $paramsAttribute = $escape((string) json_encode(
+                            $params,
+                            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+            ));
+            $formAttribute = $escape($formId);
+
+            return '<button type="submit" form="' . $formAttribute . '"'
+                    . ' class="' . $escape($class) . '"'
+                    . ' data-task="' . $taskAttribute . '"'
+                    . ' data-params="' . $paramsAttribute . '"'
+                    . ' onclick="const f=this.form;'
+                    . 'f.elements.namedItem(\'task\').value=this.dataset.task;'
+                    . 'for(const [n,v] of Object.entries(JSON.parse(this.dataset.params))){'
+                    . 'let e=f.elements.namedItem(n);'
+                    . 'if(!e){e=document.createElement(\'input\');e.type=\'hidden\';e.name=n;f.append(e);}'
+                    . 'e.value=v;}"'
+                    . '>' . $escape($text) . '</button>';
+        }
 
         // Route within the current Joomla application.
         $action = Route::_('index.php?option=' . $option);
 
         $html = '<form action="' . $escape($action) . '"'
-            . ' method="post" class="d-inline">';
+                . ' method="post" class="d-inline">';
 
         $html .= '<input type="hidden" name="task"'
-            . ' value="' . $escape($task) . '">';
+                . ' value="' . $escape($task) . '">';
 
         foreach ($params as $name => $value) {
 
@@ -285,17 +329,17 @@ In the target
             }
 
             $html .= '<input type="hidden" name="'
-                . $escape($name)
-                . '" value="' . $escape($value) . '">';
+                    . $escape($name)
+                    . '" value="' . $escape($value) . '">';
         }
 
         // Joomla CSRF token.
         $html .= HTMLHelper::_('form.token');
 
         $html .= '<button type="submit" class="'
-            . $escape($class) . '">'
-            . $escape($text)
-            . '</button>';
+                . $escape($class) . '">'
+                . $escape($text)
+                . '</button>';
 
         $html .= '</form>';
 
@@ -304,7 +348,7 @@ In the target
 
     private function checkUsergroup(string $component): bool {
         $db = Factory::getContainer()->get(DatabaseInterface::class);
-        $sql = 'SELECT id FROM #__usergroups WHERE title = '. $db->q($component)  ;
+        $sql = 'SELECT id FROM #__usergroups WHERE title = ' . $db->q($component);
         $groupId = $this->toolsHelper->getValue($sql);
 
         if ($groupId > 0) {
@@ -312,12 +356,12 @@ In the target
             return true;
         }
 
-        $table = Table::getInstance('Usergroup', 'JTable', []);
+        $table = new \Joomla\CMS\Table\Usergroup($this->db);
 
         if (!$table || !$table->save([
-            'title' => $component,
-            'parent_id' => 1,
-        ])) {
+                    'title' => $component,
+                    'parent_id' => 1,
+                ])) {
             $error = $table ? (string) $table->getError() : 'Unable to initialise Usergroup table';
             return $this->fail('Failed to create usergroup ' . $component . ': ' . $error);
         }
@@ -613,9 +657,7 @@ In the target
             return true;
         }
 
-        return isset($item->created_by)
-            && (int) $item->created_by === (int) $user->id
-            && $user->authorise('core.edit.own', $component);
+        return isset($item->created_by) && (int) $item->created_by === (int) $user->id && $user->authorise('core.edit.own', $component);
     }
 
     static function convert_to_ASCII($name) {
@@ -996,17 +1038,6 @@ In the target
         $sql .= ',' . $this->db->quote($message) . ')';
         echo "Helper::createLog: $sql<br>";
         $this->executeCommand($sql);
-        /*
-          $db = $this->getDbo();
-          $query = $db->getQuery(true);
-          $query->insert($db->quoteName('#__ra_logfile'))
-          ->set('log_date = CURRENT_TIMESTAMP')
-          ->set('sub_system = ' . $db->quote($sub_system))
-          ->set('record_type = ' . $db->quote($record_type))
-          ->set('ref = ' . $db->quote($ref))
-          ->set('message = ' . $db->quote($message));
-          $db->setQuery($query)->execute();
-         */
     }
 
     static function envelopeIcon() {
@@ -1598,7 +1629,7 @@ In the target
         echo "Subject $subject<br>";
         echo $body . '<br>';
 
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $helper = New ToolsHelper;
 
         $query = $db->getQuery(true);
@@ -1630,12 +1661,6 @@ In the target
 
     function logMessage($record_type, $ref, $message) {
         $this->createLog('Walks', $record_type, $ref, $message);
-    }
-
-    public function lookupApiKey($url = 'https://ramblers.org.uk') {
-        $sql = 'SELECT token FROM #__ra_api_sites ';
-        $sql .= 'WHERE url="' . $url . '"';
-        return $this->getValue($sql);
     }
 
     function lookupArea($area_code) {

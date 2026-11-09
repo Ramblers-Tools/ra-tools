@@ -28,11 +28,11 @@ $userId = $this->user->id;
 $listOrder = $this->state->get('list.ordering');
 $listDirn = $this->state->get('list.direction');
 $canOrder = $this->user->authorise('core.edit.state', 'com_ra_tools');
+$canRefreshEvents = $this->user->authorise('core.edit', 'com_ra_events');
+$canRefreshMembers = $this->user->authorise('core.edit', 'com_ra_members');
 $isSuperuser = $this->toolsHelper->isSuperuser();
 
 $target_info = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=3&id=';
-$target_refresh = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=2&id=';
-$target_refresh_members = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshMembers&id=';
 $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisites.testDeliveryActivity&id=';
 ?>
 
@@ -133,7 +133,16 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                 if ($item->state ==1 AND ($item->sub_system == 'RA Events')) {
                                     echo '<td>' . $this->toolsHelper->imageButton('I', $target_info . $item->id) . '</td>';
                                     echo '<td>';
-                                    echo $this->toolsHelper->buildButton($target_refresh . $item->id, 'Refresh', false, 'button-p0583');
+                                    if ($canRefreshEvents) {
+                                        echo $this->toolsHelper->buildTaskButton(
+                                            'com_ra_tools',
+                                            'apisites.refreshEvents',
+                                            'Refresh',
+                                            ['mode' => 2, 'id' => (int) $item->id],
+                                            'forest',
+                                            'adminForm'
+                                        );
+                                    }
                                     echo '</td>';
                                 } elseif ($item->state == 1 AND ($item->sub_system == 'RA Delivery')) {
                                     echo '<td></td>';
@@ -143,7 +152,16 @@ $target_delivery_test = 'administrator/index.php?option=com_ra_tools&task=apisit
                                  } elseif ($item->state == 1 AND ($item->sub_system == 'RA Members')) {
                                     echo '<td></td>';
                                     echo '<td>';
-                                    echo $this->toolsHelper->buildButton($target_refresh_members . $item->id, 'Load', false, 'button-p0583');
+                                    if ($canRefreshMembers) {
+                                        echo $this->toolsHelper->buildTaskButton(
+                                            'com_ra_tools',
+                                            'apisites.refreshMembers',
+                                            'Load',
+                                            ['id' => (int) $item->id],
+                                            'forest',
+                                            'adminForm'
+                                        );
+                                    }
                                     echo '</td>';  
                                 } else {
                                     echo '<td></td>';

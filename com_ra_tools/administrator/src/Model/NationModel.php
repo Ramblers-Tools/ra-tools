@@ -5,6 +5,7 @@
  * @author     Charlie Bigley <webmaster@bigley.me.uk>
  * @copyright  2024 Charlie Bigley
  * @license    GNU General Public License version 3 or later; see LICENSE.txt
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -266,7 +267,7 @@ class NationModel extends AdminModel
 			// Set ordering to the last item if not set
 			if (@$table->ordering === '')
 			{
-				$db = $this->getDbo();
+				$db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
 				$db->setQuery('SELECT MAX(ordering) FROM #__ra_nations');
 				$max             = $db->loadResult();
 				$table->ordering = $max + 1;

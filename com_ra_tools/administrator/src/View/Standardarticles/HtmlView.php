@@ -1,17 +1,14 @@
 <?php
+
 /**
- * @version    3.7.4
- * @package    com_ra_tools
- * @author     GitHub Copilot
- * @copyright  2026
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface, remove references to SidebarHelper
  */
+
 namespace Ramblers\Component\Ra_tools\Administrator\View\Standardarticles;
 
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
-use Joomla\CMS\HTML\Helpers\Sidebar;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\Toolbar;
 use Joomla\CMS\Toolbar\ToolbarHelper;
@@ -26,6 +23,7 @@ use Ramblers\Component\Ra_tools\Site\Helpers\JsonHelper;
  * @since  3.7.4
  */
 class HtmlView extends BaseHtmlView implements CurrentUserInterface {
+
     protected $db;
     protected $items;
     protected $toolsHelper;
@@ -40,11 +38,11 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
      *
      * @return  void
      */
-    public function display($tpl = null){
-        $this->db = \Joomla\CMS\Factory::getDbo();
-         $this->user = $this->getCurrentUser();
+    public function display($tpl = null) {
+        $this->db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+        $this->user = $this->getCurrentUser();
         $this->toolsHelper = new ToolsHelper;
-        
+
         $params = ComponentHelper::getParams('com_ra_tools');
         $site_id = $params->get('site_id');
         $this->category_id = $params->get('category_id', 0); // Default to 0 if not set
@@ -55,7 +53,7 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
         $sql = 'SELECT title FROM #__ra_api_sites where id=' . (int) $site_id;
         $this->site_name = $this->toolsHelper->getValue($sql);
         $this->items = JsonHelper::getRemoteData($site_id, $endpoint);
-        
+
         if ($this->items === false) {
             $app = Factory::getApplication();
             $messages = JsonHelper::getMessages();
@@ -64,7 +62,7 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
             }
             $this->items = [];
         }
-        
+
         $this->addToolbar();
         parent::display($tpl);
     }
@@ -72,28 +70,26 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
     protected function addToolbar() {
         $state = $this->get('State');
         $canDo = ToolsHelper::getActions('com_ra_tools');
- 
+
         ToolbarHelper::title('Standard Articles', 'generic');
 
         $toolbar = Toolbar::getInstance('toolbar');
-/*
-        $toolbar->standardButton('nrecords')
-                ->icon('fa fa-info-circle')
-                ->text(number_format($this->pagination->total) . ' Records')
-                ->task('')
-                ->onclick('return false')
-                ->listCheck(false);
-*/
+        /*
+          $toolbar->standardButton('nrecords')
+          ->icon('fa fa-info-circle')
+          ->text(number_format($this->pagination->total) . ' Records')
+          ->task('')
+          ->onclick('return false')
+          ->listCheck(false);
+         */
         ToolbarHelper::cancel('standardarticles.cancel', 'Return to Dashboard');
-
-        // Set sidebar action
-        Sidebar::setAction('index.php?option=com_ra_tools&view=standardarticles');
     }
 
-    public function getLocal($title){
-    // Seeks Article of the same name in the local database 
+    public function getLocal($title) {
+        // Seeks Article of the same name in the local database
         $sql = 'SELECT id, modified FROM #__content ';
         $sql .= 'WHERE title=' . $this->db->quote($title);
         return $this->toolsHelper->getItem($sql);
     }
+
 }

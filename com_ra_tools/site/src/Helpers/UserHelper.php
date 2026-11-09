@@ -22,6 +22,7 @@
  * 12/07/24 CB in createProfile2, use enqueue message rather than display
  * 26/04/25 CB purgeProfile
  * 04/08/25 CB correct loop within loop when purging a profile
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -120,7 +121,7 @@ class UserHelper {
 
     public function createProfile() {
         //    Create a record in ra_profiles
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $user = Factory::getApplication()->getIdentity();
         $query = $db->getQuery(true);
         $date = Factory::getDate('now', Factory::getConfig()->get('offset'))->toSql(true);
@@ -162,7 +163,7 @@ class UserHelper {
     public function createProfile_1($user_id, $group_code) {
 //    Create a record in ra_profiles
         $user = Factory::getApplication()->getIdentity();
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         // Prepare the insert query.
@@ -258,7 +259,7 @@ class UserHelper {
         $date = Factory::getDate();
         $params = '{"admin_style":"","admin_language":"","language":"","editor":"","timezone":""}';
         $password = '$2y$10$PCUXW4xpLTsLGmdJJ4NqUuuNSnpq7fBkZxB4XiqUNFq8tP1Ha3FHa'; // unspecifiedpassword
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         // Prepare the insert query.
@@ -334,7 +335,7 @@ class UserHelper {
 
     protected function linkUser($group_id) {
         //  Links User to given group
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
         $query
                 ->insert($db->quoteName('#__user_usergroup_map'))
@@ -357,13 +358,6 @@ class UserHelper {
 //        echo $sql . '<br>';
         $this->user_id = (int) $this->toolsHelper->getValue($sql);
         return $this->user_id;
-//        $db = JFactory::getDbo();
-//        $query = $db->getQuery(true);
-//        $query->select('a.id');
-//        $query->from('`#__users` AS a');
-//        $query->where($db->qn('a.email') . ' = ' . $db->q($email));
-//        $db->setQuery($query);
-//        return $db->loadResult();
     }
 
     public function purgeProfiles() {

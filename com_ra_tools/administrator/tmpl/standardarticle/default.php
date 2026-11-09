@@ -1,10 +1,6 @@
 <?php
 /**
- * @version    3.7.4
- * @package    com_ra_tools
- * @author     GitHub Copilot
- * @copyright  2026
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * 09/11/26 CB escape output when displaying it
  */
 \defined('_JEXEC') or die;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
@@ -14,16 +10,16 @@ $wa = $this->document->getWebAssetManager();
 $wa->registerAndUseStyle('ramblers', 'com_ra_tools/ramblers.css');
 $wa->registerAndUseStyle('dashboard', 'com_ra_tools/dashboard.css');
 ?>
-<div style="background-color: <?php echo $this->site->colour; ?>; padding: 10px; border-radius: 5px;">
-    <h2><?php echo $this->item->title; ?></h2>
-        <p><?php echo $this->item->text; ?></p>
+<div style="background-color: <?php echo $this->escape($this->site->colour); ?>; padding: 10px; border-radius: 5px;">
+    <h2><?php echo $this->escape($this->item->title); ?></h2>
+        <p><?php echo $this->escape($this->item->text); ?></p>
     <?php if (!empty($this->item->created)) : ?>
-        <p><strong>Created:</strong> <?php echo $this->item->created; ?></p>
+        <p><strong>Created:</strong> <?php echo $this->escape($this->item->created); ?></p>
     <?php endif; ?>
     <?php if (!empty($this->item->modified)) : ?>
-        <p><strong>Modified:</strong> <?php echo $this->item->modified; ?></p>
+        <p><strong>Modified:</strong> <?php echo $this->escape($this->item->modified); ?></p>
     <?php endif; ?>
-    <p><em>(Article ID: <?php echo $this->item->id; ?> from <?php echo $this->toolsHelper->buildLink($this->site->url, $this->site->url, true); ?>)</em></p>
+    <p><em>(Article ID: <?php echo $this->escape($this->item->id); ?> from <a href="<?php echo $this->escape($this->site->url); ?>" target="_blank" rel="noopener noreferrer"><?php echo $this->escape($this->site->url); ?></a>)</em></p>
 </div>
 <?php
 $back = 'administrator/index.php?option=com_ra_tools&view=standardarticles';

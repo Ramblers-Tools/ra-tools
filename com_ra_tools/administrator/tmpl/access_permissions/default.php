@@ -1,18 +1,20 @@
 <?php
-
+/*
+ * Access Permissions View Template
+ *
+ * Lists users with access to installed Ramblers components and provides buttons
+ * to grant or revoke access.
+ * 09/11/26 CB use buildTaskButton from ToolsHelper
+ */
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
-use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
-use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 $wa = $this->document->getWebAssetManager();
 $wa->registerAndUseStyle('ramblers', 'com_ra_tools/ramblers.css');
 
-$objHelper = new ToolsHelper;
-$self = 'index.php?option=com_ra_tools&view=access_permissions';
 $components = [];
 
 foreach ([
@@ -27,23 +29,10 @@ foreach ([
     }
 }
 
-$renderAccessButton = static function (int $userId, string $component, bool $hasAccess): string {
-    $task = $hasAccess ? 'access_permission.revoke' : 'access_permission.grant';
-    $label = $hasAccess ? 'Revoke' : 'Grant';
-    $colour = $hasAccess ? 'sunset' : 'forest';
-
-    return '<button type="submit" class="btn btn-sm ' . $colour . '" data-task="' . $task . '"'
-            . ' data-user-id="' . $userId . '" data-component="'
-            . htmlspecialchars($component, ENT_QUOTES, 'UTF-8') . '"'
-            . ' onclick="this.form.elements[\'task\'].value=this.dataset.task;'
-            . 'this.form.elements[\'user_id\'].value=this.dataset.userId;'
-            . 'this.form.elements[\'component\'].value=this.dataset.component;">'
-            . $label . '</button>';
-};
 ?>
 
-<form action="<?php echo Route::_($self); ?>" method="post" name="adminForm" id="adminForm">
-    <div class="row">
+<form action="<?php echo Route::_('index.php?option=com_ra_tools&view=access_permissions'); ?>" method="post" name="adminForm" id="adminForm">
+<div class="row">
         <div class="col-md-12">
             <div id="j-main-container" class="j-main-container">
                 <?php if (empty($this->items)) : ?>
@@ -70,7 +59,17 @@ $renderAccessButton = static function (int $userId, string $component, bool $has
                                         <td>
                                             <?php $hasAccess = (int) ($item->{$component['property']} ?? 0) === 1; ?>
                                             <?php echo $hasAccess ? 'Y' : 'N'; ?>
-                                            <?php echo $renderAccessButton((int) $item->id, $option, $hasAccess); ?>
+                                            <?php echo $this->toolsHelper->buildTaskButton(
+                                                'com_ra_tools',
+                                                $hasAccess ? 'access_permission.revoke' : 'access_permission.grant',
+                                                $hasAccess ? 'Revoke' : 'Grant',
+                                                [
+                                                    'user_id' => (int) $item->id,
+                                                    'component' => $option,
+                                                ],
+                                                $hasAccess ? 'sunset' : 'forest',
+                                                'adminForm'
+                                            ); ?>
                                         </td>
                                     <?php endforeach; ?>
                                 </tr>
@@ -78,14 +77,10 @@ $renderAccessButton = static function (int $userId, string $component, bool $has
                         </tbody>
                     </table>
                 <?php endif; ?>
-
-                <input type="hidden" name="task" id="task" value="" />
-                <input type="hidden" name="user_id" id="user_id" value="0" />
-                <input type="hidden" name="component" id="component" value="" />
+                <input type="hidden" name="task" value="">
                 <?php echo HTMLHelper::_('form.token'); ?>
             </div>
         </div>
     </div>
 </form>
-
 <p>This lists users with access to installed Ramblers components. Use the buttons to grant or revoke access.</p>

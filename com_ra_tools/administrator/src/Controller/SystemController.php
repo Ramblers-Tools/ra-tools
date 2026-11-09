@@ -1,11 +1,6 @@
 <?php
 
 /**
- * @version     3.3.3
- * @package     com_ra_tools
- *
- * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 23/12/23 CB Created
  * 30/12/23 CB show Groups the user belongs to
  * 04/01/24 CB show Authorship of lists
@@ -17,6 +12,7 @@
  * 22/07/25 CB emails/ref to INT
  * 08/08/25 CB mailman / ra_mail_lists / emails_outstanding
  * 19/04/26 CB resetHitCounters
+ * 09/11/26 CB remove hard-code API key
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -138,11 +134,17 @@ class SystemController extends FormController {
         echo $this->toolsHelper->backButton($this->back);
     }
 
-        /**
+    /**
      * Reconcile Joomla users which have no RA profile by creating the
      * standard unpublished ZZ99 placeholder. Super User only.
      */
     public function backfillProfiles(): void {
+        if (strtoupper($this->app->input->getMethod()) !== 'POST') {
+            throw new \RuntimeException('POST request required', 405);
+        }
+
+        $this->checkToken('post');
+
         if (!$this->toolsHelper->isSuperuser()) {
             throw new \RuntimeException('Only a Super User may backfill RA profiles.', 403);
         }
@@ -281,6 +283,12 @@ class SystemController extends FormController {
     }
 
     public function deleteProfilesWithoutUsers() {
+        if (strtoupper($this->app->input->getMethod()) !== 'POST') {
+            throw new \RuntimeException('POST request required', 405);
+        }
+
+        $this->checkToken('post');
+
         if (!$this->toolsHelper->isSuperuser()) {
             Factory::getApplication()->enqueueMessage('Access only permitted for Superusers', 'warning');
             $this->setRedirect('index.php?option=com_ra_tools&view=dashboard');
@@ -298,7 +306,7 @@ class SystemController extends FormController {
         }
 
         $this->setRedirect('index.php?option=com_ra_tools&task=reports.checkDatabase');
-    }   
+    }
 
     public function deleteView($component = 'com_ra_events', $view = 'Myevents') {
 // first character of View must be upper case
@@ -318,6 +326,12 @@ class SystemController extends FormController {
     }
 
     public function resetHitCounters() {
+        if (strtoupper($this->app->input->getMethod()) !== 'POST') {
+            throw new \RuntimeException('POST request required', 405);
+        }
+
+        $this->checkToken('post');
+
         if (!$this->toolsHelper->isSuperuser()) {
             Factory::getApplication()->enqueueMessage('Access only permitted for Superusers', 'warning');
             $this->setRedirect('index.php?option=com_ra_tools&view=dashboard');
@@ -436,24 +450,13 @@ class SystemController extends FormController {
 
     public function updateSites() {
         $sql = 'SELECT id FROM #__ra_api_sites ';
-        $sql .= 'WHERE url="https://staffordshireramblers.org.uk"';
-        $id = $this->getValue($sql);
-        if (is_null($id)) {
-            $sql = "INSERT INTO `#__ra_api_sites`
-            (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-('RA Tools', 'https://staffordshireramblers.org.uk', 'c2hhMjU2Ojk3OTo5ODQ4NGMzOTNhMGJmM2U5NWY3NzcyODViNTI2NzFkYzY2MmQwZTZmMzliMmNiMTlkNmUzNzI0MjNkNGUyOThk',
-'rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:03:03', 1 );";
-            $this->executeCommand($sql);
-            echo 'Created API site for Staffs<br>';
-        }
-        $sql = 'SELECT id FROM #__ra_api_sites ';
         $sql .= 'WHERE url= "https://ramblers.org"';
         $id = $this->getValue($sql);
         if (is_null($id)) {
             $sql = "INSERT INTO `#__ra_api_sites`
             (`sub_system`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-('RA Walks', 'https://ramblers.org', '742d93e8f409bf2b5aec6f64cf6f405e', '
-rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
+            ('RA Tools', 'https://ramblers.org.uk', '',
+            rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
             $this->executeCommand($sql);
             echo 'Created API site for CO<br>';
         }
@@ -463,7 +466,7 @@ rgba(133, 132, 191, 0.1)', 1, '2025-07-09 06:06:34', 1);";
         return $this->toolsHelper->getValue($sql);
     }
 
-        public function temp() {
+    public function temp() {
         $body = '<table>';
         $body .= '<thead>';
         $body .= '<th>Date</th><th>Reason</th><th>Sender</th><th>Recipient</th><th>User</th>';
