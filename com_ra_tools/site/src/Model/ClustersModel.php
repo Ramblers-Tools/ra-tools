@@ -2,6 +2,7 @@
 /**
  * @package     Joomla.Site
  * @subpackage  com_ra_tools
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Model;
@@ -21,7 +22,7 @@ class ClustersModel extends ListModel
 
     public function getListQuery()
     {
-        $db    = $this->getDbo();
+        $db    = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         $query->select('c.code, c.name AS Cluster, c.contact_id, con.name, p.preferred_name')

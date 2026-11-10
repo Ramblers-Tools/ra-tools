@@ -1,11 +1,7 @@
 <?php
 /**
- * @version    3.0.5
- * @package    com_ra_tools
- * @author     Charlie Bigley <webmaster@bigley.me.uk>
- * @copyright  2024 Charlie Bigley
- * @license    GNU General Public License version 3 or later; see LICENSE.txt
  * 22/02/25 CB delete chair_id
+ * 09/11/26 CB escape output when displaying it
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -102,7 +98,7 @@ if (!empty($saveOrder)) {
                             </td>
                         </tr>
                     </tfoot>
-                    <tbody <?php if (!empty($saveOrder)) : ?> class="js-draggable" data-url="<?php echo $saveOrderingUrl; ?>" data-direction="<?php echo strtolower($listDirn); ?>" <?php endif; ?>>
+                    <tbody <?php if (!empty($saveOrder)) : ?> class="js-draggable" data-url="<?php echo $this->escape($saveOrderingUrl); ?>" data-direction="<?php echo $this->escape(strtolower($listDirn)); ?>" <?php endif; ?>>
                         <?php
                         foreach ($this->items as $i => $item) :
                             $ordering = ($listOrder == 'a.ordering');
@@ -122,7 +118,7 @@ if (!empty($saveOrder)) {
                                 </td>
 
                                 <td>
-                                    <?php echo $item->nation_id; ?>
+                                    <?php echo $this->escape($item->nation_id); ?>
                                 </td>
                                 <td>
                                     <?php if (isset($item->checked_out) && $item->checked_out && ($canEdit || $canChange)) : ?>
@@ -137,36 +133,32 @@ if (!empty($saveOrder)) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->name; ?>
+                                    <?php echo $this->escape($item->name); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->cluster; ?>
+                                    <?php echo $this->escape($item->cluster); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->website; ?>
+                                    <?php echo $this->escape($item->website); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->co_url; ?>
+                                    <?php echo $this->escape($item->co_url); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->cluster; ?>
+                                    <?php echo $this->escape($item->cluster); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->latitude; ?>
+                                    <?php echo $this->escape($item->latitude); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->longitude; ?>
+                                    <?php echo $this->escape($item->longitude); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->created_by; ?>
+                                    <?php echo $this->escape($item->created_by); ?>
                                 </td>
-
                                 <td class="d-none d-lg-table-cell">
-                                    <?php echo $item->id; ?>
-
+                                    <?php echo $this->escape($item->id); ?>
                                 </td>
-
-
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -174,7 +166,7 @@ if (!empty($saveOrder)) {
 
                 <input type="hidden" name="task" value=""/>
                 <input type="hidden" name="boxchecked" value="0"/>
-                <input type="hidden" name="list[fullorder]" value="<?php echo $listOrder; ?> <?php echo $listDirn; ?>"/>
+                <input type="hidden" name="list[fullorder]" value="<?php echo $this->escape($listOrder); ?> <?php echo $this->escape($listDirn); ?>"/>
                 <?php echo HTMLHelper::_('form.token'); ?>
             </div>
         </div>

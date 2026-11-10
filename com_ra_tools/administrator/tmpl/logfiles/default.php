@@ -1,11 +1,7 @@
 <?php
 /**
- * @version    3.2.0
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 01/05/25 CB created from generated code
+ * 09/11/26 CB escape output when displaying it
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -71,7 +67,7 @@ if (!empty($saveOrder)) {
                             </td>
                         </tr>
                     </tfoot>
-                    <tbody <?php if (!empty($saveOrder)) : ?> class="js-draggable" data-url="<?php echo $saveOrderingUrl; ?>" data-direction="<?php echo strtolower($listDirn); ?>" <?php endif; ?>>
+                    <tbody <?php if (!empty($saveOrder)) : ?> class="js-draggable" data-url="<?php echo $this->escape($saveOrderingUrl); ?>" data-direction="<?php echo $this->escape(strtolower($listDirn)); ?>" <?php endif; ?>>
                         <?php
                         foreach ($this->items as $i => $item) :
                             $ordering = ($listOrder == 'a.ordering');
@@ -82,16 +78,16 @@ if (!empty($saveOrder)) {
                             ?>
                             <tr class="row<?php echo $i % 2; ?>" data-draggable-group='1' data-transition>
                                 <td>
-                                    <?php echo $item->log_date; ?>
+                                    <?php echo $this->escape($item->log_date); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->sub_system; ?>
+                                    <?php echo $this->escape($item->sub_system); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->record_type; ?>
+                                    <?php echo $this->escape($item->record_type); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->message; ?>
+                                    <?php echo $this->escape($item->message); ?>
                                 </td>
 
                             </tr>
@@ -101,7 +97,7 @@ if (!empty($saveOrder)) {
 
                 <input type="hidden" name="task" value=""/>
                 <input type="hidden" name="boxchecked" value="0"/>
-                <input type="hidden" name="list[fullorder]" value="<?php echo $listOrder; ?> <?php echo $listDirn; ?>"/>
+                <input type="hidden" name="list[fullorder]" value="<?php echo $this->escape($listOrder); ?> <?php echo $this->escape($listDirn); ?>"/>
                 <?php echo HTMLHelper::_('form.token'); ?>
             </div>
         </div>

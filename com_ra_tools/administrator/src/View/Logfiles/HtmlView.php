@@ -1,12 +1,8 @@
 <?php
 
 /**
- * @version    3.2.0
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 01/05/25 CB created from generated code
+ * 09/11/26 CB prepare for Joomla 6 by removing references to SidebarHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Logfiles;
@@ -18,7 +14,6 @@ use \Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use \Joomla\CMS\Toolbar\Toolbar;
 use \Joomla\CMS\Toolbar\ToolbarHelper;
 use \Joomla\CMS\Language\Text;
-use \Joomla\CMS\HTML\Helpers\Sidebar;
 
 /**
  * View class for a list of Logfiles.
@@ -54,7 +49,6 @@ class HtmlView extends BaseHtmlView {
 
         $this->addToolbar();
 
-        $this->sidebar = Sidebar::render();
         parent::display($tpl);
     }
 
@@ -73,8 +67,6 @@ class HtmlView extends BaseHtmlView {
 
         $toolbar = Toolbar::getInstance('toolbar');
 
-        // Set sidebar action
-        Sidebar::setAction('index.php?option=com_ra_tools&view=logfiles');
         // code from https://docs.joomla.org/J4.x:Joomla_4_Tips_and_Tricks:_Number_of_Records
         $toolbar->standardButton('nrecords')
                 ->icon('fa fa-info-circle')

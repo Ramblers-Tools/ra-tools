@@ -5,6 +5,7 @@
  * @copyright   Copyright (C) 2026. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 10/03/26 GPT API endpoint for remote access to #__ra_clusters
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Controller;
@@ -23,7 +24,7 @@ class ApiClustersController extends BaseController
      */
     public function getClusters()
     {
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true)
             ->select('a.*, p.preferred_name, u.email')
             ->from($db->quoteName('#__ra_clusters', 'a'))

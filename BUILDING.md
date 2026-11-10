@@ -103,6 +103,7 @@ Pushing a `v*` tag triggers `.github/workflows/release.yml`, which:
    - `com_ra_tools.zip`
    - `mod_ra_tools.zip`
    - `plg_webservices_ra_tools.zip`
+   - `plg_cli_ra_houskeeping.zip`
    - `plg_finder_ra_toolswalks.zip`
 3. Assembles the package zip: `pkg_ra_tools-<version>.zip`
 4. Publishes a GitHub Release tagged `v<version>` with the zip attached

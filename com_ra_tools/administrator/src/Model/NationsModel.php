@@ -7,6 +7,7 @@
  * @copyright  2024 Charlie Bigley
  * @license    GNU General Public License version 3 or later; see LICENSE.txt
  * 21/04/25 CB remove Ra_toolsHelper
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -110,7 +111,7 @@ class NationsModel extends ListModel {
      */
     protected function getListQuery() {
         // Create a new query object.
-        $db = $this->getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         // Select the required fields from the table.

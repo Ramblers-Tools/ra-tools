@@ -6,6 +6,7 @@
  * @copyright  2026
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 10/08/26 CB Use Joomla's workflow when creatiing artices, not just the table
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
 
@@ -40,8 +41,18 @@ class StandardarticlesController extends BaseController
 
     public function refresh()
     {
-        $this->db = Factory::getDbo();
-        $input = $this->app->input;
+        if (strtoupper($this->app->input->getMethod()) !== 'POST') {
+            throw new \RuntimeException('POST request required', 405);
+        }
+
+        $this->checkToken('post');
+
+        if (!$this->app->getIdentity()->authorise('core.edit', 'com_ra_tools')) {
+            throw new \RuntimeException('Update access denied for com_ra_tools.', 403);
+        }
+
+        $this->db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+        $input = $this->app->input->post;
         $remote_id    = $input->getInt('remote_id');
         $local_id = $input->getInt('local_id');
         $params = ComponentHelper::getParams('com_ra_tools');

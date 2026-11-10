@@ -65,6 +65,11 @@ jobs:
           cd plg_webservices_ra_tools
           zip -r ../dist/packages/plg_webservices_ra_tools.zip .
           cd ..
+
+          # plg_cli_ra_houskeeping
+          cd plg_cli_ra_houskeeping
+          zip -r ../dist/packages/plg_cli_ra_houskeeping.zip .
+          cd ..
           # tpl_ra_tools_admin — administrator template
           cd tpl_ra_tools_admin
           zip -r ../dist/packages/tpl_ra_tools_admin.zip .
@@ -89,6 +94,7 @@ jobs:
           cp dist/packages/plg_system_ra_tools.zip      dist/pkg/packages/
           cp dist/packages/plg_user_ra_profiles.zip     dist/pkg/packages/
           cp dist/packages/plg_webservices_ra_tools.zip dist/pkg/packages/
+          cp dist/packages/plg_cli_ra_houskeeping.zip dist/pkg/packages/
           cp dist/packages/tpl_ra_tools_admin.zip       dist/pkg/packages/
 
           # Zip the whole thing

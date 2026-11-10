@@ -10,18 +10,15 @@
 
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
-use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
 HTMLHelper::_('behavior.core');
 HTMLHelper::_('bootstrap.tooltip');
 
-$toolsHelper = new ToolsHelper;
 $wa = $this->document->getWebAssetManager();
 $wa->registerAndUseStyle('ramblers', 'com_ra_tools/ramblers.css');
 $wa->registerAndUseStyle('dashboard', 'com_ra_tools/dashboard.css');
 
 $target_display = 'administrator/index.php?option=com_ra_tools&view=standardarticle&id=';
-$target_refresh = 'administrator/index.php?option=com_ra_tools&task=standardarticles.refresh';
 ?>
 <form action="<?php echo Route::_('index.php?option=com_ra_tools&view=standardarticles'); ?>" method="post" name="adminForm" id="adminForm">
     <h1>Standard Articles</h1>
@@ -61,8 +58,17 @@ $target_refresh = 'administrator/index.php?option=com_ra_tools&task=standardarti
                     }
 
                     echo '<td>' . $modified . '</td>';
-                    $target = $target_refresh . '&remote_id=' . $item->id . '&local_id=' . $local_id;
-                    echo '<td>' . $this->toolsHelper->buildButton($target, $label) . '</td>';
+                    echo '<td>' . $this->toolsHelper->buildTaskButton(
+                        'com_ra_tools',
+                        'standardarticles.refresh',
+                        $label,
+                        [
+                            'remote_id' => (int) $item->id,
+                            'local_id' => (int) $local_id,
+                        ],
+                        'forest',
+                        'adminForm'
+                    ) . '</td>';
                     ?>
 
                     </tr>

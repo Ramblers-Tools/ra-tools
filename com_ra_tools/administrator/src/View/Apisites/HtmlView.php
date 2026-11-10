@@ -1,13 +1,9 @@
 <?php
 
 /**
- * @version    3.3.10
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 30/06/25 CB delete Options button
  * 21/08/25 CB remove trash, create delete button
+ * 09/11/26 CB prepare for Joomla 6 by removing references to SidebarHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Apisites;
@@ -22,7 +18,6 @@ use \Joomla\CMS\Toolbar\ToolbarHelper;
 use \Joomla\CMS\Language\Text;
 use Joomla\CMS\Helper\ContentHelper;
 use \Joomla\CMS\Form\Form;
-use \Joomla\CMS\HTML\Helpers\Sidebar;
 use \Joomla\CMS\User\CurrentUserInterface;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
@@ -56,7 +51,7 @@ class HtmlView extends BaseHtmlView {
         $this->activeFilters = $this->get('ActiveFilters');
         $this->user = $this->getCurrentUser();
         $this->toolsHelper = new ToolsHelper;
-        
+
         // Check for errors.
         if (count($errors = $this->get('Errors'))) {
             throw new \Exception(implode("\n", $errors));
@@ -64,7 +59,6 @@ class HtmlView extends BaseHtmlView {
 
         $this->addToolbar();
 
-        $this->sidebar = Sidebar::render();
         parent::display($tpl);
     }
 
@@ -134,9 +128,6 @@ class HtmlView extends BaseHtmlView {
 //                        ->listCheck(true);
 //            }
         }
-
-        // Set sidebar action
-        Sidebar::setAction('index.php?option=com_ra_tools&view=apisites');
     }
 
     /**

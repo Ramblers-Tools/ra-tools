@@ -17,6 +17,7 @@
  * 10/10/24 CB when defining working_folder, don't prefix with JPATH_ROOT
  * 11/04/25 CB add routesprint
  * 13/04/25 CB delete warning about Lat/Long out of range
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -39,7 +40,7 @@ $item = $this->toolsHelper->getItem($sql);
 $latitude = $item->latitude;
 $longitude = (float) $item->longitude;
 
-//$app = JFactory::getApplication();
+//$app = \Joomla\CMS\Factory::getApplication();
 //var_dump($this->menu_params);
 //echo "<br>";
 //$title = $this->params->get('page_title', '');

@@ -1,14 +1,10 @@
 <?php
 /**
- * @version    3.4.6
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 16/07/25 CB regenerated
  * 27/07/25 CB show sender_name
  * 01/08/25 CB show addressee_name
  * 08/12/25 CB seek attachments in images/com_ra_tools/emails
+ * 09/11/26 CB escape output when displaying it
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -89,7 +85,7 @@ $target = 'index.php?option=com_ra_tools&task=emails.showEmail&id=';
                             </td>
                         </tr>
                     </tfoot>
-                    <tbody <?php if (!empty($saveOrder)) : ?> class="js-draggable" data-url="<?php echo $saveOrderingUrl; ?>" data-direction="<?php echo strtolower($listDirn); ?>" <?php endif; ?>>
+                    <tbody <?php if (!empty($saveOrder)) : ?> class="js-draggable" data-url="<?php echo $this->escape($saveOrderingUrl); ?>" data-direction="<?php echo $this->escape(strtolower($listDirn)); ?>" <?php endif; ?>>
                         <?php
                         foreach ($this->items as $i => $item) :
                             $ordering = ($listOrder == 'a.ordering');
@@ -104,16 +100,16 @@ $target = 'index.php?option=com_ra_tools&task=emails.showEmail&id=';
                                 </td>
                                 <td>
                                     <a href="<?php echo Route::_($target . (int) $item->id); ?>">
-                                        <?php echo $item->title; ?>
+                                        <?php echo $this->escape($item->title); ?>
                                 </td>
                                 <?php
                                 echo '<td class = "item-details">';
                                 if (strlen($item->body) > 516) {
-                                    echo strip_tags(substr($item->body, 0, 516)) . ' ....';
+                                    echo $this->escape(strip_tags(substr($item->body, 0, 516))) . ' ....';
 //        $link = '';
 //        echo $this->objHelper->buildLink($link, 'Read more', true, 'readmore') . PHP_EOL;
                                 } else {
-                                    echo strip_tags(rtrim($item->body)) . PHP_EOL;
+                                    echo $this->escape(strip_tags(rtrim($item->body))) . PHP_EOL;
                                 }
                                 echo '</td>';
                                 ?>
@@ -123,29 +119,30 @@ $target = 'index.php?option=com_ra_tools&task=emails.showEmail&id=';
                                         $attachmentsArr = explode(',', $item->attachments);
                                         foreach ($attachmentsArr as $fileSingle) :
                                             if (!is_array($fileSingle)) :
-                                                $uploadPath = '/images/com_ra_tools/emails/' . $fileSingle;
-                                                echo '<a href="' . Route::_(Uri::root() . $uploadPath, false) . '" target="_blank" title="See the attachments">' . $fileSingle . '</a> | ';
+                                                $uploadPath = '/images/com_ra_tools/emails/' . rawurlencode($fileSingle);
+                                                $attachmentUrl = Route::_(rtrim(Uri::root(), '/') . $uploadPath, false);
+                                                echo '<a href="' . $this->escape($attachmentUrl) . '" target="_blank" title="See the attachments">' . $this->escape($fileSingle) . '</a> | ';
                                             endif;
                                         endforeach;
                                     else:
-                                        echo $item->attachments;
+                                        echo $this->escape($item->attachments);
                                     endif;
                                     ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->sender_name; ?>
+                                    <?php echo $this->escape($item->sender_name); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->addressee_name; ?>
+                                    <?php echo $this->escape($item->addressee_name); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->date_sent; ?>
+                                    <?php echo $this->escape($item->date_sent); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->sub_system; ?>
+                                    <?php echo $this->escape($item->sub_system); ?>
                                 </td>
                                 <td>
-                                    <?php echo $item->record_type; ?>
+                                    <?php echo $this->escape($item->record_type); ?>
                                 </td>
                                 <td class="text-center">
                                     <?php echo HTMLHelper::_('jgrid.published', $item->state, $i, 'emails.', $canChange, 'cb'); ?>
@@ -157,7 +154,7 @@ $target = 'index.php?option=com_ra_tools&task=emails.showEmail&id=';
 
                 <input type="hidden" name="task" value=""/>
                 <input type="hidden" name="boxchecked" value="0"/>
-                <input type="hidden" name="list[fullorder]" value="<?php echo $listOrder; ?> <?php echo $listDirn; ?>"/>
+                <input type="hidden" name="list[fullorder]" value="<?php echo $this->escape($listOrder); ?> <?php echo $this->escape($listDirn); ?>"/>
                 <?php echo HTMLHelper::_('form.token'); ?>
             </div>
         </div>

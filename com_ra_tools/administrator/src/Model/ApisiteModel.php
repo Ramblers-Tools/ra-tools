@@ -6,6 +6,7 @@
  * @author     Charlie Bigley <charlie@bigley.me.uk>
  * @copyright  2025 Charlie Bigley
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -239,7 +240,7 @@ class ApisiteModel extends AdminModel {
         if (empty($table->id)) {
             // Set ordering to the last item if not set
             if (@$table->ordering === '') {
-                $db = $this->getDbo();
+                $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
                 $db->setQuery('SELECT MAX(ordering) FROM #__ra_api_sites');
                 $max = $db->loadResult();
                 $table->ordering = $max + 1;

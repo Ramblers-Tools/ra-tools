@@ -19,9 +19,8 @@ use Joomla\Database\ParameterType;
 
 class Pkg_Ra_toolsInstallerScript {
 
-    private $minimumJoomlaVersion = '4.2';
+    private $minimumJoomlaVersion = '5.4';
     private $minimumPHPVersion = JOOMLA_MINIMUM_PHP;
-    private $minimumToolsVersion = '4.0.0';
     private $reconfigure_message;
     private $current_version;
     private $version_required;
@@ -246,6 +245,11 @@ class Pkg_Ra_toolsInstallerScript {
             }
         } else {
             $this->message('Mailshot Contact override will not be saved until ra_mail_shots.contact_id is added', 'warning');
+        }
+       if (version_compare($this->current_version, '4.1.1', 'le')) {
+            $this->checkColumn('ra_ice_contacts', 'created_by', 'A', 'INT NOT NULL DEFAULT 0 AFTER `created`; ');
+            $this->checkColumn('ra_ice_contacts', 'modified_by', 'A', 'INT NOT NULL DEFAULT 0 AFTER `modified`; ');
+            $this->checkColumn('ra_ice_contacts', 'expiry_date', 'A', 'DATETIME NULL AFTER `modified_by`; ');
         }
 
         $componentVersion = $this->getVersion('com_ra_tools') ?? 'not recorded';

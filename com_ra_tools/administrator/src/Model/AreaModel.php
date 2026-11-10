@@ -7,6 +7,7 @@
  * @copyright  2024 Charlie Bigley
  * @license    GNU General Public License version 3 or later; see LICENSE.txt
  * 22/02/25 CB copied working version back from test
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -234,7 +235,7 @@ class AreaModel extends AdminModel {
         if (empty($table->id)) {
             // Set ordering to the last item if not set
             if (@$table->ordering === '') {
-                $db = $this->getDbo();
+                $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
                 $db->setQuery('SELECT MAX(ordering) FROM #__ra_areas');
                 $max = $db->loadResult();
                 $table->ordering = $max + 1;

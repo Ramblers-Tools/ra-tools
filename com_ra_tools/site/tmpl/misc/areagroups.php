@@ -14,6 +14,7 @@
  * 31/08/23 CB use view programme to show walks
  * 21/11/23 CN indent text for each Group
  * 22/12/24 CB allow formatting of intro text
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -21,7 +22,7 @@ defined('_JEXEC') or die;
 // use Joomla\CMS\Factory;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
-$app = JFactory::getApplication();
+$app = \Joomla\CMS\Factory::getApplication();
 
 //$menu_params = $app->getMenu()->getActive()->getParams();
 //var_dump($this->menu_params) . "<br>";

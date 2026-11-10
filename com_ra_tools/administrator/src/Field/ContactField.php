@@ -8,6 +8,7 @@
  * 10/03/25 GPT created 
  * 08/04/26 CB updated selection of contacts to use preferred_name from ra_profiles, 
  *             and only show those with a preferred_name
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Field;
@@ -37,7 +38,7 @@ class ContactField extends FormField
     protected function getInput()
     {
         // Get a database object
-        $db = Factory::getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true)
             ->select($db->quoteName(['c.id', 'p.preferred_name']))
             ->from($db->quoteName('#__contact_details', 'c'))

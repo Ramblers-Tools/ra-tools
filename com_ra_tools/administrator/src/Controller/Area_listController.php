@@ -1,12 +1,6 @@
 <?php
 
 /**
- * @version     3.3.7
- * @package     com_ra_tools
- * @author      charlie
- *
- * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 12/06/23 CB add refreshAreas
  * 14/06/23 show group location
  * 10/07/23 CB add function cancel
@@ -22,6 +16,7 @@
  * 21/04/25 CB abortive attempt to use JsonHelper, get API key from config
  * 18/08/25 CB get API key from ra_api_sites
  * 15/04/26 CB deleted updateClusters (moved to ClustersController)
+ * 09/11/c6 CB get API key using JsonHelper, remove display
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -45,10 +40,12 @@ class Area_listController extends AdminController {
 
     protected $app;
     protected $dbPrefix;
+    protected $jsonHelper;
     protected $toolsHelper;
 
     public function __construct() {
         parent::__construct();
+        $this->jsonHelper = new JsonHelper;
         $this->toolsHelper = new ToolsHelper;
         $this->app = Factory::getApplication();
         $wa = Factory::getApplication()->getDocument()->getWebAssetManager();
@@ -119,18 +116,16 @@ class Area_listController extends AdminController {
         $area_count = 0;
         $area_insert = 0;
         $update_count = 0;
-        $api_key = $this->toolsHelper->lookupApiKey();
+        $api_key = $this->jsonHelper->lookupApiKey();
         if ($api_key == '') {
             $message = 'API key not found - please create a record in API sites';
             Factory::getApplication()->enqueueMessage($message, 'error');
         }
         $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=' . $api_key;
-        echo '___orig: ' . $feedurl . '<br>';
         $display = 0;
-        $jsonHelper = new JsonHelper;
-        //      echo 'setUrl=' . $jsonHelper->setUrl('organisation', 'groups=NS') . '<br>';
+        //      echo 'setUrl=' . $this->jsonHelper->setUrl('organisation', 'groups=NS') . '<br>';
 
-        $area_list = $jsonHelper->getJson('organisation', '');
+        $area_list = $this->jsonHelper->getJson('organisation', '');
         var_dump($area_list);
         die;
 
@@ -253,19 +248,14 @@ class Area_listController extends AdminController {
         $update_count = 0;
         $display = 0;
 
-        $this->toolsHelper->executeCmd('DELETE FROM #__ra_areas WHERE id<10');
 //       See https://app.swaggerhub.com/apis-docs/abateman/Ramblers-third-parties/1.0.0#/default/get_api_volunteers_groups
-        $api_key = $this->toolsHelper->lookupApiKey();
+        $api_key = $this->toolsHelper->lookupApikey();
         if ($api_key == '') {
             $message = 'API key not found - please create a record in API sites';
             Factory::getApplication()->enqueueMessage($message, 'error');
         }
         $feedurl = 'https://walks-manager.ramblers.org.uk/api/volunteers/groups?api-key=' . $api_key;
 
-//        $jsonHelper = new JsonHelper;
-//        echo '___orig: ' . $feedurl . '<br>';
-//        echo 'setSql=' . $jsonHelper->setUrl('organisation', 'groups=NS') . '<br>';
-//        die;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $feedurl);
         curl_setopt($ch, CURLOPT_HEADER, false); // do not include header in output
@@ -291,7 +281,7 @@ class Area_listController extends AdminController {
         $area_list = json_decode($data);
 //        var_dump($area_list);
 //        die;
-        // $area_list = $JsonHelper->getJson('group-event', 'groups=' . $group_code););
+        // $area_list = $this->jsonHelper->getJson('group-event', 'groups=' . $group_code););
 
 
         $sql_area = "SELECT id,code,name,details, website,co_url, latitude, longitude "

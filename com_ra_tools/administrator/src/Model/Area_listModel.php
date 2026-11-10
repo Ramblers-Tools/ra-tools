@@ -8,6 +8,7 @@
  * 18/07/23 CB left join on nations
  * 21/11/23 CB correct spelling of search_fields
  * 22/02/25 CB includ cluster in field list
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Model;
@@ -46,7 +47,7 @@ class Area_listModel extends ListModel {
     }
 
     protected function getListQuery() {
-        $db = $this->getDbo();
+        $db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $query = $db->getQuery(true);
 
         $query->select('a.id, UPPER(a.code) as code, a.name, a.cluster');

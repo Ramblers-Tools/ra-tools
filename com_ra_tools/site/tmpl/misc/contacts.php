@@ -10,6 +10,7 @@
  * 08/02/25 CB pass menu_id when displaying the contact form
  * 05/07/25 CB don't attempt to update email_to
  * 14/07/25 CB use Tools / Email
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 // No direct access
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
@@ -19,7 +20,7 @@ defined('_JEXEC') or die;
 $objHelper = new ToolsHelper;
 echo '<h2>' . $this->params->get('page_title') . '</h2>';
 
-$app = JFactory::getApplication();
+$app = \Joomla\CMS\Factory::getApplication();
 $menu_params = $app->getMenu()->getActive()->getParams();
 $category_id = $menu_params->get('category_id', 0);
 $sort = $menu_params->get('sort', 0);
@@ -68,7 +69,7 @@ $sql .= 'AND c.published=1 ';
 $sql .= 'AND c.catid=' . $category_id;
 $sql .= ' ORDER BY ' . $order;
 if (JDEBUG) {
-    JFactory::getApplication()->enqueueMessage('sql=' . $sql, 'message');
+    \Joomla\CMS\Factory::getApplication()->enqueueMessage('sql=' . $sql, 'message');
 }
 
 $rows = $this->toolsHelper->getRows($sql);
@@ -95,7 +96,7 @@ foreach ($rows as $row) {
         if ($row->email_to == '') {
             $objTable->add_item('');
         } else {
-            $objTable->add_item(JHtml::_('email.cloak', $row->email_to, 1, 'Send email', 0));
+            $objTable->add_item(\Joomla\CMS\HTML\HTMLHelper::_('email.cloak', $row->email_to, 1, 'Send email', 0));
         }
     } else {
         $objTable->add_item($this->toolsHelper->buildLink($target . $row->id, "Email"));

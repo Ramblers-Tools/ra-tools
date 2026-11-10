@@ -21,6 +21,7 @@ A Joomla 5/6 extension package for Ramblers local groups and areas:
 | `plg_ajax_ra_selectgroup` | Plugin (Ajax) | An Ajax service supporting the Area / Group selector and custom field, returning a four-character group code. |
 |plg_system_ra_tools | System plugin | Provides a function that prevents orphan records when a Joomla User record is deleted. Cascades the delete to any related tables: ra_profiles, ra_emails, ra_mail_subcriptions, ra_mail_subcriptions_audit, ra_bookings, and ra_guest_bookings |
 |plg_user_ra_profile | User plugin | Provides a function that creates or updates a record in the ra_profiles table when a User record is created by Joomla, whether by manual back end input or programmatically using the internal Joomla API. |
+| `plg_cli_ra_housekeeping` | Plugin (cli) | Support the command ra_tool:housekeeping, which handles routine housekeeping tasks for RA Tools, such as removing expired log and booking guest records. |
 | `plg_webservices_ra_tools` | Plugin (webservices) | REST API endpoints |
 | `plg_finder_ra_toolswalks` | Smart Search indexer for ra_walks | (Should be in ra-walks)|
 | `ra_tools_admin` | Administrator template | Ramblers-branded Joomla backend, and the menu preset that groups the RA extensions under one RA Tools heading. Installed and made the active admin template automatically. |

@@ -1,14 +1,10 @@
 <?php
 
 /**
- * @version    3.7.4
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 27/08/25 CB Help
  * 21/09/25 CB check user id not null in checkGroup
  * 06/07/26 CB Add check for com_ra_members
+ * 09/11/26 CB prepare for Joomla 6 by removing references to SidebarHelper
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Users;
@@ -22,7 +18,6 @@ use \Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use \Joomla\CMS\Object\CMSObject;
 use \Joomla\CMS\Toolbar\Toolbar;
 use \Joomla\CMS\Toolbar\ToolbarHelper;
-use \Joomla\CMS\HTML\Helpers\Sidebar;
 use \Joomla\CMS\User\CurrentUserInterface;
 use \Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 
@@ -63,7 +58,6 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
 
         $this->addToolbar();
 
-        $this->sidebar = Sidebar::render();
         parent::display($tpl);
     }
 
@@ -77,8 +71,6 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
     protected function addToolbar() {
         // Suppress menu side panel
         Factory::getApplication()->input->set('hidemainmenu', true);
-        // Set sidebar action
-        Sidebar::setAction('index.php?option=com_ra_tools&view=users');
         $this->toolsHelper = new ToolsHelper;
         $state = $this->get('State');
         $canDo = ToolsHelper::getActions();
@@ -154,7 +146,7 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
             $component = 'com_ra_mailman';
         } elseif ($mode == 4) {
             $component = 'com_ra_members';
-            }
+        }
         $sql = 'SELECT id FROM #__usergroups ';
         $sql .= 'WHERE title="' . $component . '"';
         $group_id = $this->toolsHelper->getValue($sql);
@@ -163,7 +155,7 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
             $sql = 'SELECT group_id FROM #__user_usergroup_map ';
             $sql .= 'WHERE user_id=' . $user_id . ' AND ';
             $sql .= 'group_id=' . $group_id;
-    //        echo $sql . '<br>';
+            //        echo $sql . '<br>';
             $test = $this->toolsHelper->getValue($sql);
         } else {
             Factory::getApplication()->enqueueMessage('User Group not found for ' . $component, 'warning');

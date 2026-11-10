@@ -14,6 +14,7 @@
 # 07/07/25 CB added ra_apisites
 # 23/01/26 CB changed clusters and email
 # 24/08/26 CB ra_logfile: changed sub_system to varchar(20)
+# 09/11/26 CB remove hard-coded key values
 #-------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `#__ra_api_sites` (
     `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -35,11 +36,11 @@ PRIMARY KEY (`id`)
 # ------------------------------------------------------------------------------
 INSERT INTO `#__ra_api_sites`
     (`sub_system`, `title`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-    ('RA Tools','Staffordshire Area', 'https://staffordshireramblers.org', 'c2hhMjU2Ojk3OTo5ODQ4NGMzOTNhMGJmM2U5NWY3NzcyODViNTI2NzFkYzY2MmQwZTZmMzliMmNiMTlkNmUzNzI0MjNkNGUyOThk',
+    ('RA Tools','Staffordshire Area', 'https://staffordshireramblers.org', '',
     'rgba(133,132,191,0.1)', 1, '2025-12-25 06:00:00', 1 );
 INSERT INTO `#__ra_api_sites`
     (`sub_system`, `title`, `url`, `token`, `colour`, `state`, `created`, `created_by`) VALUES
-    ('RA Walks', 'Central Office','https://ramblers.org.uk', '742d93e8f409bf2b5aec6f64cf6f405e',
+    ('RA Walks', 'Central Office','https://ramblers.org.uk', '',
     'rgba(133,132,191,0.1)', 1, '2025-12-25 06:00:00', 1);
 # ------------------------------------------------------------------------------
 -- Table structure for table `#__ra_areas`

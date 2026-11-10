@@ -1,6 +1,6 @@
 <?php
 
-/*
+/**
  * Installation script
  * 09/07/25 CB recreated from event script
  * 31/07/25 CB deleteView
@@ -13,6 +13,7 @@
  * 30/08/26 CB consolidate installed component version lookup
  * 22/09/26 CB remove dependcies of plugins (needed by mailman)
  * 19/10/26 CB remove updateSites, updateGroups, schema checking
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 
 \defined('_JEXEC') or die;
@@ -94,7 +95,7 @@ class Com_Ra_toolsInstallerScript {
     }
 
     private function checkColumnExists($table, $column) {
-        $config = JFactory::getConfig();
+        $config = \Joomla\CMS\Factory::getConfig();
         $database = $config->get('db');
         $this->dbPrefix = $config->get('dbprefix');
 
@@ -110,7 +111,7 @@ class Com_Ra_toolsInstallerScript {
 
     function checkTable($table, $details, $details2 = '') {
 
-        $config = JFactory::getConfig();
+        $config = \Joomla\CMS\Factory::getConfig();
         $database = $config->get('db');
         $this->dbPrefix = $config->get('dbprefix');
 

@@ -6,6 +6,7 @@
  * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 30/11/23 Cb use Factory::getContainer()->get('DatabaseDriver');
+ * 09/11/26 CB Updates for Joomla 6 compatibility
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -51,7 +52,7 @@ class GroupController extends FormController {
         $this->filename = JPATH_ROOT . "/tmp/area-download.csv"; // . (new DateTime())->format('Ymd-His') . ".csv";
         $handle = fopen($this->filename, 'w'); //open file for writing
         If ($handle === false) {
-            JFactory::getApplication()->enqueueMessage('Cannot open file: ' . $this->filename, 'error');
+            \Joomla\CMS\Factory::getApplication()->enqueueMessage('Cannot open file: ' . $this->filename, 'error');
             return 0;
         } else {
             echo 'Creating file ' . $this->filename . '<br>';

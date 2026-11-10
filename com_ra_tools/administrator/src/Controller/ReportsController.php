@@ -127,7 +127,7 @@ $this->breadcrumbs .= '>' . $this->toolsHelper->buildLink($this->back, 'System R
                 'owner' => 'RA Tools',             
                 'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showUsersWithoutProfile',
                 'button' => 'Generate',
-                'action' => 'administrator/index.php?option=com_ra_tools&task=system.backfillProfiles',
+                'actionTask' => 'system.backfillProfiles',
             ],
             'profiles_without_users' => [
                 'label' => 'RA profiles without a Joomla user',
@@ -135,7 +135,7 @@ $this->breadcrumbs .= '>' . $this->toolsHelper->buildLink($this->back, 'System R
                 'owner' => 'RA Tools',
                 'report' => 'administrator/index.php?option=com_ra_tools&task=reports.showProfilesWithoutUsers',
                 'button' => 'Delete',
-                'action' => 'administrator/index.php?option=com_ra_tools&task=system.deleteProfilesWithoutUsers',
+                'actionTask' => 'system.deleteProfilesWithoutUsers',
             ],
         ];
 if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
@@ -208,8 +208,27 @@ if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
                 $detailUrl = $check['report'];
                 $table->add_item(is_int($count) && $count > 0
                     ? $this->toolsHelper->buildLink($detailUrl, (string) $count) : (string) $count);
-                $table->add_item(is_int($count) && $count > 0 && $check['button'] !== ''
-                    ? $this->toolsHelper->buildButton($check['action'], $check['button'],false,'lightgreen') : ' ');
+                if (is_int($count) && $count > 0 && $check['button'] !== '') {
+                    if (isset($check['actionTask'])) {
+                        $actionButton = $this->toolsHelper->buildTaskButton(
+                            'com_ra_tools',
+                            $check['actionTask'],
+                            $check['button'],
+                            [],
+                            'forest'
+                        );
+                    } else {
+                        $actionButton = $this->toolsHelper->buildButton(
+                            $check['action'],
+                            $check['button'],
+                            false,
+                            'lightgreen'
+                        );
+                    }
+                } else {
+                    $actionButton = ' ';
+                }
+                $table->add_item($actionButton);
                 $table->generate_line();
             }
             $table->generate_table();
@@ -317,7 +336,7 @@ if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
                 $sql_user = 'SELECT u.id, u.name, u.email, p.preferred_name, p.home_group ';
                 $sql_user .= 'FROM #__users AS u ';
                 $sql_user .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
-                $sql_user .= 'WHERE u.name="' . $row->name . '"';
+                $sql_user .= 'WHERE u.name="' . $this->db->quote($row->name) . '"';
 //              echo "$sql_user<br>";
                 $profiles = $this->toolsHelper->getRows($sql_user);
                 foreach ($profiles as $profile) {
@@ -347,7 +366,7 @@ if (ComponentHelper::isEnabled('com_ra_mailman', true)) {
                 $sql_user = 'SELECT u.id, u.name, u.email, p.preferred_name, p.home_group ';
                 $sql_user .= 'FROM #__users AS u ';
                 $sql_user .= 'LEFT JOIN #__ra_profiles AS p ON p.id = u.id ';
-                $sql_user .= 'WHERE u.email="' . $row->email . '"';
+                $sql_user .= 'WHERE u.email="' . $this->db->quote($row->email) . '"';
 //              echo "$sql_user<br>";
                 $profiles = $this->toolsHelper->getRows($sql_user);
                 foreach ($profiles as $profile) {
@@ -739,7 +758,7 @@ echo $sql . '<br>';
         $sql = "SELECT date_amended, field_value ";
         $sql .= "FROM #__ra_groups_audit AS audit ";
         $sql .= "INNER JOIN #__ra_groups `groups` ON `groups`.id = audit.object_id ";
-        $sql .= "WHERE `groups`.code='" . $group_code . "' ";
+        $sql .= "WHERE `groups`.code='" . $this->db->quote($group_code) . "' ";
         $sql .= 'ORDER BY date_amended DESC ';
 //        echo $sql;
         $rows = $this->toolsHelper->getRows($sql);
@@ -749,7 +768,7 @@ echo $sql . '<br>';
             $objTable->generate_line();
         }
         $objTable->generate_table();
-        $back = "administrator/index.php?option=com_ra_tools&view=reports_group&group_code=" . $group_code . '&scope=' . $this->scope;
+        $back = "administrator/index.php?option=com_ra_tools&view=reports_group&group_code=" .  $group_code . '&scope=' . $this->scope;
         echo $this->toolsHelper->backButton($back);
 //        if ($csv == '') {
 //            $target = "administrator/index.php?option=com_ra_tools&task=reports.showFeed&csv=feed&group_code=" . $group_code . '&scope=' . $this->scope;
@@ -804,7 +823,7 @@ echo $sql . '<br>';
             $sql = "SELECT `groups`.code, date_amended, field_value ";
             $sql .= "FROM #__ra_groups_audit AS audit ";
             $sql .= "INNER JOIN #__ra_groups `groups` ON `groups`.id = audit.object_id ";
-            $sql .= "WHERE `groups`.code='" . $group->code . "' ";
+            $sql .= "WHERE `groups`.code='" . $this->db->quote($group->code) . "' ";
             $sql .= 'ORDER BY date_amended DESC LIMIT 7';
 //            echo $sql . '<br>';
             $rows = $this->toolsHelper->getRows($sql);
@@ -1113,8 +1132,13 @@ public function showMenus() {
             $objTable->generate_table();
         }
 
-        $target = 'administrator/index.php?option=com_ra_tools&task=system.resetHitCounters';
-        echo $this->toolsHelper->buildButton($target, 'Reset all hit counters', false, 'sunrise');
+        echo $this->toolsHelper->buildTaskButton(
+            'com_ra_tools',
+            'system.resetHitCounters',
+            'Reset all hit counters',
+            [],
+            'sunset'
+        );
         echo '&nbsp;';
         echo $this->toolsHelper->backButton($this->back);
     }
@@ -1315,7 +1339,7 @@ public function showMenus() {
         $sql = "SELECT ym,num_walks,joint_walks,guest_walks, ";
         $sql .= "num_leaders,total_miles,min_miles,max_miles,avg_miles ";
         $sql .= "FROM #__ra_snapshot ";
-        $sql .= "WHERE group_code='" . $group_code . "' ";
+        $sql .= "WHERE group_code='" .  $this->db->quote($group_code) . "' ";
         $sql .= 'ORDER BY ym ';
 //        echo $sql;
         $rows = $this->toolsHelper->getRows($sql);

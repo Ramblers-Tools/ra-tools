@@ -13,6 +13,7 @@
  * 13/07/26 CB use SmtpHelper, not ActivityHelper
  * 23/08/26 CB refreshMembers added
  * 05/08/26 CB enqueue any error messages from SmtpHelper
+ * 09/11/26 CB Replaced getDbo with DatabaseInterface
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -32,6 +33,7 @@ use Ramblers\Component\Ra_delivery\Site\Helper\SmtpHelper;
 use Ramblers\Component\Ra_events\Site\Helpers\EventsHelper;
 use Ramblers\Component\Ra_members\Site\Helper\LoadHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
+use Ramblers\Component\Ra_tools\Site\Helpers\JsonHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
 
 /**
@@ -48,7 +50,7 @@ class ApisitesController extends AdminController {
 
     public function __construct() {
         parent::__construct();
-        $this->db = Factory::getDbo();
+        $this->db = \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
         $this->toolsHelper = new ToolsHelper;
         $this->app = Factory::getApplication();
         $wa = Factory::getApplication()->getDocument()->getWebAssetManager();
@@ -163,8 +165,22 @@ class ApisitesController extends AdminController {
     }
 
     public function refreshEvents() {
-        $mode = Factory::getApplication()->input->getInt('mode', '1');
-        $id = Factory::getApplication()->input->getInt('id', '0');
+        $input = $this->app->input;
+        $isPost = strtoupper($input->getMethod()) === 'POST';
+        $mode = $isPost ? $input->post->getInt('mode', 0) : $input->getInt('mode', 1);
+
+        if ($mode === 2) {
+            if (!$isPost) {
+                throw new \RuntimeException('POST request required', 405);
+            }
+
+            $this->checkToken('post');
+            $this->requireUpdateAccess('com_ra_events');
+            $id = $input->post->getInt('id', 0);
+        } else {
+            $id = $input->getInt('id', 0);
+        }
+
         if ($id == 0) {
             Factory::getApplication()->enqueueMessage('Site id is zero', 'error');
             echo $this->toolsHelper->backButton($this->back);
@@ -199,7 +215,20 @@ class ApisitesController extends AdminController {
                 echo $this->toolsHelper->backButton($back);
                 return;
             } elseif ($mode == 3) {
-                $eventsHelper->showFirst($id, $events);
+                $jsonHelper = new JsonHelper;
+                $jsonHelper->showFirst($id, $events);
+                echo $this->toolsHelper->backButton($this->back);
+                $target = 'administrator/index.php?option=com_ra_tools&task=apisites.refreshEvents&mode=1&id=' . $id;
+                echo $this->toolsHelper->buildButton($target, 'Show all');
+                if ($this->app->getIdentity()->authorise('core.edit', 'com_ra_events')) {
+                    echo $this->toolsHelper->buildTaskButton(
+                        'com_ra_tools',
+                        'apisites.refreshEvents',
+                        'Refresh',
+                        ['mode' => 2, 'id' => (int) $id],
+                        'forest'
+                    );
+                }
                 return;
             } else {
                 $eventsHelper->dumpShared($id, $events);
@@ -215,7 +244,13 @@ class ApisitesController extends AdminController {
     }
 
     public function refreshMembers(){
-        $id = $this->app->input->getInt('id', 0);
+        if (strtoupper($this->app->input->getMethod()) !== 'POST') {
+            throw new \RuntimeException('POST request required', 405);
+        }
+
+        $this->checkToken('post');
+        $this->requireUpdateAccess('com_ra_members');
+        $id = $this->app->input->post->getInt('id', 0);
 
         if ($id === 0) {
             $this->app->enqueueMessage('Site id is zero', 'error');
@@ -234,6 +269,12 @@ class ApisitesController extends AdminController {
 
         echo $this->toolsHelper->backButton($this->back);
         return;
+    }
+
+    private function requireUpdateAccess(string $component): void {
+        if (!$this->app->getIdentity()->authorise('core.edit', $component)) {
+            throw new \RuntimeException('Update access denied for ' . $component . '.', 403);
+        }
     }
 
     public function testDeliveryActivity() {
