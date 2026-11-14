@@ -11,7 +11,7 @@ $e = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     <h1 style="font-size: 1.75rem;">Allow the Ramblers Tools app?</h1>
     <p>You're logged in as <strong><?php echo $e($this->name); ?></strong>.
         <a href="<?php echo $e($this->logoutUrl); ?>">Not you?</a></p>
-    <p>The app will be able to see your name and your event bookings. It can't change anything, and
+    <p>The app will be able to see your name, your email address and your event bookings. It can't change anything, and
         it never sees your password.</p>
     <form method="post" action="<?php echo Route::_('index.php?option=com_ra_tools&task=app.allow'); ?>">
         <?php foreach ($this->params as $field => $value) : ?>

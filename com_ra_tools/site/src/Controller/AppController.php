@@ -114,7 +114,7 @@ class AppController extends BaseController {
         return $this->json(200, [
                     'access_token' => $token,
                     'token_type' => 'Bearer',
-                    'member' => ['name' => $user->name],
+                    'member' => self::member($user),
         ]);
     }
 
@@ -127,7 +127,7 @@ class AppController extends BaseController {
         $user = Factory::getContainer()->get(UserFactoryInterface::class)->loadUserById($userId);
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         return $this->json(200, [
-                    'member' => ['name' => $user->name],
+                    'member' => self::member($user),
                     'generated_at' => gmdate('Y-m-d\TH:i:s\Z'),
                     'bookings' => (new AppBookings($db))->forUser($userId, Uri::root()),
         ]);
@@ -177,6 +177,15 @@ class AppController extends BaseController {
     }
 
     // ---------------------------------------------------------------------------------------
+
+    /** What the app is told about the member: their name, and their email for the feedback form. */
+    private static function member($user): array {
+        $member = ['name' => (string) $user->name];
+        if (is_string($user->email) && $user->email !== '') {
+            $member['email'] = $user->email;
+        }
+        return $member;
+    }
 
     private function requestFields(string $method): array {
         $source = $method === 'post' ? $this->input->post : $this->input->get;
