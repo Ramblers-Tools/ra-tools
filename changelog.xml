@@ -3,6 +3,17 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.2.0</version>
+        <date>2026-11-14</date>
+        <note>
+            <item><![CDATA[Members can sign in to the Ramblers Tools app (iPhone and Android) with their website account, including Single Sign On, and see their event bookings in the app]]></item>
+            <item><![CDATA[New page for members to see and remove their app sign-ins: index.php?option=com_ra_tools&task=app.signins]]></item>
+            <item><![CDATA[App sign-ins stop working when a member's password is changed, or they are blocked or deleted]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.1.0</version>
         <date>2026-11-09</date>
         <note>

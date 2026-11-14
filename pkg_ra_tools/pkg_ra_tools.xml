@@ -8,7 +8,7 @@
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>support@ramblers.tools</authorEmail>
     <authorUrl>https://ramblers.tools</authorUrl>
-    <version>4.1.3</version>
+    <version>4.2.0</version>
     <description>Installs the RA Tools component, module and plugins for Ramblers groups</description>
     <scriptfile>script.php</scriptfile>
     <changelogurl>https://raw.githubusercontent.com/Ramblers-Tools/ra-tools/main/changelog.xml</changelogurl>
