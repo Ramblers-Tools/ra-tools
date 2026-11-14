@@ -14,6 +14,7 @@
  * The format is described in the app's docs/walks-feed.md.
  *
  * 14/11/26 RH Created
+ * 14/11/26 RH Adds the group's walk types and changed-walk marker from the ra_tweaks settings
  */
 
 namespace Ramblers\Component\Ra_tools\Api\Controller;
@@ -24,7 +25,9 @@ use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Http\HttpFactory;
 use Joomla\CMS\MVC\Controller\BaseController;
+use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Database\DatabaseInterface;
+use Joomla\Registry\Registry;
 use Ramblers\Component\Ra_tools\Site\Helpers\JsonHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\WalksFeedMapper;
 
@@ -65,7 +68,23 @@ class WalksController extends BaseController {
                 null,
                 new \DateTimeImmutable('@' . $copy['fetched_at'])
         );
+        $tweaks = $this->tweaksSettings();
+        $feed['walk_types'] = WalksFeedMapper::walkTypes($tweaks);
+        $feed['changed_walks'] = WalksFeedMapper::changedWalks($tweaks);
         $this->send(200, $feed);
+    }
+
+    /** The ra_tweaks plugin's settings, or null when it isn't installed and enabled. */
+    private function tweaksSettings(): ?array {
+        try {
+            $plugin = PluginHelper::getPlugin('system', 'ra_tweaks');
+        } catch (\Throwable $e) {
+            return null;
+        }
+        if (!is_object($plugin) || !isset($plugin->params)) {
+            return null;
+        }
+        return (new Registry($plugin->params))->toArray();
     }
 
     /** The group's walks from Walks Manager, or null if it couldn't be reached. */

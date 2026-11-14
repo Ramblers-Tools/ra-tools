@@ -115,4 +115,29 @@ check(array_column($feed['walks'], 'id') === ['2', '3'], 'limit');
 // Valid JSON with no slashes escaped.
 check(strpos(json_encode($feed, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), '\\/') === false, 'json');
 
+// Walk types from the ra_tweaks settings (East Cheshire's live figures).
+$types = WalksFeedMapper::walkTypes([
+    'walk_type_labels' => '1', 'stroller_max' => '4.9', 'short_max' => '6.9', 'medium_max' => '10.9',
+    'stroller_colour' => '#4CAF50', 'short_colour' => '#2196f3', 'medium_colour' => '#f90',
+    'long_colour' => 'red', 'evening_colour' => '#5e35b1',
+]);
+check(array_column($types['bands'], 'name') === ['Stroller', 'Short', 'Medium', 'Long'], 'band names');
+check(array_column($types['bands'], 'max_miles') === [4.9, 6.9, 10.9], 'band maximums');
+check(!isset($types['bands'][3]['max_miles']), 'Long has no maximum');
+check($types['bands'][0]['colour'] === '#4caf50', 'colour lower-cased');
+check($types['bands'][2]['colour'] === '#ff9900', 'short colour expanded');
+check($types['bands'][3]['colour'] === '#e53935', 'bad colour falls back');
+check($types['evening'] === ['name' => 'Evening', 'colour' => '#5e35b1', 'from' => '17:00'], 'evening');
+check(WalksFeedMapper::walkTypes(null) === ['bands' => []], 'no ra_tweaks, no types');
+check(WalksFeedMapper::walkTypes(['walk_type_labels' => '0']) === ['bands' => []], 'labels off, no types');
+check(array_column(WalksFeedMapper::walkTypes([])['bands'], 'max_miles') === [4.0, 7.9, 10.9], 'plugin defaults');
+check(WalksFeedMapper::walkTypes(['short_max' => '3'])['bands'] === [], 'out of order, no types');
+check(strpos(json_encode($types), '"max_miles":4.9') !== false, 'miles as JSON numbers');
+
+// The changed-walk marker from the ra_tweaks settings.
+check(WalksFeedMapper::changedWalks(['marker' => '***', 'colour' => '#f08050']) === ['marker' => '***', 'colour' => '#f08050'], 'changed marker');
+check(WalksFeedMapper::changedWalks([]) === ['marker' => '***', 'colour' => '#f08050'], 'changed marker defaults');
+check(WalksFeedMapper::changedWalks(['marker' => ' ']) === ['marker' => ''], 'empty marker, off');
+check(WalksFeedMapper::changedWalks(null) === ['marker' => ''], 'no ra_tweaks, off');
+
 echo "WalksFeedMapperTest passed\n";

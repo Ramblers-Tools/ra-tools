@@ -7,6 +7,8 @@
  * Plain PHP with no Joomla calls, so it can be tested from the command line.
  *
  * 14/11/26 RH Created
+ * 14/11/26 RH Walk types (Stroller to Long, and Evening) from the ra_tweaks settings
+ * 14/11/26 RH Changed-walk marker from the ra_tweaks settings
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -67,6 +69,78 @@ class WalksFeedMapper {
             'generated_at' => ($generatedAt ?? $now)->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
             'walks' => $walks,
         ];
+    }
+
+    /** Walks starting at this time or later count as evening walks. */
+    const EVENING_FROM = '17:00';
+
+    /**
+     * The group's own walk types, from the ra_tweaks plugin's Walk Type Labelling settings, so the
+     * app can label and filter walks the way the group's programme page does.
+     *
+     * Bands are in order; a walk belongs to the first band whose max_miles it doesn't exceed, and
+     * the last band (no max_miles) takes the rest. An evening walk is one starting at or after
+     * evening.from, or with "Evening walk" in its title.
+     *
+     * @param array|null $settings  The plugin's settings, or null when ra_tweaks isn't enabled.
+     * @return array  {bands: [{name, max_miles?, colour}], evening?: {name, colour, from}}.
+     *                No bands means the group doesn't use walk types.
+     */
+    public static function walkTypes(?array $settings): array {
+        if ($settings === null || !(bool) ($settings['walk_type_labels'] ?? 1)) {
+            return ['bands' => []];
+        }
+        // The same defaults as ra_tweaks.
+        $stroller = self::miles($settings['stroller_max'] ?? null, 4.0);
+        $short = self::miles($settings['short_max'] ?? null, 7.9);
+        $medium = self::miles($settings['medium_max'] ?? null, 10.9);
+        if (!($stroller < $short && $short < $medium)) {
+            // Out of order: the site's labels would be muddled too, so don't pass them on.
+            return ['bands' => []];
+        }
+        return [
+            'bands' => [
+                ['name' => 'Stroller', 'max_miles' => $stroller, 'colour' => self::colour($settings['stroller_colour'] ?? null, '#4CAF50')],
+                ['name' => 'Short', 'max_miles' => $short, 'colour' => self::colour($settings['short_colour'] ?? null, '#2196F3')],
+                ['name' => 'Medium', 'max_miles' => $medium, 'colour' => self::colour($settings['medium_colour'] ?? null, '#FF9800')],
+                ['name' => 'Long', 'colour' => self::colour($settings['long_colour'] ?? null, '#E53935')],
+            ],
+            'evening' => ['name' => 'Evening', 'colour' => self::colour($settings['evening_colour'] ?? null, '#5E35B1'), 'from' => self::EVENING_FROM],
+        ];
+    }
+
+    /**
+     * How the group marks a changed walk, from the ra_tweaks plugin's Changed Walk Highlighting
+     * settings: leaders put the marker (e.g. ***) in the walk's title. The app takes it out of the
+     * title and shows the walk as changed, in the colour, unless the walk is cancelled.
+     *
+     * @param array|null $settings  The plugin's settings, or null when ra_tweaks isn't enabled.
+     * @return array  {marker, colour}. An empty marker means the group doesn't mark changed walks.
+     */
+    public static function changedWalks(?array $settings): array {
+        if ($settings === null) {
+            return ['marker' => ''];
+        }
+        // ra_tweaks uses *** unless the setting has been saved empty, which turns it off.
+        $marker = array_key_exists('marker', $settings) ? trim((string) $settings['marker']) : '***';
+        if ($marker === '') {
+            return ['marker' => ''];
+        }
+        return ['marker' => $marker, 'colour' => self::colour($settings['colour'] ?? null, '#F08050')];
+    }
+
+    private static function miles($value, float $default): float {
+        $value = trim((string) ($value ?? ''));
+        return is_numeric($value) && (float) $value > 0 ? (float) $value : $default;
+    }
+
+    /** A colour as #rrggbb, or the default. */
+    private static function colour($value, string $default): string {
+        $value = trim((string) ($value ?? ''));
+        if (preg_match('/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i', $value, $m)) {
+            $value = '#' . $m[1] . $m[1] . $m[2] . $m[2] . $m[3] . $m[3];
+        }
+        return strtolower(preg_match('/^#[0-9a-f]{6}$/i', $value) ? $value : $default);
     }
 
     /** One walk, or null if it has no id, title or start time. */
