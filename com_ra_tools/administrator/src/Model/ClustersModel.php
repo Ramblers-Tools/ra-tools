@@ -44,7 +44,7 @@ class ClustersModel extends ListModel {
                 'area_list', 'a.area_list',
                 'website', 'a.website',
                 'code', 'a.code',
-                'contact_id', 'a.contact_id',
+                'p.preferred_name',
             );
         }
 
