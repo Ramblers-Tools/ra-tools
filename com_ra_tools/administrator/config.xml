@@ -6,6 +6,7 @@
   06/03/23 CB Delete fields for Events and Guided Walks
   17/07/23 CB delete Group lat/long (can be taken from ra_groups
   24/07/23 CB correct name of fieldset
+  14/11/26 RH added app_walks_page for the Ramblers Tools app
 -->
 <config>   
     <fieldset
@@ -147,6 +148,17 @@
             <option value="95">95</option>
             <option value="100">100</option>
             </field>
+        <field
+            name="app_walks_page"
+            type="url"
+            filter="url"
+            validate="url"
+            scheme="https"
+            label="Walks page for the app"
+            description="The page on this site that shows your walks, e.g. https://example.org.uk/walks. Walks in the Ramblers Tools app link to this page and open the walk's details there. Leave blank to link to the walk on ramblers.org.uk instead."
+            default=""
+            class="input-xxlarge"
+        />
     </fieldset>
      <fieldset name="user_registration" label="User Registration">
         <field name="allow_self_registration"

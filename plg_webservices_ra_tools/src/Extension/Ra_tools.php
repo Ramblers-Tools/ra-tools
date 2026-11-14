@@ -13,6 +13,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Event\Application\BeforeApiRouteEvent;
 use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\Router\Route;
 use Joomla\Event\SubscriberInterface;
 
 /**
@@ -48,6 +49,19 @@ class Ra_tools extends CMSPlugin implements SubscriberInterface
     public function onBeforeApiRoute(BeforeApiRouteEvent $event): void
     {
         $router = $event->getRouter();
+
+        // The walks feed for the Ramblers Tools app. Public: it only shows public walks.
+        $router->addRoute(new Route(
+            ['GET'],
+            'v1/ra_tools/walks',
+            'walks.feed',
+            [],
+            [
+                'component' => 'com_ra_tools',
+                'public' => true,
+                'format' => ['application/json', 'application/vnd.api+json'],
+            ]
+        ));
 
         // Create CRUD routes for clusters
         $router->createCRUDRoutes(

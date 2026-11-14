@@ -9,6 +9,7 @@
  * 11/03/26 CB added displayFields and fetchApiData
  *  25/03/25 CB correct getRemoteData
  * 09/11/26 CB moved lookupApikey from ToolsHelper
+ * 14/11/26 RH removed unused getUrl, which would have printed the API key
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -256,17 +257,6 @@ class JsonHelper {
         return $details;
     }
 
-    private function getUrl($type, $criteria) {
-        if ($type == 'organisation') {
-            $url = $this->url . 'groups';
-        } else {
-            $url = $this->url . 'walksevents?types=';
-            $url .= $type;
-        }
-        $this->setKey();
-        //       return $this->url . $type . $this->api_key . $criteria;
-        die($this->url . $type . $this->api_key . $criteria);
-    }
 
     public function lookupApiKey($url = 'https://ramblers.org.uk') {
         $toolsHelper = new Toolshelper;
