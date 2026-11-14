@@ -124,8 +124,8 @@ class ClustersModel extends ListModel {
         $query->from('`#__ra_clusters` AS a');
         $query->select('p.preferred_name AS contact');
 
-        $query->innerJoin('#__contact_details AS c ON c.id = a.contact_id');
-        $query->innerJoin('#__ra_profiles AS p ON p.id = c.user_id');
+        $query->leftJoin('#__contact_details AS c ON c.id = a.contact_id');
+        $query->leftJoin('#__ra_profiles AS p ON p.id = c.user_id');
 
         // Filter by search in title
         $search = $this->getState('filter.search');
