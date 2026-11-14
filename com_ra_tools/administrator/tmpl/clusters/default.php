@@ -54,7 +54,7 @@ $listDirn  = $this->state->get('list.direction');
 							<?php echo HTMLHelper::_('searchtools.sort',  'Website', 'a.website', $listDirn, $listOrder); ?>
 						</th>
 						<th class='left'>
-							<?php echo HTMLHelper::_('searchtools.sort',  'Contact', 'c.name', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort',  'Contact', 'p.preferred_name', $listDirn, $listOrder); ?>
 						</th>						
 					<th scope="col" class="w-3 d-none d-lg-table-cell" >
 
