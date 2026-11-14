@@ -1,4 +1,4 @@
-<form addfieldprefix="Ramblers\Component\Ra_tools\Administrator\Field">
+<form addfieldprefix="Ramblers\Component\Ra_tools\Site\Field">
   <fieldset>
     <field name="id" type="text" readonly="true" class="readonly" default="0" description="JGLOBAL_FIELD_ID_DESC"/>
     <field name="name" maxlength="100" filter="string" type="text" required="true" 
@@ -19,7 +19,7 @@
       hint="Enter a 2 or 3 character code"/>
     <field
       name="contact_id"
-      type="Contact"
+      type="racontact"
       label="Contact"
       description="Contact name"
     />
