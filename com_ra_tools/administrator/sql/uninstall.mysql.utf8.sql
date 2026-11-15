@@ -1,5 +1,8 @@
 
 set FOREIGN_KEY_CHECKS=0;
+DROP TABLE IF EXISTS `#__ra_app_attempts`;
+DROP TABLE IF EXISTS `#__ra_app_codes`;
+DROP TABLE IF EXISTS `#__ra_app_tokens`;
 DROP TABLE IF EXISTS `#__ra_areas`;
 DROP TABLE IF EXISTS `#__ra_clusters`;
 DROP TABLE IF EXISTS `#__ra_control`;
