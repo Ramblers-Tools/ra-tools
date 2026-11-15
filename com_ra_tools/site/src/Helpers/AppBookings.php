@@ -15,7 +15,13 @@
  * ended yet. If a member cancelled and booked the same event again, only the live booking is
  * sent.
  *
+ * Each live booking carries the event's booking information (#__ra_events.booking_info), which
+ * organisers use for payment details. The website shows it only to members making a booking and
+ * in the confirmation email, so it's sent here, to the member who booked, and never in the public
+ * events feed. Cancelled bookings don't get it.
+ *
  * 14/11/26 RH Created
+ * 15/11/26 RH Send the event's booking information with each live booking
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -47,7 +53,7 @@ class AppBookings {
                 ->select([
                     'b.id', 'b.event_id', 'b.num_places', 'b.partner', 'b.state', 'b.is_paid', 'b.created',
                     'e.title', 'e.event_date', 'e.event_date_end', 'e.event_time', 'e.location',
-                    'e.requires_payment', 'e.state AS event_state',
+                    'e.requires_payment', 'e.booking_info', 'e.state AS event_state',
                 ])
                 ->from($this->db->quoteName('#__ra_bookings', 'b'))
                 ->join('INNER', $this->db->quoteName('#__ra_events', 'e'), 'e.id = b.event_id')
@@ -129,6 +135,7 @@ class AppBookings {
             'status' => $status,
             'requires_payment' => $requiresPayment,
             'is_paid' => $requiresPayment ? (int) ($row['is_paid'] ?? 0) === 1 : null,
+            'booking_info' => $status === 'cancelled' ? null : self::plainText($row['booking_info'] ?? null),
             'url' => rtrim($siteRoot, '/') . '/index.php?option=com_ra_events&view=event&id=' . rawurlencode((string) $row['event_id']),
         ];
         return array_filter($booking, fn($v) => $v !== null);
@@ -148,6 +155,24 @@ class AppBookings {
             return null;
         }
         return (int) $m[1] < 24 && (int) $m[2] < 60 ? sprintf('%02d:%02d', (int) $m[1], (int) $m[2]) : null;
+    }
+
+    /** Editor HTML as plain text, keeping its paragraphs, line breaks and list items. */
+    public static function plainText($html): ?string {
+        if (!is_string($html)) {
+            return null;
+        }
+        $text = str_replace(["\r\n", "\r"], "\n", $html);
+        $text = preg_replace('#<(script|style)[^>]*>.*?</\1>#is', '', $text);
+        $text = preg_replace('#<br\s*/?>#i', "\n", $text);
+        $text = preg_replace('#<li[^>]*>#i', '• ', $text);
+        $text = preg_replace('#</(p|div|h[1-6]|ul|ol|table)>#i', "\n\n", $text);
+        $text = preg_replace('#</(li|tr)>#i', "\n", $text);
+        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = str_replace("\u{00A0}", ' ', $text);
+        $lines = array_map(fn($line) => trim(preg_replace('/[ \t]+/', ' ', $line)), explode("\n", $text));
+        $text = trim(preg_replace("/\n{3,}/", "\n\n", implode("\n", $lines)));
+        return $text === '' ? null : $text;
     }
 
     private static function text($value): ?string {

@@ -88,6 +88,11 @@ foreach (['0' => 'requested', '-1' => 'waiting_list', '-2' => 'cancelled', '9' =
 check(AppBookings::booking($row(['event_state' => '-2']), [], '')['status'] === 'cancelled', 'a cancelled event cancels the booking');
 check(AppBookings::booking($row(['partner' => 'Pat']), [], '')['guests'] === ['Pat'], 'an older booking\'s partner is a guest');
 check(!array_key_exists('is_paid', AppBookings::booking($row(['requires_payment' => '0']), [], '')), 'no payment, no paid flag');
+$info = AppBookings::booking($row(['booking_info' => '<p>Pay by bank transfer:</p><p>Sort code 00&#8209;00&#8209;00<br>Ref: XMAS</p>']), [], '');
+check($info['booking_info'] === "Pay by bank transfer:\n\nSort code 00\u{2011}00\u{2011}00\nRef: XMAS", 'a live booking gets the booking information as plain text');
+check(!array_key_exists('booking_info', AppBookings::booking($row(['booking_info' => '<p>Pay ECR</p>', 'state' => '-2']), [], '')), 'a cancelled booking doesn\'t');
+check(!array_key_exists('booking_info', AppBookings::booking($row(['booking_info' => '<p>Pay ECR</p>', 'event_state' => '-2']), [], '')), 'nor one for a cancelled event');
+check(!array_key_exists('booking_info', AppBookings::booking($row(['booking_info' => '<p>&nbsp;</p>']), [], '')), 'and empty information is left out');
 $list = AppBookings::bookings([$row(['id' => '1', 'state' => '-2']), $row(['id' => '2', 'state' => '0']), $row(['id' => '3', 'event_id' => '43', 'state' => '-2'])], [], '');
 check(array_column($list, 'id') === ['2', '3'], 'a cancelled booking is hidden when the event was booked again');
 
