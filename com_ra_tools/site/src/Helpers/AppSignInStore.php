@@ -141,6 +141,15 @@ class AppSignInStore {
 
     /** Revokes one of a member's sign-ins, or all of them when $id is null. */
     public function revoke(int $userId, ?int $id = null): int {
+        if ($id === null) {
+            // Signing out everywhere (or a password change) also cancels any sign-in that is
+            // part way through, so a code issued just before can't still be swapped for a token.
+            $codes = $this->db->getQuery(true)
+                    ->delete($this->db->quoteName('#__ra_app_codes'))
+                    ->where($this->db->quoteName('user_id') . ' = :user')
+                    ->bind(':user', $userId, ParameterType::INTEGER);
+            $this->db->setQuery($codes)->execute();
+        }
         $now = self::now();
         $query = $this->db->getQuery(true)
                 ->update($this->db->quoteName('#__ra_app_tokens'))
