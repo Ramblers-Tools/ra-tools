@@ -3,6 +3,24 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.2.2</version>
+        <date>2026-11-15</date>
+        <note>
+            <item><![CDATA[App sign-in: the login form is on the app's sign-in page, so a wrong password shows the same page again with a message, instead of the full website login page]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
+        <version>4.2.1</version>
+        <date>2026-11-15</date>
+        <note>
+            <item><![CDATA[App bookings include the event's booking information (payment details) for the member who booked, but not while they're on the waiting list]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.2.0</version>
         <date>2026-11-14</date>
         <note>
