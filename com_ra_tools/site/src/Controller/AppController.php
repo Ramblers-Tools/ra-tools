@@ -4,6 +4,7 @@
  * Signing in to the Ramblers Tools app (iPhone and Android) with a group website account.
  *
  *   index.php?option=com_ra_tools&task=app.authorize    the page the app opens: log in, then Allow
+ *   index.php?option=com_ra_tools&task=app.login        (POST) the login form on the sign-in page
  *   index.php?option=com_ra_tools&task=app.allow        (POST) the Allow / Cancel form
  *   index.php?option=com_ra_tools&task=app.token&format=json     (POST) a one-time code for a token
  *   index.php?option=com_ra_tools&task=app.bookings&format=json  the member's bookings (bearer token)
@@ -15,6 +16,8 @@
  * bearer token only: they ignore the Joomla session, send no CORS headers and never redirect.
  *
  * 14/11/26 RH Created
+ * 15/11/26 RH Log in on the sign-in page itself. Joomla's own login form sends a wrong password
+ *             back to the full site's login page, which strands the member in the app's popup.
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Controller;
@@ -47,15 +50,52 @@ class AppController extends BaseController {
         }
         $user = $this->app->getIdentity();
         if (!$user || $user->guest) {
-            return $this->page('login', [
-                        'loginUrl' => Route::_('index.php?option=com_users&view=login&tmpl=component&return=' . base64_encode($this->authorizeUrl($params)), false),
-                        'ssoUrl' => $this->ssoUrl(),
-            ]);
+            return $this->loginPage($params);
         }
         return $this->page('consent', [
                     'params' => $params,
                     'name' => $user->name,
                     'logoutUrl' => Route::_('index.php?option=com_users&task=user.logout&' . Session::getFormToken() . '=1&return=' . base64_encode($this->authorizeUrl($params)), false),
+        ]);
+    }
+
+    /**
+     * POST: the login form on the sign-in page. Logs in as Joomla's own form does (the site's
+     * authentication plugins, then any multi-factor check), but a wrong password comes back to
+     * this page rather than to the full site's login page.
+     */
+    public function login() {
+        $params = $this->requestFields('post');
+        $problem = AppSignIn::authorizeProblem($params);
+        if ($problem !== null) {
+            return $this->page('error', ['message' => $problem]);
+        }
+        if (!Session::checkToken('post')) {
+            return $this->loginPage($params, 'This page had expired, so you weren\'t logged in. Please try again.');
+        }
+        $username = trim($this->input->post->getUsername('username', ''));
+        $password = $this->input->post->get('password', '', 'RAW');
+        if ($username === '' || $password === '') {
+            return $this->loginPage($params, 'Enter your username and password.', $username);
+        }
+        // Silent: the message below replaces Joomla's own, which would show above the form too.
+        $loggedIn = $this->app->login(['username' => $username, 'password' => $password], ['remember' => false, 'silent' => true]);
+        if ($loggedIn !== true) {
+            return $this->loginPage($params, 'We couldn\'t log you in with that username and password. Please check them and try again.', $username);
+        }
+        // On to Allow, by way of the site's multi-factor check if the member has one.
+        $this->app->redirect($this->authorizeUrl($params));
+    }
+
+    /** The sign-in page for a member who isn't logged in yet. */
+    private function loginPage(array $params, ?string $error = null, string $username = '') {
+        return $this->page('login', [
+                    'params' => $params,
+                    'error' => $error,
+                    'username' => $username,
+                    'ssoUrl' => $this->ssoUrl(),
+                    'resetUrl' => Route::_('index.php?option=com_users&view=reset', false),
+                    'remindUrl' => Route::_('index.php?option=com_users&view=remind', false),
         ]);
     }
 

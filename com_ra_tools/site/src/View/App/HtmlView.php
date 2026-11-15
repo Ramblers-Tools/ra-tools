@@ -17,7 +17,10 @@ use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 class HtmlView extends BaseHtmlView {
 
     public $message = '';
-    public $loginUrl = '';
+    public $error = null;
+    public $username = '';
+    public $resetUrl = '';
+    public $remindUrl = '';
     public $ssoUrl = null;
     public $params = [];
     public $name = '';
