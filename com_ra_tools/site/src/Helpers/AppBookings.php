@@ -18,10 +18,11 @@
  * Each live booking carries the event's booking information (#__ra_events.booking_info), which
  * organisers use for payment details. The website shows it only to members making a booking and
  * in the confirmation email, so it's sent here, to the member who booked, and never in the public
- * events feed. Cancelled bookings don't get it.
+ * events feed. Waiting-list and cancelled bookings don't get it, so nobody pays for a place they
+ * haven't got.
  *
  * 14/11/26 RH Created
- * 15/11/26 RH Send the event's booking information with each live booking
+ * 15/11/26 RH Send the event's booking information with each live booking, but not to the waiting list
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -135,7 +136,7 @@ class AppBookings {
             'status' => $status,
             'requires_payment' => $requiresPayment,
             'is_paid' => $requiresPayment ? (int) ($row['is_paid'] ?? 0) === 1 : null,
-            'booking_info' => $status === 'cancelled' ? null : self::plainText($row['booking_info'] ?? null),
+            'booking_info' => in_array($status, ['cancelled', 'waiting_list'], true) ? null : self::plainText($row['booking_info'] ?? null),
             'url' => rtrim($siteRoot, '/') . '/index.php?option=com_ra_events&view=event&id=' . rawurlencode((string) $row['event_id']),
         ];
         return array_filter($booking, fn($v) => $v !== null);
