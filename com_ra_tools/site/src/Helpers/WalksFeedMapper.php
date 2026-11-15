@@ -9,6 +9,7 @@
  * 14/11/26 RH Created
  * 14/11/26 RH Walk types (Stroller to Long, and Evening) from the ra_tweaks settings
  * 14/11/26 RH Changed-walk marker from the ra_tweaks settings
+ * 15/11/26 RH The leader's link (Walks Manager's link to a site or file, often a GPX route)
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -171,6 +172,7 @@ class WalksFeedMapper {
             'start_point' => self::location($w['start_location'] ?? null),
             'leader' => self::leader($w['walk_leader'] ?? null),
             'url' => self::walkUrl($id, $walkPage, $w['url'] ?? null),
+            'link' => self::link($w['external_url'] ?? null),
         ];
         return array_filter($walk, fn($v) => $v !== null);
     }
@@ -254,6 +256,29 @@ class WalksFeedMapper {
             'phone' => self::text($leader['telephone'] ?? null),
             'contact_url' => $contact,
         ], fn($v) => $v !== null);
+    }
+
+    /**
+     * The link the leader added in Walks Manager (a site or a file), often the route as a GPX
+     * file. Web links only. Links to just a site's home page are left out: some groups put
+     * their own home page on every walk, which tells the member nothing.
+     */
+    public static function link($url): ?array {
+        $url = trim((string) ($url ?? ''));
+        $parts = parse_url($url);
+        if ($parts === false || !in_array(strtolower($parts['scheme'] ?? ''), ['https', 'http'], true)
+                || empty($parts['host']) || isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+        $path = $parts['path'] ?? '';
+        if (in_array(strtolower(rtrim($path, '/')), ['', '/index.php', '/index.html', '/home'], true)
+                && empty($parts['query'])) {
+            return null;
+        }
+        return [
+            'url' => $url,
+            'kind' => preg_match('/\.gpx$/i', rawurldecode($path)) ? 'gpx' : 'page',
+        ];
     }
 
     private static function walkUrl(string $id, string $walkPage, $centralUrl): ?string {
