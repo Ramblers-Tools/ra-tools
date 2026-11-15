@@ -140,4 +140,14 @@ check(WalksFeedMapper::changedWalks([]) === ['marker' => '***', 'colour' => '#f0
 check(WalksFeedMapper::changedWalks(['marker' => ' ']) === ['marker' => ''], 'empty marker, off');
 check(WalksFeedMapper::changedWalks(null) === ['marker' => ''], 'no ra_tweaks, off');
 
+// The leader's link
+check(WalksFeedMapper::link('https://example.org/routes/Kerridge%20Ridge.GPX') === ['url' => 'https://example.org/routes/Kerridge%20Ridge.GPX', 'kind' => 'gpx'], 'a GPX file');
+check(WalksFeedMapper::link('https://example.org/walks/kerridge') === ['url' => 'https://example.org/walks/kerridge', 'kind' => 'page'], 'a page');
+check(WalksFeedMapper::link('https://example.org/index.php?option=com_content&id=4')['kind'] === 'page', 'a Joomla page with a query');
+foreach (['https://www.ramblerseastcheshire.org.uk/', 'https://ramblerseastcheshire.org.uk', 'https://example.org/index.php', 'javascript:alert(1)', 'ftp://example.org/a.gpx', 'https://user:pw@example.org/a.gpx', '', null] as $url) {
+    check(WalksFeedMapper::link($url) === null, 'left out: ' . json_encode($url));
+}
+check(WalksFeedMapper::walk(walk(['external_url' => 'https://example.org/a.gpx']), $page)['link']['kind'] === 'gpx', 'a walk carries its link');
+check(!isset(WalksFeedMapper::walk(walk(['external_url' => 'https://example.org/']), $page)['link']), 'but not a home page');
+
 echo "WalksFeedMapperTest passed\n";

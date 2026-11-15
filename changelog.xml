@@ -3,6 +3,15 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.3.0</version>
+        <date>2026-11-15</date>
+        <note>
+            <item><![CDATA[The Ramblers Tools app's walks feed includes the link the leader added in Walks Manager (often the route as a GPX file). Links to just a site's home page are left out]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.2.2</version>
         <date>2026-11-15</date>
         <note>
