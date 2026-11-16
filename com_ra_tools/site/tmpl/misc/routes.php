@@ -1,11 +1,6 @@
 <?php
 
 /**
- * @version     5.1.1
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2021. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
  * 10/04/22 tweaked
  * 11/06/22 CB Show route library to logged in members
  * 20/11/23 CB strip leading slash from name of gpx file if necessary
@@ -18,11 +13,13 @@
  * 11/04/25 CB add routesprint
  * 13/04/25 CB delete warning about Lat/Long out of range
  * 09/11/26 CB Updates for Joomla 6 compatibility
+ * 16/11/26 CB new option to show folder contents as editable list
  */
 // No direct access
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Router\Route;
 use \Joomla\Uri\Uri;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
@@ -44,42 +41,76 @@ $longitude = (float) $item->longitude;
 //var_dump($this->menu_params);
 //echo "<br>";
 //$title = $this->params->get('page_title', '');
-if (is_null($this->menu_params)) {
-    $folder = "/images";
-    $display_type = "RJsonwalksStdFulldetails";
-    $title = "Settings not found";
-    $download = "None";
+$app = Factory::getApplication();
+$input = $app->getInput();
+$menuParams = $this->menu_params;
+$queryFolder = $input->getString('folder', '');
+$queryTargetFolder = $input->getString('target_folder', '');
+$queryGpx = $input->getString('gpxfile', '');
+if ($queryGpx === '') {
+    $queryGpx = $input->getString('gpx', '');
+}
+$parameterRequest = $queryGpx !== '' || $queryFolder !== '' || $queryTargetFolder !== '';
+
+if (is_null($menuParams)) {
+    $display_type = 'L';
+    $intro = '';
+    $download = 'None';
+    $target_folder = '';
+    $show_folder = 'Y';
+    $show_file = 'Y';
+    $menuGpx = '';
 } else {
-    $display_type = $this->menu_params->get('display_type');
-    $intro = $this->menu_params->get('page_intro');
-    $download = $this->menu_params->get('download');
-    $target_folder = $this->menu_params->get('target_folder', 'images');
-    $show_folder = $this->menu_params->get('show_folder', 'Y');
-    $show_file = $this->menu_params->get('show_file', 'Y');
+    $display_type = $menuParams->get('display_type', 'L');
+    $intro = $menuParams->get('page_intro', '');
+    $download = $menuParams->get('download', 'None');
+    $target_folder = $menuParams->get('target_folder', '');
+    $show_folder = $menuParams->get('show_folder', 'Y');
+    $show_file = $menuParams->get('show_file', 'Y');
+    $menuGpx = $menuParams->get('gpx', '');
+}
 
-    $working_folder = ToolsHelper::addSlash('/images/' . $target_folder);
-    $working_folder = 'images/' . $target_folder;
-    if (JDEBUG) {
-        echo "display type $display_type<br>";
-        echo "target folder is $target_folder<br>";
-        echo "working folder is $working_folder<br>";
-    }
-    // if only showing a single file, $gpx will be the name of the file to be displayed
-    $gpx = $this->menu_params->get('gpx');
+// URL parameters override the corresponding menu-item settings.
+$target_folder = $queryFolder !== '' ? $queryFolder
+    : ($queryTargetFolder !== '' ? $queryTargetFolder : $target_folder);
+$gpx = $queryGpx !== '' ? $queryGpx : $menuGpx;
+if ($queryGpx !== '') {
+    $display_type = 'S';
+}
+if (str_starts_with($gpx, '/')) {
+    $gpx = substr($gpx, 1);
+}
+$working_folder = 'images/' . $target_folder;
 
-    if (substr($gpx, 0, 1) == '/') {
-        $gpx = substr($gpx, 1);
-    }
-//    echo "gpx $gpx<br>";
+if ($display_type === 'E') {
+    $target = 'index.php?option=com_ra_tools&view=gpxs&folder=' . rawurlencode($target_folder)
+        . '&Itemid=' . (int) $this->menu_id;
+    $app->redirect(Route::_($target, false));
+    return;
+}
+
+if (JDEBUG) {
+    echo "display type $display_type<br>";
+    echo "target folder is $target_folder<br>";
+    echo "working folder is $working_folder<br>";
 }
 // Validate input parameters
 
 
 if (($display_type == 'L') or ($display_type == 'S')) {
-    if ($target_folder == '-1') {
+    $imagesRoot = realpath(JPATH_ROOT . '/images');
+    $relativeFolder = str_replace('\\', '/', trim($target_folder, "/\\ "));
+    $folderSegments = explode('/', $relativeFolder);
+    $folderPath = $imagesRoot !== false ? realpath($imagesRoot . '/' . $relativeFolder) : false;
+    if ($relativeFolder === '' || $relativeFolder === '-1'
+            || in_array('..', $folderSegments, true) || in_array('.', $folderSegments, true)
+            || $imagesRoot === false || $folderPath === false || !is_dir($folderPath)
+            || !str_starts_with($folderPath, $imagesRoot . DIRECTORY_SEPARATOR)) {
         Factory::getApplication()->enqueueMessage('No folder has been selected', 'error');
         return;
     }
+    $target_folder = $relativeFolder;
+    $working_folder = 'images/' . $target_folder;
     if (!file_exists($working_folder)) {
         $text = 'Folder ' . $working_folder . ' does not exist';
         // Add a message to the message queue
@@ -90,6 +121,10 @@ if (($display_type == 'L') or ($display_type == 'S')) {
 if ($display_type == 'S') {
     if ($gpx == '') {
         Factory::getApplication()->enqueueMessage('Filename is blank ', 'error');
+    }
+    if ($gpx !== basename($gpx) || preg_match('/^[A-Za-z0-9][A-Za-z0-9._ -]{0,119}\.gpx$/i', $gpx) !== 1) {
+        Factory::getApplication()->enqueueMessage('Invalid GPX filename.', 'error');
+        return;
     }
     $target_file = JPATH_ROOT . '/' . $working_folder . '/' . $gpx;
     //   echo "target file is $target_file<br>";
@@ -156,5 +191,10 @@ if ($display_type == 'P') {
             echo 'Login or Register to download gpx files<br>';
         }
     }
+}
+if ($parameterRequest || $display_type === 'L') {
+    $target = 'index.php?option=com_ra_tools&view=gpxs&folder=' . rawurlencode($target_folder)
+        . '&Itemid=' . (int) $this->menu_id;
+    echo $this->toolsHelper->buildButton($target, 'Show editable list');
 }
 ?>
