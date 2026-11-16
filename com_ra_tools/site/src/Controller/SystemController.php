@@ -24,6 +24,7 @@
  * 19/03/26 CB don't reject EventAttendees if no booking_id
  * 13/07/26 CV notes added
  * 09/11/26 CB Replaced getDbo with DatabaseInterface
+ * 16/11/26 RH eventOrganiser: no debug output when the organiser has no email; message on the event page
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Controller;
@@ -32,6 +33,7 @@ namespace Ramblers\Component\Ra_tools\Site\Controller;
 
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Controller\FormController;
 use \Joomla\CMS\Object\CMSObject;
 use Joomla\CMS\Router\Route;
@@ -230,8 +232,8 @@ class SystemController extends FormController {
 
     public function eventOrganiser() {
 // Accept event id, lookup email address of the organiser
-        $id = Factory::getApplication()->input->getCmd('id', '0');
-        if ($id == 0) {
+        $id = Factory::getApplication()->input->getInt('id', 0);
+        if ($id <= 0) {
             $this->app->enqueueMessage('Sorry, Event reference not given', 'error');
             $this->setRedirect('index.php?option=com_ra_tools&task=emailform.cancel');
             return;
@@ -242,43 +244,22 @@ class SystemController extends FormController {
         $sql .= 'LEFT JOIN #__ra_profiles AS p ON p.id = c.user_id ';
         $sql .= 'LEFT JOIN #__users AS u ON u.id = c.user_id ';
         $sql .= 'WHERE e.id=' . $id;
-//        echo $sql . '<br>';
         $event = $this->toolsHelper->getItem($sql);
         if (is_null($event)) {
             $this->app->enqueueMessage('Event not found for id ' . $id, 'error');
             $this->setRedirect('index.php?option=com_ra_tools&task=emailform.cancel');
             return;
         }
-        if ($event->email == '') {
-            $this->app->enqueueMessage('Email address not found for event ' . $id, 'error');
-
-            echo 'Event = ' . $id . '<br>';
-            $sql = 'SELECT contact_id FROM #__ra_events WHERE id=' . $id;
-            $contact_id = $this->toolsHelper->getValue($sql);
-            echo 'Contact = ' . $contact_id . '<br>';
-
-            $sql = 'SELECT user_id FROM #__contact_details WHERE id=' . $contact_id;
-            $user_id = $this->toolsHelper->getValue($sql);
-//            echo 'User id = ' . $user_id . '<br>';
-
-            if ($user_id == '') {
-                $message = 'No user found';
-                echo $message . '<br>';
-            } else {
-                $sql = 'SELECT email FROM #__users WHERE id=' . $user_id;
-                $email = $this->toolsHelper->getValue($sql);
-                if ($email == '') {
-                    $message = 'No user found WHERE id=' . $user_id;
-                    echo $message . '<br>';
-                } else {
-                    echo 'Email = ' . $email . '<br>';
-                }
-                $sql = 'SELECT preferred_name FROM #__ra_profiles WHERE id=' . $user_id;
-                $preferred_name = $this->toolsHelper->getValue($sql);
-                echo 'Preferred_name = ' . $preferred_name . '<br>';
-                $this->setRedirect('index.php?option=com_ra_tools&task=emailform.cancel');
-            }
-            die;
+        if (trim((string) $event->email) === '') {
+            // No organiser, or the organiser's contact has no linked user with an email address.
+            // Say so on the event page and note the details (never an address) in the site log
+            // for the webmaster.
+            Log::add(sprintf('eventOrganiser: no email address for event %d (contact %s, user %s)',
+                            $id, $event->contact_id ?? 'none', $event->user_id ?? 'none'),
+                    Log::WARNING, 'com_ra_tools');
+            $this->app->enqueueMessage("Sorry, there's no email address for this event's organiser. Please contact the group another way.", 'warning');
+            $this->setRedirect(Route::_('index.php?option=com_ra_events&view=event&id=' . $id, false));
+            return;
         }
 
 // Generate a standard object to pass to ra_tools

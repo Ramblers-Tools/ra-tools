@@ -3,6 +3,15 @@
     <changelog>
         <element>pkg_ra_tools</element>
         <type>package</type>
+        <version>4.3.1</version>
+        <date>2026-11-16</date>
+        <note>
+            <item><![CDATA[Emailing an event's organiser when they have no email address now shows a message on the event page, instead of a page of technical details]]></item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_ra_tools</element>
+        <type>package</type>
         <version>4.3.0</version>
         <date>2026-11-15</date>
         <note>
