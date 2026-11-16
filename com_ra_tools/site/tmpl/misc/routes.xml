@@ -17,9 +17,10 @@
                                    type="radio" 
                                    default="P" 
                                    label="Type of display">
-                                <option value="P">Plot a Route</option>                            
-                                <option value="L">Display a library of Routes</option>
+                                <option value="E">Display a library of Routes and allow editing</option>
+                                <option value="L">Display a library of Routes as a Map or List</option>
                                 <option value="S">Display a single Route</option>
+                                <option value="P">Plot a Route</option>
                             </field>  
                             <field name="page_intro" 
                                    type="textarea" 
