@@ -7,6 +7,7 @@
  * Tables: #__ra_app_codes, #__ra_app_tokens and #__ra_app_attempts (install.mysql.utf8.sql).
  *
  * 14/11/26 RH Created
+ * 18/11/26 RH Tokens carry a scope; tokenFor() returns it for AppToken.
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -83,6 +84,7 @@ class AppSignInStore {
                     'token_hash' => AppSignIn::hash($token),
                     'user_id' => $userId,
                     'client_id' => $clientId,
+                    'scope' => AppSignIn::SCOPES,
                     'user_agent' => mb_substr($userAgent, 0, 255),
                     'created' => self::now(),
                     'last_used' => self::now(),
@@ -96,12 +98,21 @@ class AppSignInStore {
      * Notes when it was last used.
      */
     public function userForToken(string $token): ?int {
+        $row = $this->tokenFor($token);
+        return $row === null ? null : $row['user_id'];
+    }
+
+    /**
+     * A working token's member and scopes: ['user_id' => int, 'scope' => string], or null when the
+     * token is unknown, expired or revoked, or the member is blocked. Notes when it was last used.
+     */
+    public function tokenFor(string $token): ?array {
         if ($token === '') {
             return null;
         }
         $hash = AppSignIn::hash($token);
         $query = $this->db->getQuery(true)
-                ->select(['t.id', 't.user_id', 't.created', 't.last_used', 't.revoked', 'u.block'])
+                ->select(['t.id', 't.user_id', 't.scope', 't.created', 't.last_used', 't.revoked', 'u.block'])
                 ->from($this->db->quoteName('#__ra_app_tokens', 't'))
                 ->join('INNER', $this->db->quoteName('#__users', 'u'), 'u.id = t.user_id')
                 ->where('t.token_hash = :hash')
@@ -119,7 +130,7 @@ class AppSignInStore {
                 ->bind(':now', $now)
                 ->bind(':id', $id, ParameterType::INTEGER);
         $this->db->setQuery($update)->execute();
-        return (int) $row['user_id'];
+        return ['user_id' => (int) $row['user_id'], 'scope' => (string) $row['scope']];
     }
 
     /** Revokes one token, by its value (the app signing out). Returns the member, if any. */
