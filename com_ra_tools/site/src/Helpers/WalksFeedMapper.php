@@ -161,6 +161,9 @@ class WalksFeedMapper {
         }
 
         $cancelled = strtolower((string) ($w['status'] ?? '')) === 'cancelled';
+        // Walks Manager's meeting time, e.g. 09:20 at the station for a 10:00 start after a train.
+        // Left out when it's the same as the start.
+        $meeting = self::time($w['meeting_date_time'] ?? null);
         $walk = [
             'id' => $id,
             'title' => $title,
@@ -168,6 +171,7 @@ class WalksFeedMapper {
             'before_you_go' => self::plainText($w['additional_details'] ?? null),
             'start' => $start,
             'end' => self::time($w['end_date_time'] ?? null),
+            'meeting_time' => $meeting !== $start ? $meeting : null,
             'distance_km' => self::number($w['distance_km'] ?? null),
             'distance_miles' => self::number($w['distance_miles'] ?? null),
             'ascent_metres' => isset($w['ascent_metres']) && is_numeric($w['ascent_metres']) ? (int) round($w['ascent_metres']) : null,
