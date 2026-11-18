@@ -10,6 +10,7 @@
  * 14/11/26 RH Walk types (Stroller to Long, and Evening) from the ra_tweaks settings
  * 14/11/26 RH Changed-walk marker from the ra_tweaks settings
  * 15/11/26 RH The leader's link (Walks Manager's link to a site or file, often a GPX route)
+ * 18/11/26 RH Routes uploaded through ra_tweaks (route) and the GPX / OS Maps / Outdoor Active labels (route_labels)
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -33,10 +34,12 @@ class WalksFeedMapper {
      * @param int    $weeks      Only walks starting within this many weeks (0 for no limit)
      * @param \DateTimeImmutable|null $now  For tests; defaults to the current time
      * @param \DateTimeImmutable|null $generatedAt  When the walks were fetched
+     * @param array  $routes     Routes leaders uploaded: walk id => {gpx_url, page_url?}. Empty when the
+     *                           group doesn't use ra_tweaks walk routes.
      */
     public static function feed(array $response, string $groupCode, string $groupName, string $walkPage,
             int $limit = 0, int $weeks = 0, ?\DateTimeImmutable $now = null,
-            ?\DateTimeImmutable $generatedAt = null): array {
+            ?\DateTimeImmutable $generatedAt = null, array $routes = []): array {
         $zone = new \DateTimeZone(self::ZONE);
         $now = ($now ?? new \DateTimeImmutable('now'))->setTimezone($zone);
         // Keep the whole of today, so a walk that has already started still shows.
@@ -48,7 +51,7 @@ class WalksFeedMapper {
             if (!is_array($item) || ($item['item_type'] ?? 'group-walk') !== 'group-walk') {
                 continue;
             }
-            $walk = self::walk($item, $walkPage);
+            $walk = self::walk($item, $walkPage, $routes[trim((string) ($item['id'] ?? ''))] ?? null);
             if ($walk === null) {
                 continue;
             }
@@ -144,8 +147,12 @@ class WalksFeedMapper {
         return strtolower(preg_match('/^#[0-9a-f]{6}$/i', $value) ? $value : $default);
     }
 
-    /** One walk, or null if it has no id, title or start time. */
-    public static function walk(array $w, string $walkPage = ''): ?array {
+    /**
+     * One walk, or null if it has no id, title or start time.
+     *
+     * @param array|null $route  The route a leader uploaded for this walk ({gpx_url, page_url?}), if any
+     */
+    public static function walk(array $w, string $walkPage = '', ?array $route = null): ?array {
         $id = trim((string) ($w['id'] ?? ''));
         $title = self::text($w['title'] ?? null);
         $start = self::time($w['start_date_time'] ?? null);
@@ -173,6 +180,8 @@ class WalksFeedMapper {
             'leader' => self::leader($w['walk_leader'] ?? null),
             'url' => self::walkUrl($id, $walkPage, $w['url'] ?? null),
             'link' => self::link($w['external_url'] ?? null),
+            'route' => self::route($route),
+            'route_labels' => self::routeLabels($w, self::route($route) !== null),
         ];
         return array_filter($walk, fn($v) => $v !== null);
     }
@@ -279,6 +288,68 @@ class WalksFeedMapper {
             'url' => $url,
             'kind' => preg_match('/\.gpx$/i', rawurldecode($path)) ? 'gpx' : 'page',
         ];
+    }
+
+    /**
+     * The route a leader uploaded through ra_tweaks: the stored GPX file and, when the group has set
+     * one, the website's route page for the walk. Web addresses only; null when there is no usable file.
+     */
+    public static function route(?array $route): ?array {
+        $gpx = self::webUrl($route['gpx_url'] ?? null);
+        if ($gpx === null) {
+            return null;
+        }
+        return array_filter(['gpx_url' => $gpx, 'page_url' => self::webUrl($route['page_url'] ?? null)], fn($v) => $v !== null);
+    }
+
+    /**
+     * The pills the group's programme page shows after the grade: gpx, os_maps, outdoor_active, in
+     * that order, only those that apply. The same rules as ecrWalkRouteLabels() in the East Cheshire
+     * template (helpers.php), so the app and the website can't disagree:
+     *  - gpx: the walk has an uploaded route, or a link in its description, additional notes or Walks
+     *    Manager external URL ends in .gpx;
+     *  - os_maps: such a link is on osmaps.com or os.uk (or a subdomain);
+     *  - outdoor_active: such a link is on outdooractive.com (or a subdomain).
+     * Null when none apply.
+     */
+    public static function routeLabels(array $w, bool $hasRoute): ?array {
+        $found = [];
+        if ($hasRoute) {
+            $found['gpx'] = true;
+        }
+        $text = html_entity_decode(
+                (string) ($w['description'] ?? '') . ' ' . (string) ($w['additional_details'] ?? '') . ' ' . (string) ($w['external_url'] ?? ''),
+                ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (preg_match_all('#https?://[^\s"\'<>]+#i', $text, $links)) {
+            foreach ($links[0] as $link) {
+                $host = strtolower((string) parse_url($link, PHP_URL_HOST));
+                $path = strtolower(rawurldecode((string) parse_url($link, PHP_URL_PATH)));
+                if (substr($path, -4) === '.gpx') {
+                    $found['gpx'] = true;
+                } elseif (self::onSite($host, 'osmaps.com') || self::onSite($host, 'os.uk')) {
+                    $found['os_maps'] = true;
+                } elseif (self::onSite($host, 'outdooractive.com')) {
+                    $found['outdoor_active'] = true;
+                }
+            }
+        }
+        $labels = array_values(array_filter(['gpx', 'os_maps', 'outdoor_active'], fn($label) => isset($found[$label])));
+        return $labels ?: null;
+    }
+
+    private static function onSite(string $host, string $site): bool {
+        return $host === $site || substr($host, -strlen($site) - 1) === '.' . $site;
+    }
+
+    /** An http or https address with no embedded password, or null. */
+    private static function webUrl($url): ?string {
+        $url = trim((string) ($url ?? ''));
+        $parts = parse_url($url);
+        if ($parts === false || !in_array(strtolower($parts['scheme'] ?? ''), ['https', 'http'], true)
+                || empty($parts['host']) || isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+        return $url;
     }
 
     private static function walkUrl(string $id, string $walkPage, $centralUrl): ?string {

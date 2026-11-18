@@ -150,4 +150,25 @@ foreach (['https://www.ramblerseastcheshire.org.uk/', 'https://ramblerseastchesh
 check(WalksFeedMapper::walk(walk(['external_url' => 'https://example.org/a.gpx']), $page)['link']['kind'] === 'gpx', 'a walk carries its link');
 check(!isset(WalksFeedMapper::walk(walk(['external_url' => 'https://example.org/']), $page)['link']), 'but not a home page');
 
+// Routes leaders uploaded (ra_tweaks Walk Routes) and the route labels.
+$route = ['gpx_url' => 'https://example.org/images/walk-routes/walk-100000001-ab12cd34.gpx', 'page_url' => 'https://example.org/index.php?option=com_content&view=article&id=535&walk=100000001'];
+$w = WalksFeedMapper::walk(walk(), $page, $route);
+check($w['route'] === $route, 'an uploaded route: ' . json_encode($w['route'] ?? null));
+check($w['route_labels'] === ['gpx'], 'an uploaded route is a gpx label');
+$w = WalksFeedMapper::walk(walk(), $page, ['gpx_url' => $route['gpx_url'], 'page_url' => null]);
+check($w['route'] === ['gpx_url' => $route['gpx_url']], 'no page address, none sent');
+foreach ([null, [], ['gpx_url' => ''], ['gpx_url' => 'javascript:alert(1)'], ['gpx_url' => 'https://u:p@example.org/a.gpx']] as $bad) {
+    $w = WalksFeedMapper::walk(walk(), $page, $bad);
+    check(!isset($w['route']) && !isset($w['route_labels']), 'no usable route, neither field: ' . json_encode($bad));
+}
+$labels = fn(array $changes, bool $has = false) => WalksFeedMapper::routeLabels(walk($changes), $has);
+check($labels(['description' => 'See https://explore.osmaps.com/route/1'], false) === ['os_maps'], 'OS Maps in the description');
+check($labels(['external_url' => 'https://osmaps.com/r/1']) === ['os_maps'], 'OS Maps as the external URL');
+check($labels(['additional_details' => 'Map: https://www.os.uk/x']) === ['os_maps'], 'os.uk subdomain');
+check($labels(['external_url' => 'https://www.outdooractive.com/en/route/1']) === ['outdoor_active'], 'Outdoor Active');
+check($labels(['external_url' => 'https://example.org/Route%20One.GPX']) === ['gpx'], 'a GPX link');
+check($labels(['external_url' => 'https://explore.osmaps.com/route/1', 'description' => 'https://example.org/a.gpx https://www.outdooractive.com/r/2'], true) === ['gpx', 'os_maps', 'outdoor_active'], 'all three, in order');
+check($labels(['external_url' => 'https://notosmaps.com/x', 'description' => 'https://evilos.uk/y']) === null, 'look-alike hosts do not count');
+check($labels(['description' => 'plain', 'external_url' => null]) === null, 'none apply');
+
 echo "WalksFeedMapperTest passed\n";

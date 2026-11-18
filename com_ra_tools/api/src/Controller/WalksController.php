@@ -15,6 +15,7 @@
  *
  * 14/11/26 RH Created
  * 14/11/26 RH Adds the group's walk types and changed-walk marker from the ra_tweaks settings
+ * 18/11/26 RH Adds each walk's uploaded route (ra_tweaks Walk Routes) and its route labels
  */
 
 namespace Ramblers\Component\Ra_tools\Api\Controller;
@@ -26,6 +27,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Http\HttpFactory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Plugin\PluginHelper;
+use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Registry\Registry;
 use Ramblers\Component\Ra_tools\Site\Helpers\JsonHelper;
@@ -58,6 +60,7 @@ class WalksController extends BaseController {
             $this->send(502, ['error' => 'Walks Manager could not be reached. Please try again later.']);
         }
 
+        $tweaks = $this->tweaksSettings();
         $feed = WalksFeedMapper::feed(
                 $copy['response'],
                 $group,
@@ -66,12 +69,50 @@ class WalksController extends BaseController {
                 0,
                 0,
                 null,
-                new \DateTimeImmutable('@' . $copy['fetched_at'])
+                new \DateTimeImmutable('@' . $copy['fetched_at']),
+                $this->uploadedRoutes($tweaks)
         );
-        $tweaks = $this->tweaksSettings();
         $feed['walk_types'] = WalksFeedMapper::walkTypes($tweaks);
         $feed['changed_walks'] = WalksFeedMapper::changedWalks($tweaks);
         $this->send(200, $feed);
+    }
+
+    /**
+     * The routes leaders have uploaded through ra_tweaks' Walk Routes, as walk id => {gpx_url, page_url?}.
+     * Empty when ra_tweaks or its walk routes are off, or the table doesn't exist yet. The page address is
+     * the plugin's "routes page" setting plus the walk id, made absolute; left out when the setting is empty.
+     */
+    private function uploadedRoutes(?array $tweaks): array {
+        if ($tweaks === null || (int) ($tweaks['walk_routes'] ?? 0) !== 1) {
+            return [];
+        }
+        $root = rtrim(Uri::root(), '/');
+        $page = trim((string) ($tweaks['routes_page'] ?? ''));
+        if ($page !== '' && !preg_match('#^https?://#i', $page)) {
+            $page = $root . '/' . ltrim($page, '/');
+        }
+        try {
+            $db = Factory::getContainer()->get(DatabaseInterface::class);
+            $query = $db->getQuery(true)
+                    ->select([$db->quoteName('walk_id'), $db->quoteName('file')])
+                    ->from($db->quoteName('#__ra_tweaks_walk_routes'));
+            $rows = (array) $db->setQuery($query)->loadObjectList();
+        } catch (\Throwable $e) {
+            return [];
+        }
+        $routes = [];
+        foreach ($rows as $row) {
+            $file = basename((string) $row->file);
+            if ($file === '' || !is_file(JPATH_ROOT . '/images/walk-routes/' . $file)) {
+                continue;
+            }
+            $id = (string) $row->walk_id;
+            $routes[$id] = [
+                'gpx_url' => $root . '/images/walk-routes/' . rawurlencode($file),
+                'page_url' => $page === '' ? null : $page . (strpos($page, '?') === false ? '?' : '&') . 'walk=' . rawurlencode($id),
+            ];
+        }
+        return $routes;
     }
 
     /** The ra_tweaks plugin's settings, or null when it isn't installed and enabled. */
