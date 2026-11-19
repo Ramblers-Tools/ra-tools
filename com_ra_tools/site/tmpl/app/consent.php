@@ -1,5 +1,8 @@
 <?php
-/** Ramblers Tools app sign-in: Allow or Cancel. Always shown, even if allowed before. 14/11/26 RH */
+/**
+ * Ramblers Tools app sign-in: Allow or Cancel. Always shown, even if allowed before. 14/11/26 RH
+ * 18/11/26 RH Also footpath inspection records (token scope "footpaths", AppSignIn::SCOPES).
+ */
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
@@ -8,11 +11,11 @@ use Joomla\CMS\Router\Route;
 $e = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 ?>
 <div class="ra-app-signin" style="max-width: 32rem; margin: 1.5rem auto; padding: 0 1rem;">
-    <h1 style="font-size: 1.75rem;">Allow the Ramblers Tools app?</h1>
+    <h1 style="font-size: 1.5rem;">Allow the Ramblers Tools app to see your bookings and, if you're a footpath inspector, the footpath inspection records?</h1>
     <p>You're logged in as <strong><?php echo $e($this->name); ?></strong>.
         <a href="<?php echo $e($this->logoutUrl); ?>">Not you?</a></p>
-    <p>The app will be able to see your name, your email address and your event bookings. It can't change anything, and
-        it never sees your password.</p>
+    <p>The app will be able to see your name, your email address, your event bookings and, if you're a footpath
+        inspector, the footpath inspection records. It can't change anything, and it never sees your password.</p>
     <form method="post" action="<?php echo Route::_('index.php?option=com_ra_tools&task=app.allow'); ?>">
         <?php foreach ($this->params as $field => $value) : ?>
             <input type="hidden" name="<?php echo $e($field); ?>" value="<?php echo $e($value); ?>">

@@ -16,6 +16,7 @@
  * bearer token only: they ignore the Joomla session, send no CORS headers and never redirect.
  *
  * 14/11/26 RH Created
+ * 18/11/26 RH Bookings checked through AppToken (scope "bookings"), shared with com_ra_footpaths.
  * 15/11/26 RH Log in on the sign-in page itself. Joomla's own login form sends a wrong password
  *             back to the full site's login page, which strands the member in the app's popup.
  */
@@ -35,6 +36,7 @@ use Joomla\Database\DatabaseInterface;
 use Ramblers\Component\Ra_tools\Site\Helpers\AppBookings;
 use Ramblers\Component\Ra_tools\Site\Helpers\AppSignIn;
 use Ramblers\Component\Ra_tools\Site\Helpers\AppSignInStore;
+use Ramblers\Component\Ra_tools\Site\Helpers\AppToken;
 
 class AppController extends BaseController {
 
@@ -160,11 +162,11 @@ class AppController extends BaseController {
 
     /** GET: the signed-in member's bookings. */
     public function bookings() {
-        $userId = (new AppSignInStore)->userForToken(AppSignIn::bearer($_SERVER));
-        if ($userId === null) {
-            return $this->json(401, ['error' => 'invalid_token']);
+        $user = AppToken::user('bookings', $error);
+        if ($user === null) {
+            return $this->json($error === 'insufficient_scope' ? 403 : 401, ['error' => $error]);
         }
-        $user = Factory::getContainer()->get(UserFactoryInterface::class)->loadUserById($userId);
+        $userId = (int) $user->id;
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         return $this->json(200, [
                     'member' => self::member($user),

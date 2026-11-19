@@ -10,6 +10,8 @@
  * seconds, and bearer tokens stored here only as a SHA-256 hash.
  *
  * 14/11/26 RH Created
+ * 18/11/26 RH Token scopes: new tokens get SCOPES ("bookings footpaths"); tokens from before 4.4.0
+ *             have "bookings" only, so the app has to sign in again to see footpath records.
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -34,6 +36,17 @@ class AppSignIn {
 
     /** Token endpoint tries per IP address per minute. */
     const TRIES_PER_MINUTE = 10;
+
+    /**
+     * What a new token may read, space separated. The Allow page says the same in words, so change
+     * both together. "footpaths" also needs the member to be a footpath inspector (com_ra_footpaths).
+     */
+    const SCOPES = 'bookings footpaths';
+
+    /** Whether a token's scopes (space separated) include the one an endpoint needs. */
+    public static function hasScope(string $scopes, string $need): bool {
+        return $need !== '' && in_array($need, preg_split('/\s+/', trim($scopes)) ?: [], true);
+    }
 
     /**
      * Checks the request to the authorise page. Returns null if it's fine, or a message for an

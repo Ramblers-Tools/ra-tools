@@ -97,4 +97,14 @@ check(!array_key_exists('booking_info', AppBookings::booking($row(['booking_info
 $list = AppBookings::bookings([$row(['id' => '1', 'state' => '-2']), $row(['id' => '2', 'state' => '0']), $row(['id' => '3', 'event_id' => '43', 'state' => '-2'])], [], '');
 check(array_column($list, 'id') === ['2', '3'], 'a cancelled booking is hidden when the event was booked again');
 
+
+// Token scopes (4.4.0).
+check(AppSignIn::hasScope(AppSignIn::SCOPES, 'bookings'), 'a new token can read bookings');
+check(AppSignIn::hasScope(AppSignIn::SCOPES, 'footpaths'), 'a new token can read footpath records');
+check(AppSignIn::hasScope('bookings', 'bookings'), 'an old token can still read bookings');
+check(!AppSignIn::hasScope('bookings', 'footpaths'), 'an old token cannot read footpath records');
+check(!AppSignIn::hasScope('bookings footpaths', 'footpaths.write'), 'reading footpaths does not allow writing them');
+check(!AppSignIn::hasScope('bookings footpaths', 'foot'), 'part of a scope name does not count');
+check(!AppSignIn::hasScope('', 'bookings'), 'no scopes allows nothing');
+check(!AppSignIn::hasScope('bookings', ''), 'an empty scope is never granted');
 echo "All passed\n";

@@ -283,6 +283,7 @@ CREATE TABLE IF NOT EXISTS `#__ra_app_tokens` (
   `token_hash` CHAR(64) NOT NULL,
   `user_id` INT NOT NULL,
   `client_id` VARCHAR(64) NOT NULL,
+  `scope` VARCHAR(100) NOT NULL DEFAULT 'bookings',
   `user_agent` VARCHAR(255) NULL,
   `created` DATETIME NOT NULL,
   `last_used` DATETIME NULL,
