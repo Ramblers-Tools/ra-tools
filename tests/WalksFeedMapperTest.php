@@ -72,6 +72,14 @@ check($w['url'] === $page . '#walk=100000001', 'link to the group site');
 $w = WalksFeedMapper::walk(walk(['start_date_time' => '2026-11-15T09:30:00']), $page);
 check($w['start'] === '2026-11-15T09:30:00+00:00', 'winter start has +00:00');
 
+// A meeting time before the start (a train to the start): kept. The same as the start: left out.
+$w = WalksFeedMapper::walk(walk(['meeting_date_time' => '2026-12-05T09:20:00', 'start_date_time' => '2026-12-05T10:00:00']), $page);
+check($w['meeting_time'] === '2026-12-05T09:20:00+00:00', 'meeting time: ' . json_encode($w['meeting_time'] ?? null));
+$w = WalksFeedMapper::walk(walk(['meeting_date_time' => '2026-06-14T10:00:00']), $page);
+check(!isset($w['meeting_time']), 'meeting time same as start is left out');
+$w = WalksFeedMapper::walk(walk(), $page);
+check(!isset($w['meeting_time']), 'no meeting time');
+
 // Cancelled walks keep their reason.
 $w = WalksFeedMapper::walk(walk(['status' => 'cancelled', 'cancellation_reason' => '<p>Flooding</p>']), $page);
 check($w['status'] === 'cancelled' && $w['cancellation_reason'] === 'Flooding', 'cancelled with reason');
