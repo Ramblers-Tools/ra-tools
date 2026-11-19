@@ -2279,17 +2279,17 @@ class ToolsHelper {
         $sql .= 'WHERE c.user_id=' . $id;
         if ($future == 'Y') {
             $sql .= ' AND DATEDIFF(e.event_date, CURRENT_DATE)>=0 ';
-            $missing = 'You are not organising any Future Events';
+            $missing = 'You are not organising any future events.';
         } else {
             $sql .= ' AND DATEDIFF(e.event_date, CURRENT_DATE)<0 ';
-            $missing = 'You have yet not organising any Events';
+            $missing = 'You have not organised any past events.';
         }
         $sql .= ' GROUP BY e.id, e.event_date, e.title, e.max_bookings, e.notify_organiser, t.description';
         $sql .= ' ORDER BY e.event_date DESC';
 
         $rows = $this->getRows($sql);
         if ((count($rows) == 0)) {
-            echo $missing;
+            echo '<p>' . $missing . '</p>';
         } else {
             $this->toolsTable->add_header("Date,Group,Event,Type,Max places,Notify,Count bookings,Total places,Emails");
             if ($future == 'Y') {
