@@ -200,7 +200,7 @@
 		class="class:puzzle-piece"
 		dashboard="components"
 		>
-		<params>{"hideitems":["com_ra_tools","com_ra_delivery","com_ra_mailman","com_miniorange_oauth","com_ra_tenant_status","com_ra_events","com_ra_setup","com_ra_develop","com_ra_treasurer"]}</params>
+		<params>{"hideitems":["com_ra_tools","com_ra_delivery","com_ra_mailman","com_miniorange_oauth","com_ra_tenant_status","com_ra_events","com_ra_app","com_ra_setup","com_ra_develop","com_ra_treasurer"]}</params>
 	</menuitem>
 
 	<!-- Ramblers Tools addition: RA Tools promoted to its own top-level heading.
@@ -332,6 +332,16 @@
 			type="component"
 			element="com_ra_events"
 			link="index.php?option=com_ra_events&amp;view=events"
+		/>
+
+		<!-- Ramblers Tools addition: com_ra_app (the group directory for the mobile
+		     apps) registers itself as a standalone top-level link at component-install
+		     time, so existing sites need the same reparent by hand as RA Events. -->
+		<menuitem
+			title="RA Mobile APP"
+			type="component"
+			element="com_ra_app"
+			link="index.php?option=com_ra_app"
 		/>
 
 		<!-- Ramblers Tools addition: RA Setup, RA Develop and RA Treasurer, each
