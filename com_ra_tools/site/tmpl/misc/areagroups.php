@@ -5,16 +5,12 @@
  * table #__ra_groups. Optionally includes a link to their walking programme
  *
  *
- * @version     4.0.6
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2021. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
  * 30/11/22 CB Created from com ramblers
  * 31/08/23 CB use view programme to show walks
  * 21/11/23 CN indent text for each Group
  * 22/12/24 CB allow formatting of intro text
  * 09/11/26 CB Updates for Joomla 6 compatibility
+ * 22/11/26 CB remove display of raw SQL if no records found
  */
 // No direct access
 defined('_JEXEC') or die;
@@ -60,7 +56,7 @@ if ($area_info == 1) {
 $sql = "SELECT * FROM #__ra_groups WHERE code like '" . $area . "%' ORDER BY name";
 $rows = $this->toolsHelper->getRows($sql);
 if ($rows === False) {
-    echo 'No data found for ' . $sql . '<br>';
+    echo 'No Group data found<br>';
 }
 foreach ($rows as $row) {
     $heading = '<h4>' . $row->name . ' ' . $row->code;

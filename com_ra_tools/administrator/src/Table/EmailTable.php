@@ -1,13 +1,9 @@
 <?php
 
 /**
- * @version    4.5.6
- * @package    com_ra_tools
- * @author     Charlie Bigley <charlie@bigley.me.uk>
- * @copyright  2025 Charlie Bigley
- * @license    GNU General Public License version 2 or later; see LICENSE.txt
  * 08/06/25 CB change date logic in bind
  * 08/12/25 CB upload attachments to /images
+ * 21/11/26 CB instantiating table class updated for Joomla 6
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Table;
@@ -315,7 +311,7 @@ class EmailTable extends Table implements VersionableTableInterface, TaggableTab
      */
     protected function _getAssetParentId($table = null, $id = null) {
         // We will retrieve the parent-asset from the Asset-table
-        $assetParent = Table::getInstance('Asset');
+        $assetParent = new \Joomla\CMS\Table\Asset($this->getDatabase());
 
         // Default: if no asset-parent can be found we take the global asset
         $assetParentId = $assetParent->getRootId();

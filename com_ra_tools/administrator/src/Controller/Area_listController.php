@@ -16,7 +16,7 @@
  * 21/04/25 CB abortive attempt to use JsonHelper, get API key from config
  * 18/08/25 CB get API key from ra_api_sites
  * 15/04/26 CB deleted updateClusters (moved to ClustersController)
- * 09/11/c6 CB get API key using JsonHelper, remove display
+ * 09/11/26 CB get API key using JsonHelper, remove display
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Controller;
@@ -249,7 +249,7 @@ class Area_listController extends AdminController {
         $display = 0;
 
 //       See https://app.swaggerhub.com/apis-docs/abateman/Ramblers-third-parties/1.0.0#/default/get_api_volunteers_groups
-        $api_key = $this->toolsHelper->lookupApikey();
+        $api_key = $this->jsonHelper->lookupApiKey();
         if ($api_key == '') {
             $message = 'API key not found - please create a record in API sites';
             Factory::getApplication()->enqueueMessage($message, 'error');

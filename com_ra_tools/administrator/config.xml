@@ -208,19 +208,6 @@
             description="Category to be used when importing Articles" 
         />   
     </fieldset>
-    <fieldset name="emails" label="Email logging">
-        <field 
-            name="note3" 
-            type="note" 
-            label="This is for diagnostic purposes only, and should be used with caution. Four modes are available:"
-        />
-         <field name="email_log_level" type="radio" default="0" label="Email log level">
-            <option value="0">0 No additional processing</option>                            
-            <option value="1">1 Also log details of all emails to table ra_emails</option>
-            <option value="-1">-1 Don't send the email, just create a log to ra_emails</option>
-            <option value="-2">-2 Benchmark SMTP timings - don't send or log</option>
-        </field>                                                          
-    </fieldset>    
     <fieldset
         name="permissions"
         label="JCONFIG_PERMISSIONS_LABEL"

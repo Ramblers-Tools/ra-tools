@@ -1,14 +1,9 @@
 <?php
 
 /**
- * @version     1.2.1
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2020. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie <webmaster@bigley.me.uk> - https://www.stokeandnewcastleramblers.org.uk
  * This template file will be included by the JViewLegacy class.
  * Therefore, here, $this refers to the Ra_toolsView Enhancements class, which extends it.
- *
+
  *
  * Shows list of Groups for the specified Area
   // 12/04/21 change organising_group to group_code
@@ -25,7 +20,8 @@
  * 24/07/23 CB correct link to external website, add display of walks
  * 21/08/23 CB use JsonHelper
  * 09/10/24 CB delete code for import/export of walks
- * 10/08/26 CB show nearest 
+ * 10/08/26 CB show nearest
+ * 22/11/26 CB remove display of raw SQL if no records found
  */
 //
 // No direct access
@@ -87,7 +83,7 @@ $sql .= " order by `groups`.code, `groups`.name";
 $rows = $objHelper->getRows($sql);
 $record_count = $objHelper->rows;
 if ($record_count == 0) {
-    echo "No data found for " . $sql . "<br>";
+    echo "No groups data found <br>";
 } else {
     $heading = 'Code,Name,,Website,Walks';
 

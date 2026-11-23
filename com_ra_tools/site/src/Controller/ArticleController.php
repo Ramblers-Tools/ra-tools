@@ -1,16 +1,12 @@
 <?php
 
 /**
- * @version    5.0.3
- * @component  com_ra_tools
- *
- * @copyright   Copyright (C) 2005 - 2019 Open Source Matters, Inc. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
  * 12/08/24 CB created
  * 16/08/24 copied to old.stokenewcastleramblers.org.uk as tools.showArticle
  * 04/09/24 CB add catid to local field list, only show link to original is logged in
  * 07/09/24 CB use criteria from model when seeking prev/next
  * 09/09/24 CB Show total number of Articles
+ * 21/11/26 CB removed reference to getSession (J6 incompatible)
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Controller;
@@ -22,8 +18,6 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\MVC\Controller\FormController;
 use Joomla\Database\DatabaseFactory;
-use Joomla\CMS\Session\Session;
-//use Joomla\CMS\Uri\Uri;
 use Joomla\Utilities\ArrayHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsHelper;
 use Ramblers\Component\Ra_tools\Site\Helpers\ToolsTable;
@@ -162,7 +156,7 @@ class ArticleController extends FormController {
             echo $next;
         }
         if ($params->get('site') == 'remote') {
-            if (Session::getInstance()->get('user.id') > 0) {
+            if (!Factory::getApplication()->getIdentity()->guest) {
                 $target = $objHelper->addSlash($params->get('remote_url')) . 'index.php?option=com_content&view=article&id=' . $id;
                 echo $objHelper->buildButton($target, "View original post", True, "teal");
             }

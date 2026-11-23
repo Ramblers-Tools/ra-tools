@@ -446,6 +446,15 @@ final class GpxFileHelper {
         return $filename;
     }
 
+    public static function deleteRoute(string $filename): string {
+        $path = self::resolveFile($filename);
+        if (!File::delete($path)) {
+            throw new RuntimeException('Unable to delete the GPX file.');
+        }
+
+        return basename($path);
+    }
+
     public static function workingDirectory(): string {
         $relative = str_replace('\\', '/', self::configuredFolder());
         if ($relative === '' || $relative === '-1' || str_contains($relative, "\0")) {

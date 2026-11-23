@@ -15,6 +15,7 @@ class HtmlView extends BaseHtmlView
     protected $folder = '';
     protected $params;
     protected $canManage = false;
+    protected $canDelete = false;
     protected $toolsHelper;
 
     public function display($tpl = null)
@@ -31,6 +32,7 @@ class HtmlView extends BaseHtmlView
         $this->toolsHelper = new ToolsHelper();
         $actions = $this->toolsHelper->getActions('com_ra_tools');
         $this->canManage = $actions->get('core.create') || $actions->get('core.edit');
+        $this->canDelete = $actions->get('core.delete');
 
         if (count($errors = $this->get('Errors'))) {
             throw new \RuntimeException(implode("\n", $errors));

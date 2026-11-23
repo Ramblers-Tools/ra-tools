@@ -246,12 +246,13 @@ class Pkg_Ra_toolsInstallerScript {
         } else {
             $this->message('Mailshot Contact override will not be saved until ra_mail_shots.contact_id is added', 'warning');
         }
-       if (version_compare($this->current_version, '4.1.1', 'le')) {
-            $this->checkColumn('ra_ice_contacts', 'created_by', 'A', 'INT NOT NULL DEFAULT 0 AFTER `created`; ');
-            $this->checkColumn('ra_ice_contacts', 'modified_by', 'A', 'INT NOT NULL DEFAULT 0 AFTER `modified`; ');
-            $this->checkColumn('ra_ice_contacts', 'expiry_date', 'A', 'DATETIME NULL AFTER `modified_by`; ');
+        if ($this->getVersion('com_ra_events')) {
+            if (version_compare($this->current_version, '4.1.1', 'le')) {
+                $this->checkColumn('ra_ice_contacts', 'created_by', 'A', 'INT NOT NULL DEFAULT 0 AFTER `created`; ');
+                $this->checkColumn('ra_ice_contacts', 'modified_by', 'A', 'INT NOT NULL DEFAULT 0 AFTER `modified`; ');
+                $this->checkColumn('ra_ice_contacts', 'expiry_date', 'A', 'DATETIME NULL AFTER `modified_by`; ');
+            }
         }
-
         $componentVersion = $this->getVersion('com_ra_tools') ?? 'not recorded';
         $this->message('com_ra_tools is now at ' . $componentVersion);
         if ($this->reconfigure_message == true) {
