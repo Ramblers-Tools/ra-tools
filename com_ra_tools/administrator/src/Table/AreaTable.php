@@ -1,12 +1,8 @@
 <?php
 
 /**
- * @version    CVS: 3.0.0
- * @package    com_ra_tools
- * @author     Charlie Bigley <webmaster@bigley.me.uk>
- * @copyright  2024 Charlie Bigley
- * @license    GNU General Public License version 3 or later; see LICENSE.txt
  * 21/04/25 CB remove Ra_toolsHelper
+ * 21/11/26 CB instantiating table class updated for Joomla 6
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\Table;
@@ -224,7 +220,7 @@ class AreaTable extends Table implements VersionableTableInterface, TaggableTabl
      */
     protected function _getAssetParentId($table = null, $id = null) {
         // We will retrieve the parent-asset from the Asset-table
-        $assetParent = Table::getInstance('Asset');
+        $assetParent = new \Joomla\CMS\Table\Asset($this->getDatabase());
 
         // Default: if no asset-parent can be found we take the global asset
         $assetParentId = $assetParent->getRootId();

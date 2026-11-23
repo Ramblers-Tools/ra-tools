@@ -35,6 +35,9 @@ $intro = (string) $this->params->get('page_intro', '');
                         <?php if ($this->canManage) : ?>
                             <th scope="col">Edit</th>
                         <?php endif; ?>
+                        <?php if ($this->canDelete) : ?>
+                            <th scope="col">Delete</th>
+                        <?php endif; ?>
                         <th scope="col">Location</th>
                         <th scope="col">Route</th>
                     </tr>
@@ -58,6 +61,22 @@ $intro = (string) $this->params->get('page_intro', '');
                             echo '<td>' .  $escape($item['distance']) . '</td>';
                             if ($this->canManage) {
                                 echo '<td><a href="' . Route::_('index.php?option=com_ra_tools&view=gpx&file=' . rawurlencode($item['filename']) . $folderQuery . '&Itemid=' . $itemId, false) . '">Edit</a></td>';
+                            }
+                            if ($this->canDelete) {
+                                ?>
+                                <td>
+                                    <form action="<?php echo Route::_('index.php?option=com_ra_tools&task=gpxs.delete&Itemid=' . $itemId, false); ?>" method="post" class="d-inline">
+                                        <input type="hidden" name="file" value="<?php echo $escape($item['filename']); ?>">
+                                        <input type="hidden" name="folder" value="<?php echo $escape($this->folder); ?>">
+                                        <input type="hidden" name="option" value="com_ra_tools">
+                                        <input type="hidden" name="Itemid" value="<?php echo $itemId; ?>">
+                                        <?php echo HTMLHelper::_('form.token'); ?>
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete <?php echo $escape($item['filename']); ?>" aria-label="Delete <?php echo $escape($item['filename']); ?>" onclick="return confirm('Delete this GPX file?');">
+                                            <span class="fas fa-trash" aria-hidden="true"></span>
+                                        </button>
+                                    </form>
+                                </td>
+                                <?php
                             }
                             // 
                             echo '<td>' . $this->toolsHelper->showLocation(
@@ -87,17 +106,26 @@ $intro = (string) $this->params->get('page_intro', '');
         . rawurlencode($this->folder) . '&Itemid=' . $itemId;
     echo $this->toolsHelper->buildButton($target, 'Show on a map');
     ?>
-    <?php if ($this->canManage) : ?>
+    <?php 
+         /*
+         Not possible to user ToolsHelper::buildTaskButton: it escapes the button text, 
+         so it can’t render the trash icon, and it has no confirmation prompt or 
+         accessible-label option.
+        */  
+    
+    
+    if ($this->canManage) : ?>
+ 
         <section class="com-ra-tools-gpxs__upload">
-            <h2>Upload a GPX file</h2>
+            <h2>Upload GPX files</h2>
             <form id="form-gpx-upload"
                   action="<?php echo Route::_('index.php?option=com_ra_tools&task=gpxs.upload&Itemid=' . $itemId, false); ?>"
                   method="post" enctype="multipart/form-data" class="form-validate form-horizontal">
                 <div class="mb-3">
-                    <label class="form-label" for="gpx_file">GPX file</label>
-                    <input class="form-control" type="file" id="gpx_file" name="gpx_file"
+                    <label class="form-label" for="gpx_file">GPX files</label>
+                    <input class="form-control" type="file" id="gpx_file" name="gpx_file[]" multiple
                            accept=".gpx,application/gpx+xml,application/xml,text/xml" required>
-                    <div class="form-text">Select a valid GPX XML file (maximum 20 MB). Existing files will not be overwritten.</div>
+                    <div class="form-text">Select one or more valid GPX XML files (maximum 20 MB each). Existing files will not be overwritten.</div>
                 </div>
                 <div class="control-group">
                     <div class="controls">

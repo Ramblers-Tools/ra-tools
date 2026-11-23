@@ -15,6 +15,7 @@
  * 08/11/24 CB filter by nation and cluster
  * 14/08/26 CB delete references to Chair
  * 09/11/26 CB Replaced getDbo with DatabaseInterface
+ * 20/11/26 CB Disallow sort by c.name
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Model;
@@ -39,7 +40,6 @@ class Area_listModel extends ListModel {
                 'a.name',
                 'a.cluster',
                 'n.name',
-                'c.name',
                 'a.website',
                 'co_url',
             );
@@ -61,8 +61,7 @@ class Area_listModel extends ListModel {
 
         $query->from($db->quoteName('#__ra_areas', 'a'));
         $query->innerJoin('#__ra_nations AS n ON n.id = a.nation_id');
-        // Filter by search
-        $search = $this->getState('filter.search');
+
 
         // Filter by cluster
         $cluster = $this->getState('filter.cluster');
@@ -74,6 +73,7 @@ class Area_listModel extends ListModel {
             }
         }
 
+        // Filter by search
         $search = $this->getState('filter.search');
         if (!empty($search)) {
             if (stripos($search, 'id:') === 0) {

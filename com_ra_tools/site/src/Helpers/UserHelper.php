@@ -1,11 +1,6 @@
 <?php
 
 /**
- * @version     3.3.5
- * @package     com_ra_tools
- * @copyright   Copyright (C) 2020. All rights reserved.
- * @license     GNU General Public License version 2 or later; see LICENSE.txt
- * @author      Charlie Bigley <webmaster@bigley.me.uk> - https://www.developer-url.com
  * Invoked from controllers/dataload to import Users, will be passed 4 parameters:
  *  method_id, list_id, processing and filename
  * Data Type: 3 Download from Insight Hub
@@ -23,6 +18,7 @@
  * 26/04/25 CB purgeProfile
  * 04/08/25 CB correct loop within loop when purging a profile
  * 09/11/26 CB Replaced getDbo with DatabaseInterface
+ * 21/11/26 CB instantiating table class updated for Joomla 6
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -31,7 +27,6 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Table\Table;
 use \Joomla\CMS\User\User;
 use Joomla\Database\DatabaseInterface;
 use Ramblers\Component\Ra_mailman\Site\Helpers\Mailhelper;
@@ -139,13 +134,14 @@ class UserHelper {
 
     public function createProfile_2($user_id, $group_code) {
         // Fails to find Instance of table
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
         $data = array(
             'id' => $user_id,
             'home_group' => $db->quote($group_code),
             'groups_to_follow' => $db->quote($group_code),
             'preferred_name' => $db->quote($this->name),
         );
-        $table = Table::getInstance('Profile', 'Table');
+        $table = new \Ramblers\Component\Ra_tools\Site\Table\Ra_profilesTable($db);
         if (!$table->bind($data)) {
             $app->enqueueMessage('could not bind', 'error');
             return false;

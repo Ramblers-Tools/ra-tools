@@ -25,6 +25,8 @@
  * 09/11/26 CB Replaced getDbo with DatabaseInterface
  * 09/11/26 CB Updates for Joomla 6 compatibility
  * 09/11/26 CB moved lookupApikey to JsonHelper
+ * 20/11/26 Delete reference to email_log_level
+ * 22/11/26 CB added canUpdate
  */
 
 namespace Ramblers\Component\Ra_tools\Site\Helpers;
@@ -344,6 +346,10 @@ class ToolsHelper {
         $html .= '</form>';
 
         return $html;
+    }
+
+    public function canUpdate(string $component): bool {
+        return Factory::getApplication()->getIdentity()->authorise('core.manage', $component);
     }
 
     private function checkUsergroup(string $component): bool {
@@ -1922,18 +1928,6 @@ class ToolsHelper {
             $this->createLog('RA Tools', '20', $log_target, 'sendEmail entered for subject "' . $subject . '"');
         }
 
-        $params = ComponentHelper::getParams('com_ra_tools');
-        $email_log_level = $params->get('email_log_level', '0');
-        // Log level -2 is solely to benchmark the overhead of sending via SMTP
-        if ($email_log_level == -2) {
-            return true;
-        }
-        if (($email_log_level == 1) OR ($email_log_level == -1)) {
-            $this->logEmail($to, $reply_to, $subject, $body, $attachments, $bcc);
-            if ($email_log_level == -1) {
-                return true;
-            }
-        }
         // Clone the Joomla mailer so each send starts with a clean PHPMailer instance.
         $mailer = clone Factory::getMailer();
         if (property_exists($mailer, 'SMTPKeepAlive')) {

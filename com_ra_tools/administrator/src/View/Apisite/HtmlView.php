@@ -2,6 +2,7 @@
 
 /**
  * 21/09/26 CB restrict access to superUsers only
+ * 21/11/25 CB removed "Save New" and "Save as Copy" buttons
  */
 
 namespace Ramblers\Component\Ra_tools\Administrator\View\Apisite;
@@ -85,17 +86,6 @@ class HtmlView extends BaseHtmlView implements CurrentUserInterface {
             ToolbarHelper::apply('apisite.apply', 'JTOOLBAR_APPLY');
             ToolbarHelper::save('apisite.save', 'JTOOLBAR_SAVE');
         }
-
-        if (!$checkedOut && ($canDo->get('core.create'))) {
-            ToolbarHelper::custom('apisite.save2new', 'save-new.png', 'save-new_f2.png', 'JTOOLBAR_SAVE_AND_NEW', false);
-        }
-
-        // If an existing item, can save to a copy.
-        if (!$isNew && $canDo->get('core.create')) {
-            ToolbarHelper::custom('apisite.save2copy', 'save-copy.png', 'save-copy_f2.png', 'JTOOLBAR_SAVE_AS_COPY', false);
-        }
-
-
 
         if (empty($this->item->id)) {
             ToolbarHelper::cancel('apisite.cancel', 'JTOOLBAR_CANCEL');
